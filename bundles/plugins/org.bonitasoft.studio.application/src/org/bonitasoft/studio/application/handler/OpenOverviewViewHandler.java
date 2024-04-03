@@ -35,8 +35,15 @@ public class OpenOverviewViewHandler {
                 .map(IWorkbench::getActiveWorkbenchWindow)
                 .map(IWorkbenchWindow::getActivePage)
                 .ifPresent(activePage -> {
+                    if (PlatformUI.getWorkbench().isClosing()
+                            || PlatformUI.getWorkbench().getDisplay() == null
+                            || PlatformUI.getWorkbench().getDisplay().isDisposed()) {
+                        return;
+                    }
+
                     try {
-                        activePage.openEditor(ProjectOverviewEditorInput.getInstance(), ProjectOverviewEditorPart.ID);
+                        activePage.openEditor(ProjectOverviewEditorInput.getInstance(),
+                                ProjectOverviewEditorPart.ID);
                     } catch (PartInitException e) {
                         BonitaStudioLog.error(e);
                     }
@@ -45,7 +52,7 @@ public class OpenOverviewViewHandler {
 
     @CanExecute
     public boolean canExecute(RepositoryAccessor repositoryAccessor) {
-        return PlatformUI.isWorkbenchRunning() 
+        return PlatformUI.isWorkbenchRunning()
                 && PlatformUI.getWorkbench().getActiveWorkbenchWindow() != null
                 && repositoryAccessor.hasActiveRepository();
     }

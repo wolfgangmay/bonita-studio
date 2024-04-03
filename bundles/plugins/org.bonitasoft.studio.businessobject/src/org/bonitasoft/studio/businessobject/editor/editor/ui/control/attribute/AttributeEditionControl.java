@@ -32,7 +32,7 @@ import org.bonitasoft.studio.businessobject.i18n.Messages;
 import org.bonitasoft.studio.businessobject.refactor.DiffElement;
 import org.bonitasoft.studio.businessobject.refactor.Event;
 import org.bonitasoft.studio.businessobject.validator.FieldNameValidator;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.pics.PicsConstants;
 import org.bonitasoft.studio.ui.databinding.ComputedValueBuilder;
@@ -56,6 +56,7 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.layout.LayoutConstants;
 import org.eclipse.jface.viewers.CheckboxCellEditor;
+import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.StyledString;
@@ -103,7 +104,7 @@ public class AttributeEditionControl extends Composite {
             BusinessDataModelFormPage formPage,
             IObservableValue<BusinessObject> selectedBoObservable,
             DataBindingContext ctx) {
-        super(parent, SWT.None);
+        super(parent, SWT.NONE);
         setLayout(GridLayoutFactory.fillDefaults().create());
         setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
         formPage.getToolkit().adapt(this);
@@ -192,10 +193,10 @@ public class AttributeEditionControl extends Composite {
         viewer.addFilter(new SearchFilter<>(fieldToFilter));
 
         TableLayout layout = new TableLayout();
-        layout.addColumnData(new ColumnWeightData(5, true));
-        layout.addColumnData(new ColumnWeightData(4, true));
-        layout.addColumnData(new ColumnWeightData(3, true));
-        layout.addColumnData(new ColumnWeightData(3, true));
+        layout.addColumnData(new ColumnWeightData(1, true));
+        layout.addColumnData(new ColumnPixelData(180));
+        layout.addColumnData(new ColumnPixelData(100));
+        layout.addColumnData(new ColumnPixelData(100));
         viewer.getTable().setLayout(layout);
 
         createNameColumn(viewer);

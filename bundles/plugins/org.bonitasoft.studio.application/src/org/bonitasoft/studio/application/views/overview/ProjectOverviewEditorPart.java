@@ -16,20 +16,24 @@ package org.bonitasoft.studio.application.views.overview;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-import org.apache.maven.model.Model;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.application.views.BonitaProjectExplorer;
 import org.bonitasoft.studio.application.views.extension.ExtensionComposite;
 import org.bonitasoft.studio.common.CommandExecutor;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectDependenciesStore;
-import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.model.IRepository;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.pics.PicsConstants;
 import org.bonitasoft.studio.preferences.BonitaThemeConstants;
@@ -41,6 +45,7 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.EclipseContextFactory;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -96,7 +101,6 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
     private RepositoryAccessor repositoryAccessor;
     private LocalResourceManager localResourceManager;
     private ExceptionDialogHandler errorHandler;
-    private MavenProjectHelper mavenHelper;
     private CommandExecutor commandExecutor;
 
     private Composite mainComposite;
@@ -115,6 +119,8 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
     private IProgressService progressService;
 
+    private ProjectMetadata metadata;
+
     private static Object lock = new Object();
 
     public ProjectOverviewEditorPart() {
@@ -124,7 +130,6 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
     @Override
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-        mavenHelper = new MavenProjectHelper();
         var eclipseContext = EclipseContextFactory.create();
         errorHandler = ContextInjectionFactory.make(ExceptionDialogHandler.class, eclipseContext);
         commandExecutor = ContextInjectionFactory.make(CommandExecutor.class, eclipseContext);
@@ -142,11 +147,14 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
     @Override
     public void createPartControl(Composite parent) {
+
         try {
             PlatformUI.getWorkbench().getProgressService().busyCursorWhile(monitor -> {
-                monitor.beginTask("Loading project overview...", IProgressMonitor.UNKNOWN);
-                while (repositoryAccessor.getCurrentRepository().filter(IRepository::isLoaded).isEmpty()) {
-                    Thread.sleep(20);
+                monitor.beginTask(Messages.loadingProjectOverview, IProgressMonitor.UNKNOWN);
+                try {
+                    waitUntil(() -> isCurrentRepositoryLoaded(), 5000, 50);
+                } catch (TimeoutException e) {
+                    BonitaStudioLog.error(e);
                 }
             });
         } catch (InvocationTargetException | InterruptedException e) {
@@ -154,7 +162,7 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
         }
 
         initVariables(parent);
-        if(parent.isDisposed()) {
+        if (parent.isDisposed()) {
             return;
         }
         parent.setLayout(GridLayoutFactory.fillDefaults().create());
@@ -169,7 +177,39 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
         elementComposite = new ElementComposite(mainComposite);
     }
-    
+
+    private boolean isCurrentRepositoryLoaded() {
+        return repositoryAccessor.getCurrentRepository().isPresent()
+                && !repositoryAccessor.getCurrentRepository().filter(IRepository::isLoaded).isEmpty();
+    }
+
+    private static void waitUntil(BooleanSupplier condition, int timeout, int interval)
+            throws TimeoutException, InterruptedException {
+        var countDownLatch = new CountDownLatch(1);
+        var shouldExitThread = new AtomicBoolean();
+        shouldExitThread.set(false);
+        new Thread(() -> {
+            var result = false;
+            while (!result && !shouldExitThread.get()) {
+                result = condition.getAsBoolean();
+                try {
+                    Thread.sleep(interval);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (result) {
+                countDownLatch.countDown();
+            }
+        }, "Wait condition thread").start();
+
+        if (!countDownLatch.await(timeout, TimeUnit.MILLISECONDS)) {
+            shouldExitThread.set(true);
+            throw new TimeoutException(String.format("Failed to evaluate condition after %sms", timeout));
+        }
+
+    }
+
     private void toElementsView() {
         if (extensionComposite != null && !extensionComposite.isDisposed()) {
             extensionComposite.dispose();
@@ -255,7 +295,8 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
                 .onClick(e -> {
                     try {
                         progressService.run(true, false, monitor -> {
-                            var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
+                            var currentRepository = RepositoryManager.getInstance().getCurrentRepository()
+                                    .orElseThrow();
                             try {
                                 MavenPlugin.getProjectConfigurationManager()
                                         .updateProjectConfiguration(currentRepository.getProject(), monitor);
@@ -326,7 +367,7 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
     }
 
     private void initVariables(Composite parent) {
-        if(!parent.isDisposed() && !parent.getDisplay().isDisposed()) {
+        if (!parent.isDisposed() && !parent.getDisplay().isDisposed()) {
             cursorHand = parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND);
             cursorArrow = parent.getDisplay().getSystemCursor(SWT.CURSOR_ARROW);
         }
@@ -340,16 +381,25 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
     private void refreshContent() {
         synchronized (lock) {
-            Display.getDefault().asyncExec(() -> {
-                if (title == null || title.isDisposed()) {
-                    return;
-                }
-                try {
-                    Model mavenModel = mavenHelper
-                            .getMavenModel(repositoryAccessor.getCurrentRepository().orElseThrow().getProject());
-                    String name = mavenModel.getName();
-                    String version = mavenModel.getVersion();
-                    String descriptionContent = mavenModel.getDescription();
+            repositoryAccessor.getCurrentProject().ifPresent(bonitaProject -> {
+                Display.getDefault().asyncExec(() -> {
+                    if (metadata == null) {
+                        try {
+                            metadata = bonitaProject.getProjectMetadata(new NullProgressMonitor());
+                        } catch (CoreException e) {
+                            BonitaStudioLog.error(e);
+                        }
+                    }
+                    if (metadata == null) {
+                        return;
+                    }
+                    String name = metadata.getName();
+                    name = name == null ? "" : name;
+                    String version = metadata.getVersion();
+                    String descriptionContent = metadata.getDescription();
+                    if (title == null || title.isDisposed()) {
+                        return;
+                    }
                     title.setText(String.format("%s %s", name, version));
 
                     StyleRange titleStyle = new StyleRange(0, name.length(), title.getForeground(),
@@ -366,9 +416,7 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
                     if (extensionComposite != null && !extensionComposite.isDisposed()) {
                         extensionComposite.refreshContent();
                     }
-                } catch (CoreException e) {
-                    errorHandler.openErrorDialog(Display.getDefault().getActiveShell(), e);
-                }
+                });
             });
         }
     }
@@ -463,11 +511,14 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
         try {
             event.getDelta().accept(delta -> {
                 IResource r = delta.getResource();
-                if (Objects.equals(r, repositoryAccessor.getCurrentRepository().orElseThrow().getProject()
-                        .getFile(IMavenConstants.POM_FILE_NAME))) {
+                if (repositoryAccessor.getCurrentRepository()
+                        .filter(current -> Objects.equals(r, current.getProject()
+                                .getFile(IMavenConstants.POM_FILE_NAME)))
+                        .isPresent()) {
+                    metadata = null;
                     refreshContent();
                     return false;
-                }
+                } ;
                 return true;
             });
         } catch (CoreException e) {
@@ -477,6 +528,7 @@ public class ProjectOverviewEditorPart extends EditorPart implements EventHandle
 
     @Override
     public void handleEvent(org.osgi.service.event.Event event) {
+        metadata = null;
         refreshContent();
     }
 

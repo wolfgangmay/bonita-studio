@@ -17,10 +17,6 @@ package org.bonitasoft.studio.identity.actors.repository;
 import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.common.repository.filestore.PackageFileStore;
 import org.bonitasoft.studio.common.repository.store.SourceRepositoryStore;
-import org.bonitasoft.studio.identity.IdentityPlugin;
-import org.bonitasoft.studio.identity.i18n.Messages;
-import org.bonitasoft.studio.pics.Pics;
-import org.eclipse.swt.graphics.Image;
 
 /**
  * @author Romain Bioteau
@@ -45,24 +41,6 @@ public class ActorFilterSourceRepositoryStore extends SourceRepositoryStore<Abst
     @Override
     public String getName() {
         return STORE_NAME;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IRepositoryStore#getDisplayName()
-     */
-    @Override
-    public String getDisplayName() {
-        return Messages.filtersSourceRepositoryName;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IRepositoryStore#getIcon()
-     */
-    @Override
-    public Image getIcon() {
-        return Pics.getImage("java.gif", IdentityPlugin.getDefault());
     }
 
 }

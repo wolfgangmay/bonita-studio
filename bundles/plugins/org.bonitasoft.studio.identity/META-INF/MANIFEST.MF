@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.bonitasoft.studio.identity;singleton:=true
 Automatic-Module-Name: org.bonitasoft.studio.actors
-Bundle-Version: 7.15.9.qualifier
+Bundle-Version: 8.0.4.qualifier
 Bundle-ClassPath: .
 Bundle-Activator: org.bonitasoft.studio.identity.IdentityPlugin
 Bundle-Vendor: %providerName
@@ -62,8 +62,8 @@ Import-Package: javax.inject;version="1.0.0",
  org.bonitasoft.engine.profile,
  org.bonitasoft.engine.search,
  org.bonitasoft.engine.session,
- org.bonitasoft.studio.common.jface,
- org.bonitasoft.studio.common.jface.databinding.validator,
+ org.bonitasoft.studio.common.databinding.validator,
+ org.bonitasoft.studio.common.ui.jface,
  org.bonitasoft.studio.expression.editor.filter
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
@@ -100,6 +100,7 @@ Export-Package: org.bonitasoft.studio.identity;uses:="org.osgi.framework,org.ecl
  org.bonitasoft.studio.identity.organization.model.organization.validation,
  org.bonitasoft.studio.identity.organization.operation,
  org.bonitasoft.studio.identity.organization.repository,
+ org.bonitasoft.studio.identity.organization.styler,
  org.bonitasoft.studio.identity.organization.ui.control,
  org.bonitasoft.studio.identity.organization.ui.provider.content,
  org.bonitasoft.studio.identity.organization.ui.provider.label,

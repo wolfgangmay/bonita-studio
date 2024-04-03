@@ -16,8 +16,8 @@ package org.bonitasoft.studio.application.handler;
 
 import java.util.Optional;
 
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -31,7 +31,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.ui.actions.RefreshAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
@@ -50,10 +49,8 @@ public class RefreshProjectHandler extends AbstractHandler {
 
                     @Override
                     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                        AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
-                        MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(currentRepository.getProject(), monitor);
-                        currentRepository.getProjectDependenciesStore().analyze(monitor);
-                        currentRepository.build(monitor);
+                        BonitaProject project = RepositoryManager.getInstance().getCurrentProject().orElseThrow();
+                        project.refresh(true, monitor);
                         return Status.OK_STATUS;
                     }
                 };

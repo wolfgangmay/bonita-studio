@@ -17,7 +17,6 @@ import javax.inject.Named;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -25,6 +24,8 @@ import org.bonitasoft.studio.common.repository.filestore.FileStoreFinder;
 import org.bonitasoft.studio.common.repository.model.IDeployable;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.GetApiSessionOperation;
@@ -87,11 +88,12 @@ public class QuickDeployHandler {
             }
 
             if (customPageFilseStore != null) {
+                String displayName = IDisplayable.toDisplayName(customPageFilseStore).orElse("");
                 if (!customPageFilseStore.isReadOnly()) {
                     IStatus buildStatus = build(customPageFilseStore);
                     if (!buildStatus.isOK()) {
                         return ValidationStatus
-                                .error(String.format(Messages.buildHasFailed, customPageFilseStore.getDisplayName()));
+                                .error(String.format(Messages.buildHasFailed, displayName));
                     }
                 }
                 var session = apiSessionOperation.execute();
@@ -100,11 +102,10 @@ public class QuickDeployHandler {
                         httpClientFactory,
                         customPageFilseStore);
                 if (showInUI) {
-                    new ProgressMonitorDialog(Display.getDefault().getActiveShell()).run(true, false,
-                            deployRestAPIExtensionOperation);
+                    new ProgressMonitorDialog(Display.getDefault().getActiveShell()).run(true, false, deployRestAPIExtensionOperation::run);
                     final IStatus status = deployRestAPIExtensionOperation.getStatus();
                     if (status.isOK()) {
-                        openDeploySuccessDialog(customPageFilseStore.getDisplayName());
+                        openDeploySuccessDialog(displayName);
                     } else {
                         showDeployErrorDialog(status);
                     }

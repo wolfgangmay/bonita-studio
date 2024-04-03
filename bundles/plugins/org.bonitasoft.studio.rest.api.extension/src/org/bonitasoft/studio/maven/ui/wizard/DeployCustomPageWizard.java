@@ -13,10 +13,10 @@ import java.lang.reflect.InvocationTargetException;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
-import org.bonitasoft.engine.session.APISession;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.GetApiSessionOperation;
@@ -87,13 +87,14 @@ public abstract class DeployCustomPageWizard extends Wizard {
 
     protected boolean deploy(final CustomPageProjectFileStore fileStore) {
         GetApiSessionOperation apiSessionOperation = new GetApiSessionOperation();
+        String displayName = IDisplayable.toDisplayName(fileStore).orElse("");
         try {
-            APISession apiSession = apiSessionOperation.execute();
+            var apiSession = apiSessionOperation.execute();
             BOSEngineManager bosEngineManager = BOSEngineManager.getInstance();
             var operation = new DeployCustomPageProjectOperation(bosEngineManager.getPageAPI(apiSession),
                     httpClientFactory,
                     fileStore);
-            getContainer().run(true, false, operation);
+            getContainer().run(true, false, operation::run);
             final IStatus status = operation.getStatus();
             if (!status.isOK()) {
                 return showDeployErrorDialog(status);
@@ -101,13 +102,13 @@ public abstract class DeployCustomPageWizard extends Wizard {
         } catch (InvocationTargetException | InterruptedException | BonitaHomeNotSetException | ServerAPIException
                 | UnknownAPITypeException e) {
             new BonitaErrorDialog(getShell(), Messages.errorTitle,
-                    NLS.bind(Messages.deployFailedMessage, fileStore.getDisplayName()), e).open();
+                    NLS.bind(Messages.deployFailedMessage, displayName), e).open();
             BonitaStudioLog.error(e);
             return false;
         } finally {
             apiSessionOperation.logout();
         }
-        return openDeploySuccessDialog(fileStore.getDisplayName());
+        return openDeploySuccessDialog(displayName);
     }
 
     protected boolean build(final CustomPageProjectFileStore fileStore) {

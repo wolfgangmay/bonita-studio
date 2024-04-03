@@ -17,8 +17,8 @@ package org.bonitasoft.studio.engine.ui.wizard;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.engine.i18n.Messages;
 import org.bonitasoft.studio.engine.operation.ExportBarOperation;
 import org.bonitasoft.studio.model.process.MainProcess;
@@ -62,10 +62,6 @@ public class ExportBarWizard extends Wizard {
         addPage(page);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.jface.wizard.Wizard#performFinish()
-     */
     @Override
     public boolean performFinish() {
         try {
@@ -94,11 +90,9 @@ public class ExportBarWizard extends Wizard {
                         Messages.exportSuccessMsg);
             }
             return !statusContainsError(status);
-        } catch (InvocationTargetException e) {
+        } catch (InvocationTargetException | InterruptedException e) {
             BonitaStudioLog.error(e);
-        } catch (InterruptedException e) {
-            BonitaStudioLog.error(e);
-        }
+        } 
         return false;
     }
 

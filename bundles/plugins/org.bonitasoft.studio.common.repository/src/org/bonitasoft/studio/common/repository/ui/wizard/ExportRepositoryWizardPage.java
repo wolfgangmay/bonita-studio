@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -26,19 +27,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.bonitasoft.studio.common.jface.FileActionDialog;
-import org.bonitasoft.studio.common.jface.databinding.validator.EmptyInputValidator;
+import org.bonitasoft.studio.common.databinding.validator.EmptyInputValidator;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.IResourceContainer;
 import org.bonitasoft.studio.common.repository.operation.ExportBosArchiveOperation;
 import org.bonitasoft.studio.common.repository.store.LocalDependenciesStore;
 import org.bonitasoft.studio.common.repository.ui.viewer.CheckboxRepositoryTreeViewer;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.typed.PojoProperties;
@@ -287,6 +288,7 @@ public class ExportRepositoryWizardPage extends WizardPage {
             List<IResource> selectedResoureContainer = getSelectedResoureContainer();
             getContainer().run(true, false, monitor -> {
                 monitor.beginTask(Messages.exporting, IProgressMonitor.UNKNOWN);
+                operation.setBonitaProject(RepositoryManager.getInstance().getCurrentProject().orElseThrow());
                 operation.setDestinationPath(getDetinationPath());
                 operation.setFileStores(selectedFileStores);
                 operation.addResources(selectedResoureContainer);
@@ -326,21 +328,8 @@ public class ExportRepositoryWizardPage extends WizardPage {
                     }
                 }
                 if (isZip) {
-                    var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElse(null);
-                    IProject project = currentRepository.getProject();
-                    IFile pomFile = project
-                            .getFile(IMavenConstants.POM_FILE_NAME);
-                    if (pomFile.exists()) {
-                        resources.add(pomFile);
-                    }
-                    IFolder depStore = project.getFolder(LocalDependenciesStore.NAME);
-                    if (depStore.exists()) {
-                        resources.add(depStore);
-                    }
-                    IFolder resourcesFolder = project.getFolder("src/main/resources");
-                    if(resourcesFolder.exists()) {
-                        resources.add(resourcesFolder);
-                    }
+                    var bonitaProject = RepositoryManager.getInstance().getCurrentProject().orElseThrow();
+                    resources.addAll(getExportableResources(bonitaProject));
                 }
             });
         } catch (InvocationTargetException | InterruptedException e) {
@@ -348,6 +337,32 @@ public class ExportRepositoryWizardPage extends WizardPage {
         }
         return resources;
     }
+    
+    Collection<? extends IResource> getExportableResources(BonitaProject project) {
+        var resources = new ArrayList<IResource>();
+        IProject parentProject = project.getParentProject();
+        IFile pomFile = parentProject
+                .getFile(IMavenConstants.POM_FILE_NAME);
+        if (pomFile.exists()) {
+            resources.add(pomFile);
+        }
+        IFolder appModule = parentProject.getFolder(BonitaProject.APP_MODULE);
+        IFile appPomFile = appModule
+                .getFile(IMavenConstants.POM_FILE_NAME);
+        if (appPomFile.exists()) {
+            resources.add(appPomFile);
+        }
+        IFolder depStore = appModule.getFolder(LocalDependenciesStore.NAME);
+        if (depStore.exists()) {
+            resources.add(depStore);
+        }
+        IFolder resourcesFolder = appModule.getFolder("src/main/resources");
+        if (resourcesFolder.exists()) {
+            resources.add(resourcesFolder);
+        }
+        return resources;
+    }
+    
 
     protected void createDestination(final Composite group) {
         final Label destPath = new Label(group, SWT.NONE);

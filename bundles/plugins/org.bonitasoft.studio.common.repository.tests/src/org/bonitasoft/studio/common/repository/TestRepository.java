@@ -15,6 +15,7 @@
 package org.bonitasoft.studio.common.repository;
 
 import org.bonitasoft.studio.common.extension.ExtensionContextInjectionFactory;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.jdt.JDTTypeHierarchyManager;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
@@ -22,10 +23,10 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 
 public class TestRepository extends AbstractRepository{
 
-    public TestRepository(IWorkspace workspace, IProject project,
+    public TestRepository(IWorkspace workspace, BonitaProject project,
             ExtensionContextInjectionFactory extensionContextInjectionFactory,
-            JDTTypeHierarchyManager jdtTypeHierarchyManager, IEventBroker eventBroker, boolean migrationEnabled) {
-        super(workspace, project, extensionContextInjectionFactory, jdtTypeHierarchyManager, eventBroker, migrationEnabled);
+            JDTTypeHierarchyManager jdtTypeHierarchyManager, IEventBroker eventBroker) {
+        super(workspace, project, extensionContextInjectionFactory, jdtTypeHierarchyManager, eventBroker);
     }
 
 }

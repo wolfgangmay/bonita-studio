@@ -15,6 +15,7 @@ import javax.inject.Named;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.maven.MavenRepositoryRegistry;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup.Status;
@@ -35,6 +36,8 @@ import org.bonitasoft.studio.ui.wizard.WizardBuilder;
 import org.eclipse.core.databinding.observable.list.IObservableList;
 import org.eclipse.core.databinding.observable.list.WritableList;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.wizard.IWizardContainer;
@@ -144,7 +147,7 @@ public class ImportBosHandler {
                 BonitaStudioLog.error(e);
             }
             mavenRepositories.addAll(mavenRepositoryRegistry.getGlobalRepositories());
-            AbstractRepository repository = repositoryAccessor.getRepository(targetRepository);
+            var repository = repositoryAccessor.getRepository(targetRepository);
             if (repository != null && repository.exists()) {
                 mavenRepositories.addAll(mavenRepositoryRegistry.getProjectRepositories(repository.getProject()));
             }
@@ -157,6 +160,9 @@ public class ImportBosHandler {
             try {
                 container.run(true, false,
                         monitor -> {
+                            // Wait for Project initialization job to avoid locking the workspace
+                            Job.getJobManager()
+                                    .join(RepositoryManager.class, new NullProgressMonitor());
                             repositoryAccessor
                                     .createNewRepository(bosArchiveControlSupplier.getProjectMetadata(), monitor);
                             reparseArchive(bosArchiveControlSupplier, repositoryAccessor, monitor);
@@ -181,10 +187,10 @@ public class ImportBosHandler {
 
     }
 
-    private AbstractRepository getTargetRepository(RepositoryAccessor repositoryAccessor) {
+    private org.bonitasoft.studio.common.repository.model.IRepository getTargetRepository(RepositoryAccessor repositoryAccessor) {
         String targetRepository = switchRepositoryStrategy.getTargetRepository();
-        AbstractRepository currentRepository = repositoryAccessor.getCurrentRepository().orElseThrow();
-        if (Objects.equals(targetRepository, currentRepository.getName())) {
+        var currentRepository = repositoryAccessor.getCurrentRepository().orElseThrow();
+        if (Objects.equals(targetRepository, currentRepository.getProjectId())) {
             return currentRepository;
         }
         return repositoryAccessor.getRepository(targetRepository);
@@ -217,7 +223,7 @@ public class ImportBosHandler {
 
         activeShell.getDisplay().asyncExec(() -> openEndImportDialog(operation,
                 repositoryAccessor.getRepositoryStore(DiagramRepositoryStore.class), activeShell,
-                repositoryAccessor.getCurrentRepository().orElseThrow().getName()));
+                repositoryAccessor.getCurrentRepository().orElseThrow().getProjectId()));
     }
 
     protected void openEndImportDialog(ImportBosArchiveOperation operation, DiagramRepositoryStore store,

@@ -24,13 +24,14 @@ import java.util.Objects;
 import org.apache.maven.model.Dependency;
 import org.bonitasoft.studio.assertions.StatusAssert;
 import org.bonitasoft.studio.common.model.ImportAction;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.operation.DependenciesUpdateOperationFactory;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
 import org.bonitasoft.studio.importer.bos.model.BosArchive;
@@ -218,8 +219,8 @@ public class ImportBOSArchiveIT {
         operation.run(new NullProgressMonitor());
         assertThat(operation.getStatus()).isNotNull();
 
-        final boolean javaFileExists = ResourcesPlugin.getWorkspace().getRoot()
-                .getProject(CommonRepositoryPlugin.getCurrentRepository())
+        final boolean javaFileExists = BonitaProject.create(CommonRepositoryPlugin.getCurrentRepository())
+                .getAppProject()
                 .getFolder("src-connectors").getFolder("org").getFolder("bonitasoft").getFolder("connector")
                 .getFolder("demo").getFile("FillDBImpl.java")
                 .exists();

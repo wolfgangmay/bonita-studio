@@ -17,12 +17,10 @@ package org.bonitasoft.studio.swtbot.framework.rule;
 import java.lang.reflect.InvocationTargetException;
 
 import org.bonitasoft.studio.application.actions.coolbar.NormalCoolBarHandler;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
-import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
-import org.bonitasoft.studio.common.repository.core.maven.contribution.InstallBonitaMavenArtifactsOperation;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.bonitasoft.studio.engine.EnginePlugin;
 import org.bonitasoft.studio.engine.preferences.EnginePreferenceConstants;
 import org.bonitasoft.studio.preferences.BonitaCoolBarPreferenceConstant;
@@ -31,12 +29,11 @@ import org.bonitasoft.studio.preferences.BonitaStudioPreferencesPlugin;
 import org.bonitasoft.studio.preferences.pages.BonitaAdvancedPreferencePage;
 import org.bonitasoft.studio.swtbot.framework.conditions.BonitaBPMConditions;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
+import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.swt.finder.finders.UIThreadRunnable;
 import org.eclipse.swtbot.swt.finder.results.BoolResult;
@@ -55,11 +52,16 @@ import org.junit.runners.model.Statement;
  */
 public class SWTGefBotRule implements TestRule {
 
-    private boolean disablePopup;
     protected final SWTGefBot bot;
+    private boolean requireExistingProject;
 
     public SWTGefBotRule(final SWTGefBot bot) {
+        this(bot, true);
+    }
+    
+    public SWTGefBotRule(final SWTGefBot bot, boolean requireExistingProject) {
         this.bot = bot;
+        this.requireExistingProject = requireExistingProject;
     }
 
     @Override
@@ -81,7 +83,6 @@ public class SWTGefBotRule implements TestRule {
                 } finally {
                     afterStatement(description);
                 }
-
             }
 
             void captureScreenshot(Description description, Throwable t) {
@@ -136,6 +137,12 @@ public class SWTGefBotRule implements TestRule {
                     // not in a dialog
                 }
                 try {
+                    bot.button(IDialogConstants.NO_LABEL).click();
+                    break;
+                } catch (Throwable t) {
+                    // not in a dialog
+                }
+                try {
                     shell.close();
                 } catch (TimeoutException e1) {
                     System.out.println(String.format("Failed to close shell %s: %s", shell.getText(), e1));
@@ -156,29 +163,23 @@ public class SWTGefBotRule implements TestRule {
     }
 
     protected void beforeStatement() {
-        Display.getDefault().syncExec(this::ensureDefaultProjectExists);
+        if(requireExistingProject) {
+            Display.getDefault().syncExec(SWTGefBotRule::ensureDefaultProjectExists);
+        }
         initPreferences();
         bot.saveAllEditors();
-        bot.closeAllEditors();
+        bot.editors(new EditorMatcherExceptOverview()).forEach(SWTBotEditor::close);
         bot.waitUntil(BonitaBPMConditions.noPopupActive(), 10000);
     }
 
-    private void ensureDefaultProjectExists() {
+    public static void ensureDefaultProjectExists() {
         var repositoryManager = RepositoryManager.getInstance();
-        if (repositoryManager.getRepository(Messages.defaultRepositoryName) == null
-                || !repositoryManager.getRepository(Messages.defaultRepositoryName).exists()) {
+        var defaultProjectMetadta = ProjectMetadata.defaultMetadata();
+        if (repositoryManager.getRepository(defaultProjectMetadta.getArtifactId()) == null
+                || !repositoryManager.getRepository(defaultProjectMetadta.getArtifactId()).exists()) {
             try {
                 PlatformUI.getWorkbench().getProgressService().run(true, false, monitor -> {
-                    try {
-                        new InstallBonitaMavenArtifactsOperation(MavenPlugin.getMaven().getLocalRepository())
-                                .execute(monitor);
-                    } catch (CoreException e) {
-                        throw new InvocationTargetException(e);
-                    }
-                    repositoryManager.setCurrentRepository(
-                            repositoryManager.createRepository(Messages.defaultRepositoryName, false));
-                    repositoryManager.getAccessor().start(monitor);
-                    PlatformUtil.openDashboardIfNoOtherEditorOpen();
+                    repositoryManager.getAccessor().createNewRepository(defaultProjectMetadta, monitor);
                 });
             } catch (InvocationTargetException | InterruptedException e) {
                 throw new RuntimeException(e);
@@ -188,8 +189,8 @@ public class SWTGefBotRule implements TestRule {
 
     protected void closeAllAndReturnToWelcomePage() {
         bot.saveAllEditors();
-        bot.closeAllEditors();
-        FileActionDialog.setDisablePopup(disablePopup);
+        bot.editors(new EditorMatcherExceptOverview()).forEach(SWTBotEditor::close);
+        FileActionDialog.setDisablePopup(false);
     }
 
     protected void initPreferences() {

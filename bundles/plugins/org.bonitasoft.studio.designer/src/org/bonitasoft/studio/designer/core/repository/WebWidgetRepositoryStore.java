@@ -14,11 +14,10 @@
  */
 package org.bonitasoft.studio.designer.core.repository;
 
-import org.bonitasoft.studio.designer.i18n.Messages;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.pics.PicsConstants;
+import static java.util.function.Predicate.not;
+
+import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.swt.graphics.Image;
 
 /**
  * @author Romain Bioteau
@@ -31,15 +30,10 @@ public class WebWidgetRepositoryStore extends WebArtifactRepositoryStore<WebWidg
     public String getName() {
         return WEB_WIDGET_REPOSITORY_NAME;
     }
-
+    
     @Override
-    public String getDisplayName() {
-        return Messages.widgetRepository;
-    }
-
-    @Override
-    public Image getIcon() {
-        return Pics.getImage(PicsConstants.widget);
+    public boolean canBeExported() {
+        return getChildren().stream().anyMatch(IRepositoryFileStore::canBeExported);
     }
 
     @Override

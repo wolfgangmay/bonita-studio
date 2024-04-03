@@ -21,13 +21,13 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.bonitasoft.studio.application.views.BonitaProjectExplorer;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreFinder;
+import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.bonitasoft.studio.dependencies.repository.DependencyRepositoryStore;
 import org.bonitasoft.studio.designer.core.operation.DeleteUIDArtifactOperation;
 import org.bonitasoft.studio.designer.core.repository.InFolderJSONFileStore;
@@ -57,7 +57,7 @@ public class DeleteHandler extends AbstractHandler {
         for (Object sel : selection.toList()) {
             selectedResources.add(((IAdaptable) sel).getAdapter(IResource.class));
         }
-        AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
+        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
         if ((selectedResources.size() == 1 && FileActionDialog
                 .confirmDeletionQuestion(selectedResources.get(0).getName()))
                 || selectedResources.size() > 1 && FileActionDialog.confirmDeletionQuestionWithCustomMessage(
@@ -102,7 +102,7 @@ public class DeleteHandler extends AbstractHandler {
                 && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage() != null
                 && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart() instanceof BonitaProjectExplorer) {
             ISelection selection = selectionFinder.getSelectionInExplorer();
-            AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
+            var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
             return selection instanceof IStructuredSelection
                     ? selectionCanBeDeleted((IStructuredSelection) selection, currentRepository)
                     : false;
@@ -110,7 +110,7 @@ public class DeleteHandler extends AbstractHandler {
         return false;
     }
 
-    protected boolean selectionCanBeDeleted(IStructuredSelection selection, AbstractRepository currentRepository) {
+    protected boolean selectionCanBeDeleted(IStructuredSelection selection, IRepository currentRepository) {
         for (Object sel : selection.toList()) {
             if (sel instanceof IAdaptable) {
                 IResource adapter = ((IAdaptable) sel).getAdapter(IResource.class);

@@ -14,6 +14,9 @@
  */
 package org.bonitasoft.studio.application.views.filters;
 
+import org.bonitasoft.studio.common.repository.BonitaProjectNature;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.Viewer;
 
@@ -25,6 +28,16 @@ public class HideTopLevelProjectIfNested
         if (element instanceof IJavaProject) {
             return super.select(viewer, parentElement, ((IJavaProject) element).getProject());
         }
+        if(element instanceof IProject) {
+            try {
+                if( ((IProject) element).hasNature(BonitaProjectNature.NATURE_ID)) {
+                    return true;
+                }
+            } catch (CoreException e) {
+                return false;
+            }
+        }
+      
         return super.select(viewer, parentElement, element);
     }
 

@@ -16,7 +16,6 @@ package org.bonitasoft.studio.tests.businessobject;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.maven.Maven;
@@ -29,26 +28,19 @@ import org.bonitasoft.studio.businessobject.core.operation.DeployBDMOperation;
 import org.bonitasoft.studio.businessobject.core.operation.GenerateBDMOperation;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelRepositoryStore;
-import org.bonitasoft.studio.common.ProjectUtil;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.tests.util.InitialProjectRule;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.ICallable;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenExecutionContext;
-import org.eclipse.m2e.core.internal.embedder.MavenImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,7 +52,7 @@ public class DeployBDMOperationIT {
 
     @Rule
     public InitialProjectRule projectRule = InitialProjectRule.INSTANCE;
-    
+
     private BusinessObjectModelRepositoryStore<BusinessObjectModelFileStore> bomRepositoryStore;
     private BusinessObjectModelFileStore businessObjectDefinitionFileStore;
     private APISession apiSession;
@@ -77,32 +69,27 @@ public class DeployBDMOperationIT {
         }
     }
 
-    
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        PlatformUtil.delete(ProjectUtil.getBonitaStudioWorkFolder(), AbstractRepository.NULL_PROGRESS_MONITOR);
-        bomRepositoryStore = RepositoryManager.getInstance().getRepositoryStore(BusinessObjectModelRepositoryStore.class);
+        bomRepositoryStore = RepositoryManager.getInstance()
+                .getRepositoryStore(BusinessObjectModelRepositoryStore.class);
         final BusinessObjectModelFileStore fileStore = bomRepositoryStore.getChild("bdm.zip", true);
         if (fileStore != null) {
             fileStore.delete();
         }
-        InputStream testBDMStream = DeployBDMOperationIT.class.getResourceAsStream("/bdm.zip");
-        businessObjectDefinitionFileStore = (BusinessObjectModelFileStore) bomRepositoryStore.importInputStream("bdm.zip",
-                testBDMStream);
         managerEx = BOSEngineManager.getInstance();
     }
 
     @Test
     public void should_generate_and_deploy_bdm() throws Exception {
-        new GenerateBDMOperation(businessObjectDefinitionFileStore).run(null);
-
-        AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
-        
-        IProject project = currentRepository.getProject();
+        try (var is = DeployBDMOperationIT.class.getResourceAsStream("/bdm.zip")) {
+            businessObjectDefinitionFileStore = (BusinessObjectModelFileStore) bomRepositoryStore.importInputStream(
+                    "bdm.zip",
+                    is);
+        }
+        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
         final IJavaProject javaProject = currentRepository.getJavaProject();
-        project.build(IncrementalProjectBuilder.AUTO_BUILD, null);
-        Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
         final IType iType = javaProject.findType("org.bonita.CompanyUser");
         assertThat(iType).isNotNull();
 
@@ -111,27 +98,26 @@ public class DeployBDMOperationIT {
 
         apiSession = managerEx.loginDefaultTenant(null);
         final TenantAdministrationAPI tenantManagementAPI = managerEx.getTenantAdministrationAPI(apiSession);
-        assertThat(tenantManagementAPI.getBusinessDataModelResource().getState()).isEqualTo(TenantResourceState.INSTALLED);
+        assertThat(tenantManagementAPI.getBusinessDataModelResource().getState())
+                .isEqualTo(TenantResourceState.INSTALLED);
         assertThat(tenantManagementAPI.isPaused()).isFalse();
 
-        MavenExecutionResult executionResult = resolveMavenDependency("org.bonita","bdm-client","1.0.0");
+        var metadata = ProjectMetadata.defaultMetadata();
+        MavenExecutionResult executionResult = resolveMavenDependency(metadata.getGroupId(),
+                metadata.getArtifactId() + "-bdm-model", metadata.getVersion());
         assertThat(executionResult.hasExceptions())
-            .overridingErrorMessage("BDM client maven dependency not installed in local repository:\n%s", getException(executionResult))
-            .isFalse();
-        executionResult = resolveMavenDependency("org.bonita","bdm-dao","1.0.0");
-        assertThat(executionResult.hasExceptions())
-            .overridingErrorMessage("BDM dao maven dependency not installed in local repository:\n%s", getException(executionResult))
-            .isFalse();
+                .overridingErrorMessage("BDM model maven dependency not installed in local repository:\n%s",
+                        getException(executionResult))
+                .isFalse();
     }
-
 
     // Update assertj to use lazy message initialization and avoid this
     private Throwable getException(MavenExecutionResult executionResult) {
-        return  !executionResult.getExceptions().isEmpty() ? executionResult.getExceptions().get(0)  : null;
+        return !executionResult.getExceptions().isEmpty() ? executionResult.getExceptions().get(0) : null;
     }
 
-
-    private MavenExecutionResult resolveMavenDependency( String groupId, String artifactId, String version) throws CoreException {
+    private MavenExecutionResult resolveMavenDependency(String groupId, String artifactId, String version)
+            throws CoreException {
         IMaven maven = MavenPlugin.getMaven();
         final IMavenExecutionContext context = maven.createExecutionContext();
         final MavenExecutionRequest request = context.getExecutionRequest();
@@ -150,8 +136,7 @@ public class DeployBDMOperationIT {
                 systemProperties.setProperty("version", version);
                 systemProperties.setProperty("packaging", "jar");
                 request.setSystemProperties(systemProperties);
-                return ((MavenImpl) maven).lookupComponent(Maven.class)
-                        .execute(request);
+                return maven.lookup(Maven.class).execute(request);
             }
         }, new NullProgressMonitor());
     }

@@ -18,47 +18,43 @@ import static org.bonitasoft.studio.ui.databinding.UpdateStrategyFactory.neverUp
 import static org.bonitasoft.studio.ui.databinding.UpdateStrategyFactory.updateValueStrategy;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.maven.artifact.Artifact;
-import org.bonitasoft.studio.businessobject.BusinessObjectPlugin;
-import org.bonitasoft.studio.businessobject.core.operation.DeployBDMJob;
-import org.bonitasoft.studio.businessobject.core.operation.GenerateBDMOperation;
-import org.bonitasoft.studio.businessobject.core.repository.BDMArtifactDescriptor;
+import org.apache.maven.model.Dependency;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelRepositoryStore;
 import org.bonitasoft.studio.businessobject.editor.editor.ui.control.businessObject.BusinessObjectEditionControl;
 import org.bonitasoft.studio.businessobject.editor.editor.ui.control.businessObject.BusinessObjectList;
-import org.bonitasoft.studio.businessobject.editor.model.BusinessDataModelPackage;
 import org.bonitasoft.studio.businessobject.editor.model.BusinessObject;
 import org.bonitasoft.studio.businessobject.editor.model.BusinessObjectModel;
 import org.bonitasoft.studio.businessobject.i18n.Messages;
-import org.bonitasoft.studio.businessobject.ui.wizard.validator.GroupIdValidator;
-import org.bonitasoft.studio.common.repository.core.maven.RemoveDependencyOperation;
-import org.bonitasoft.studio.ui.databinding.UpdateStrategyFactory;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.pics.Pics;
+import org.bonitasoft.studio.pics.PicsConstants;
+import org.bonitasoft.studio.ui.widget.TextAreaWidget;
 import org.bonitasoft.studio.ui.widget.TextWidget;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.conversion.IConverter;
-import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.core.databinding.observable.value.ComputedValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
-import org.eclipse.core.databinding.validation.ValidationStatus;
-import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.emf.databinding.EMFObservables;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.DocumentRewriteSession;
 import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.forms.AbstractFormPart;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.wst.sse.core.internal.text.JobSafeStructuredDocument;
@@ -66,6 +62,7 @@ import org.xml.sax.SAXException;
 
 public class BusinessDataModelFormPart extends AbstractFormPart {
 
+    private static final String TEXT_EDITOR_FONT = "org.eclipse.jdt.ui.editors.textfont";
     private DataBindingContext ctx = new DataBindingContext();
     private BusinessDataModelFormPage formPage;
     private BusinessObjectList businessObjectList;
@@ -78,13 +75,12 @@ public class BusinessDataModelFormPart extends AbstractFormPart {
                 .setLayout(GridLayoutFactory.fillDefaults().numColumns(2).spacing(20, 5).create());
         businessDataModelComposite
                 .setLayoutData(GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 700).create());
-
         Composite leftComposite = formPage.getToolkit().createComposite(businessDataModelComposite);
         leftComposite.setLayout(GridLayoutFactory.fillDefaults().create());
         leftComposite.setLayoutData(GridDataFactory.fillDefaults().grab(false, true).create());
 
         createBusinessObjectList(leftComposite);
-        createMavenArtifactPropertiesGroup(leftComposite, ctx);
+        createMavenArtifactGAV(leftComposite, ctx);
 
         Composite rightComposite = formPage.getToolkit().createComposite(businessDataModelComposite);
         rightComposite.setLayout(GridLayoutFactory.fillDefaults().create());
@@ -93,72 +89,102 @@ public class BusinessDataModelFormPart extends AbstractFormPart {
         createBusinessObjectEditionControl(rightComposite);
     }
 
-    private void createMavenArtifactPropertiesGroup(Composite parent, DataBindingContext ctx) {
-        Section section = formPage.getToolkit().createSection(parent, Section.EXPANDED);
+    private void createMavenArtifactGAV(Composite parent, DataBindingContext ctx) {
+        Section section = formPage.getToolkit().createSection(parent, Section.TWISTIE | Section.NO_TITLE_FOCUS_BOX);
+        section.setExpanded(false);
         section.setLayoutData(GridDataFactory.fillDefaults().create());
         section.setLayout(GridLayoutFactory.fillDefaults().create());
         section.setText(Messages.mavenArtifactProperties);
+        section.setToolTipText(Messages.mavenArtifactPropertiesHint);
 
         Composite client = formPage.getToolkit().createComposite(section);
         client.setLayoutData(GridDataFactory.fillDefaults().create());
         client.setLayout(GridLayoutFactory.fillDefaults().margins(5, 10).create());
 
         IObservableValue<BusinessObjectModel> workingCopyObservable = formPage.observeWorkingCopy();
-        Supplier<IStatus> canEditSupplier = () -> {
-            boolean canEdit = formPage.getEditorContribution().containsBusinessObjects(workingCopyObservable)
-                    && !formPage.getEditorContribution().isOnError(workingCopyObservable);
-            return canEdit
-                    ? ValidationStatus.ok()
-                    : ValidationStatus.error(Messages.groupIdCannotBeEdited);
-        };
-        new TextWidget.Builder()
-                .withLabel(Messages.groupId)
+        var bdmStore = formPage.getRepositoryAccessor().getRepositoryStore(BusinessObjectModelRepositoryStore.class);
+        BusinessObjectModelFileStore store = (BusinessObjectModelFileStore) bdmStore
+                .getChild(BusinessObjectModelFileStore.BOM_FILENAME, false);
+        Dependency dep = null;
+        try {
+            dep = store.getModelMavenDependency();
+        } catch (CoreException e) {
+            BonitaStudioLog.error(e);
+            dep = new Dependency();
+        }
+        String modelDependencyGav = String.format("<dependency>" + System.lineSeparator()
+                + "    <groupId>%s</groupId>" + System.lineSeparator()
+                + "    <artifactId>%s</artifactId>" + System.lineSeparator()
+                + "    <version>%s</version>" + System.lineSeparator()
+                + "    <scope>provided</scope>" + System.lineSeparator()
+                + "</dependency>", dep.getGroupId(), dep.getArtifactId(), dep.getVersion());
+        var textAreaWidget = new TextAreaWidget.Builder()
                 .labelAbove()
-                .transactionalEdit((oldValue, newValue) -> updateMavenDependency(oldValue, newValue), canEditSupplier)
                 .fill()
-                .withTootltip(Messages.mavenArtifactPropertiesHint)
                 .grabHorizontalSpace()
-                .bindTo(EMFObservables.observeDetailValue(Realm.getDefault(), workingCopyObservable,
-                        BusinessDataModelPackage.Literals.BUSINESS_OBJECT_MODEL__GROUP_ID))
-                .withTargetToModelStrategy(UpdateStrategyFactory.convertUpdateValueStrategy()
-                        .withValidator(new GroupIdValidator(formPage.getRepositoryAccessor().getWorkspace()))
-                        .create())
+                .bindTo(new WritableValue<String>(modelDependencyGav,
+                        String.class))
+                .editable(false)
                 .inContext(ctx)
                 .adapt(formPage.getToolkit())
+                .withButton(Pics.getImage(PicsConstants.copyToClipboard), Messages.copyToClipboard)
                 .createIn(client);
+
+        textAreaWidget.onClickButton(e -> {
+            copyToClipboard(modelDependencyGav, textAreaWidget, true);
+        });
+
+        var textControl = textAreaWidget.getTextControl();
+        textControl.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_TEXT_DISABLED_BACKGROUND));
+        textControl.getParent().setBackground(Display.getDefault().getSystemColor(SWT.COLOR_TEXT_DISABLED_BACKGROUND));
+        textControl.setFont(JFaceResources.getFontRegistry().get(TEXT_EDITOR_FONT));
+        textControl.addFocusListener(new FocusAdapter() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                textControl.getDisplay().timerExec(100, () -> {
+                    textControl.selectAll();
+                    copyToClipboard(modelDependencyGav, textAreaWidget, false);
+                });
+            }
+
+        });
 
         section.setClient(client);
     }
 
-    private void updateMavenDependency(String oldValue, String newValue) {
-        if (!Objects.equals(oldValue, newValue)) {
-            BusinessObjectPlugin.getDefault().getPreferenceStore()
-                    .setValue(BusinessObjectModelFileStore.BDM_DEPLOY_REQUIRED_PROPERTY, true); // Bypass the notification mechanism
-            formPage.getEditorContribution().doSave(new NullProgressMonitor());
-            BDMArtifactDescriptor loadArtifactDescriptor = formPage.getEditorContribution().loadBdmArtifactDescriptor();
-            RemoveDependencyOperation operation = new RemoveDependencyOperation(oldValue,
-                    GenerateBDMOperation.BDM_CLIENT, loadArtifactDescriptor.getVersion(), Artifact.SCOPE_PROVIDED);
-            BusinessObjectModelFileStore bdmFileStore = (BusinessObjectModelFileStore) formPage.getRepositoryAccessor()
-                    .getRepositoryStore(BusinessObjectModelRepositoryStore.class)
-                    .getChild(BusinessObjectModelFileStore.BOM_FILENAME, false);
-            DeployBDMJob deployBDMJob = new DeployBDMJob(bdmFileStore, false);
-            new WorkspaceJob("Remove Project BDM dependency") {
-
-                @Override
-                public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                    operation.run(monitor);
-                    deployBDMJob.schedule();
-                    return Status.OK_STATUS;
-                }
-            }.schedule();
+    private void copyToClipboard(String text, TextWidget textAreaWidget, boolean forceFeedback) {
+        Clipboard clipboard = new Clipboard(Display.getDefault());
+        TextTransfer textTransfer = TextTransfer.getInstance();
+        var content = clipboard.getContents(textTransfer);
+        if (!text.equals(content)) {
+            clipboard.setContents(new String[] { text }, new Transfer[] { textTransfer });
         }
+        if (!text.equals(content) || forceFeedback) {
+            textAreaWidget.getButtonWithImage().ifPresent(showCopiedToClipboard());
+        }
+        clipboard.dispose();
+    }
+
+    private Consumer<? super ToolItem> showCopiedToClipboard() {
+        return b -> Display.getDefault().asyncExec(() -> {
+            var originalImage = b.getImage();
+            b.setImage(Pics.getImage(PicsConstants.checkmark));
+            Display.getDefault().timerExec(1500, () -> {
+                if (!b.isDisposed() && !originalImage.isDisposed()) {
+                    b.setImage(originalImage);
+                }
+            });
+        });
     }
 
     private void createBusinessObjectEditionControl(Composite parent) {
         businessObjectEditionControl = new BusinessObjectEditionControl(parent, formPage, ctx);
         ctx.bindValue(formPage.observeBusinessObjectSelected(), businessObjectEditionControl.observeSectionTitle(),
                 updateValueStrategy()
-                    .withConverter(IConverter.<BusinessObject, String> create(o -> o != null ? o.getSimpleName() : "")).create(),
+                        .withConverter(
+                                IConverter.<BusinessObject, String> create(o -> o != null ? o.getSimpleName() : ""))
+                        .create(),
                 neverUpdateValueStrategy().create());
         ctx.bindValue(businessObjectEditionControl.observeSectionVisible(), new ComputedValue<Boolean>(Boolean.TYPE) {
 
@@ -183,9 +209,6 @@ public class BusinessDataModelFormPart extends AbstractFormPart {
         try {
             session = document.startRewriteSession(DocumentRewriteSessionType.STRICTLY_SEQUENTIAL);
             document.set(new String(formPage.getParser().marshall(formPage.getConverter().toEngineModel(workingCopy))));
-            BDMArtifactDescriptor bdmArtifactDescriptor = new BDMArtifactDescriptor();
-            bdmArtifactDescriptor.setGroupId(workingCopy.getGroupId());
-            formPage.getEditorContribution().saveBdmArtifactDescriptor(bdmArtifactDescriptor);
         } catch (final JAXBException | IOException | SAXException e) {
             throw new RuntimeException("Fail to update the document", e);
         } finally {

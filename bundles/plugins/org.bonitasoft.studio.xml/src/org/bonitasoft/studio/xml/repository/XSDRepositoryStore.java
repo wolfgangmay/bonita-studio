@@ -25,8 +25,6 @@ import org.bonitasoft.studio.common.repository.core.migration.report.MigrationRe
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.common.repository.store.AbstractEMFRepositoryStore;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.pics.PicsConstants;
 import org.bonitasoft.studio.xml.Messages;
 import org.bonitasoft.studio.xml.XMLPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -37,7 +35,6 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edapt.migration.MigrationException;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.xml.core.internal.XMLCorePlugin;
 import org.eclipse.wst.xml.core.internal.catalog.provisional.ICatalog;
 import org.eclipse.wst.xml.core.internal.catalog.provisional.ICatalogEntry;
@@ -78,24 +75,6 @@ public class XSDRepositoryStore extends AbstractEMFRepositoryStore<XSDFileStore>
     @Override
     public String getName() {
         return STORE_NAME;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IRepositoryStore#getDisplayName()
-     */
-    @Override
-    public String getDisplayName() {
-        return Messages.xsdRepositoryName;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IRepositoryStore#getIcon()
-     */
-    @Override
-    public Image getIcon() {
-        return Pics.getImage(PicsConstants.xml);
     }
 
     /*
@@ -179,7 +158,6 @@ public class XSDRepositoryStore extends AbstractEMFRepositoryStore<XSDFileStore>
     protected void addAdapterFactory(final ComposedAdapterFactory adapterFactory) {
         adapterFactory.addAdapterFactory(new XSDAdapterFactory());
     }
-
 
     @Override
     public MigrationReport migrate(IProgressMonitor monitor) throws CoreException, MigrationException {

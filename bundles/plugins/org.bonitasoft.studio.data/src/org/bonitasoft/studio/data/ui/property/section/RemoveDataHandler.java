@@ -17,9 +17,9 @@ package org.bonitasoft.studio.data.ui.property.section;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 
-import org.bonitasoft.studio.common.dialog.OutlineDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.ui.dialog.OutlineDialog;
 import org.bonitasoft.studio.data.DataPlugin;
 import org.bonitasoft.studio.data.i18n.Messages;
 import org.bonitasoft.studio.model.process.Data;
@@ -45,7 +45,8 @@ public class RemoveDataHandler {
     public void execute(final IStructuredSelection structuredSelection, final EObject container, final EStructuralFeature dataFeature) {
         final String[] buttonList = { IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL };
         final OutlineDialog dialog = new OutlineDialog(Display.getDefault().getActiveShell(),
-                org.bonitasoft.studio.common.Messages.removalConfirmationDialogTitle, createMessage(structuredSelection), MessageDialog.CONFIRM, buttonList, 1, structuredSelection.toList());
+                org.bonitasoft.studio.common.Messages.removalConfirmationDialogTitle, 
+                Display.getDefault().getSystemImage(SWT.ICON_WARNING), createMessage(structuredSelection), MessageDialog.CONFIRM, buttonList, 1, structuredSelection.toList());
         if (dialog.open() == Dialog.OK) {
             final IProgressService service = PlatformUI.getWorkbench().getProgressService();
             final RefactorDataOperation op = new RefactorDataOperation(RefactoringOperationType.REMOVE);

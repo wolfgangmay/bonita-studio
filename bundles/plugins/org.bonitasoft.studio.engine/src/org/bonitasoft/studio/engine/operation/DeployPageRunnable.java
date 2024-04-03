@@ -22,6 +22,7 @@ import java.nio.file.Files;
 
 import org.apache.http.HttpException;
 import org.bonitasoft.engine.api.PageAPI;
+import org.bonitasoft.studio.common.ui.IDisplayable;
 import org.bonitasoft.engine.page.Page;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.designer.core.bar.FormBuilder;
@@ -76,9 +77,7 @@ public class DeployPageRunnable extends DeployCustomPageOperation {
     }
 
     private String pageLabel() {
-        return pageFileStore.getDisplayName() != null && !pageFileStore.getDisplayName().isEmpty()
-                ? pageFileStore.getDisplayName()
-                : pageFileStore.getName();
+        return IDisplayable.toDisplayName(pageFileStore).orElseGet(pageFileStore::getName);
     }
 
     @Override

@@ -31,8 +31,8 @@ import java.util.stream.Stream;
 
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.net.PortSelector;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.designer.UIDesignerPlugin;
 import org.bonitasoft.studio.designer.i18n.Messages;
 import org.bonitasoft.studio.preferences.BonitaPreferenceConstants;
@@ -57,6 +57,7 @@ import org.eclipse.debug.internal.core.IInternalDebugCoreConstants;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -101,6 +102,9 @@ public class DataRepositoryServerManager {
     }
 
     public synchronized void start(int workspaceResourcePort, int dataRepositoryPort, IProgressMonitor monitor) {
+        if(!PlatformUI.isWorkbenchRunning()) {
+            return;
+        }
         if (launch == null
                 || Stream.of(launch.getProcesses())
                         .findFirst()

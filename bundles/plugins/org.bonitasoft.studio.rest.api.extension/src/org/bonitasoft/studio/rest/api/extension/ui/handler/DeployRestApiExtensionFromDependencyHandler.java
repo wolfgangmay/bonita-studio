@@ -23,9 +23,10 @@ import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
 import org.bonitasoft.engine.session.APISession;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.GetApiSessionOperation;
@@ -67,13 +68,14 @@ public class DeployRestApiExtensionFromDependencyHandler {
     }
 
     protected boolean deploy(CustomPageProjectFileStore fileStore, HttpClientFactory httpClientFactory) {
+        String displayName = IDisplayable.toDisplayName(fileStore).orElse("");
         GetApiSessionOperation apiSessionOperation = new GetApiSessionOperation();
         try {
             APISession apiSession = apiSessionOperation.execute();
             var operation = new DeployCustomPageProjectOperation(BOSEngineManager.getInstance().getPageAPI(apiSession),
                     httpClientFactory,
                     fileStore);
-            PlatformUI.getWorkbench().getProgressService().run(true, false, operation);
+            PlatformUI.getWorkbench().getProgressService().run(true, false, operation::run);
             IStatus status = operation.getStatus();
             if (!status.isOK()) {
                 return showDeployErrorDialog(status);
@@ -81,13 +83,13 @@ public class DeployRestApiExtensionFromDependencyHandler {
         } catch (InvocationTargetException | InterruptedException | BonitaHomeNotSetException | ServerAPIException
                 | UnknownAPITypeException e) {
             new BonitaErrorDialog(Display.getDefault().getActiveShell(), Messages.errorTitle,
-                    NLS.bind(Messages.deployFailedMessage, fileStore.getDisplayName()), e).open();
+                    NLS.bind(Messages.deployFailedMessage, displayName), e).open();
             BonitaStudioLog.error(e);
             return false;
         } finally {
             apiSessionOperation.logout();
         }
-        return openDeploySuccessDialog(fileStore.getDisplayName());
+        return openDeploySuccessDialog(displayName);
     }
 
     protected boolean openDeploySuccessDialog(final String restApiName) {

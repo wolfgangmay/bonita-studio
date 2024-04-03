@@ -15,6 +15,7 @@ import org.apache.http.HttpException;
 import org.bonitasoft.engine.api.PageAPI;
 import org.bonitasoft.engine.page.Page;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.IDisplayable;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.DeployCustomPageOperation;
 import org.bonitasoft.studio.maven.CustomPageProjectFileStore;
@@ -67,7 +68,7 @@ public class DeployCustomPageProjectOperation extends DeployCustomPageOperation 
 
     @Override
     protected String getCustomPageLabel() {
-        return fileStore.getDisplayName();
+        return IDisplayable.toDisplayName(fileStore).orElse("");
     }
 
     @Override
@@ -77,7 +78,7 @@ public class DeployCustomPageProjectOperation extends DeployCustomPageOperation 
 
     @Override
     protected String taskName() {
-        return NLS.bind(Messages.deployingCustomPage, fileStore.getDisplayName());
+        return NLS.bind(Messages.deployingCustomPage, getCustomPageLabel());
     }
 
 }

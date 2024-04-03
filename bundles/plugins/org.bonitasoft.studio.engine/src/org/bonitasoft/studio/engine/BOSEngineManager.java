@@ -17,7 +17,6 @@ package org.bonitasoft.studio.engine;
 import static java.util.Objects.requireNonNull;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -137,7 +136,7 @@ public class BOSEngineManager {
         return new BOSEngineManager(monitor);
     }
 
-    public synchronized void start(AbstractRepository repository) {
+    public synchronized void start(IRepository repository) {
         if (!isRunning() || !BOSWebServerManager.getInstance().serverIsStarted()) {
             boolean notifying = notifyStartServer();
             monitor.beginTask(Messages.initializingProcessEngine, IProgressMonitor.UNKNOWN);
@@ -199,7 +198,8 @@ public class BOSEngineManager {
         if (tomcatServerIsRunning()) {
             BonitaStudioLog.error(e);
         } else {
-            BonitaStudioLog.warning("Tomcat server has been shutdown before first start ended.", EnginePlugin.PLUGIN_ID);
+            BonitaStudioLog.warning("Tomcat server has been shutdown before first start ended.",
+                    EnginePlugin.PLUGIN_ID);
         }
         return false;
     }
@@ -209,30 +209,27 @@ public class BOSEngineManager {
     }
 
     public synchronized void stop() {
-        APISession session = null;
-        TenantAdministrationAPI tenantManagementAPI = null;
-        try {
-            session = loginDefaultTenant(null);
-            tenantManagementAPI = getTenantAdministrationAPI(session);
-            tenantManagementAPI.pause();
-            if (dropBusinessDataDBOnExit()) {
+        if (dropBusinessDataDBOnExit()) {
+            TenantAdministrationAPI tenantManagementAPI = null;
+            APISession session = null;
+            try {
+                session = loginDefaultTenant(null);
+                tenantManagementAPI = getTenantAdministrationAPI(session);
+                tenantManagementAPI.pause();
                 tenantManagementAPI.cleanAndUninstallBusinessDataModel();
-            } else {
-                tenantManagementAPI.uninstallBusinessDataModel();
-            }
-            tenantManagementAPI.resume();
-        } catch (final Exception e) {
-            BonitaStudioLog.error(e);
-        } finally {
-            if (tenantManagementAPI != null && tenantManagementAPI.isPaused()) {
-                try {
-                    tenantManagementAPI.resume();
-                } catch (final UpdateException e) {
-                    BonitaStudioLog.error(e);
+            } catch (Exception e) {
+               BonitaStudioLog.error("An error occured while cleaning the Business Data Model.", e);
+            } finally {
+                if (tenantManagementAPI != null && tenantManagementAPI.isPaused()) {
+                    try {
+                        tenantManagementAPI.resume();
+                    } catch (UpdateException e) {
+                        BonitaStudioLog.error("An error occured while resuming BPM services.", e);
+                    }
                 }
-            }
-            if (session != null) {
-                logoutDefaultTenant(session);
+                if (session != null) {
+                    logoutDefaultTenant(session);
+                }
             }
         }
         if (BOSWebServerManager.getInstance().serverIsStarted()) {
@@ -259,7 +256,7 @@ public class BOSEngineManager {
             if (contrib != null && contrib.shouldRun(repository)) {
                 final APISession session = getLoginAPI().login(BONITA_TECHNICAL_USER, BONITA_TECHNICAL_USER_PASSWORD);
                 try {
-                    contrib.run(session,repository);
+                    contrib.run(session, repository);
                 } finally {
                     if (session != null) {
                         logoutDefaultTenant(session);
@@ -409,7 +406,8 @@ public class BOSEngineManager {
         try {
             loginPlatform = loginPlatform(monitor);
             final PlatformAPI platformAPI = getPlatformAPI(loginPlatform);
-            final Map<Long, Map<String, byte[]>> clientTenantConfigurations = platformAPI.getClientTenantConfigurations();
+            final Map<Long, Map<String, byte[]>> clientTenantConfigurations = platformAPI
+                    .getClientTenantConfigurations();
             final Map<String, byte[]> resources = clientTenantConfigurations.get(DEFAULT_TENANT_ID);
             if (!resources.containsKey(resourceName)) {
                 throw new FileNotFoundException(String.format("Resource %s does not exist in database.", resourceName));

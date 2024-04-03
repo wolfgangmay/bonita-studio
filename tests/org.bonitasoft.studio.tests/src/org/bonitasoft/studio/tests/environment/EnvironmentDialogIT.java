@@ -1,5 +1,6 @@
 package org.bonitasoft.studio.tests.environment;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
@@ -13,11 +14,13 @@ import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
+
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.model.process.Pool;
 import org.bonitasoft.studio.swtbot.framework.application.BotApplicationWorkbenchWindow;
 import org.bonitasoft.studio.swtbot.framework.projectExplorer.EnvironmentsProjectExplorerBot;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
+import org.bonitasoft.studio.tests.util.ProjectUtil;
 
 @RunWith(SWTBotJunit4ClassRunner.class)
 public class EnvironmentDialogIT {
@@ -35,8 +38,9 @@ public class EnvironmentDialogIT {
     }
     
     @After
-    public void cleanup() {
+    public void cleanup() throws CoreException {
         envExplorerBot.setAsActiveEnvironment("Local");
+        ProjectUtil.cleanProject();
     }
 
     @Test
@@ -114,7 +118,7 @@ public class EnvironmentDialogIT {
     public void should_modify_details_new_environment_selected_with_multiples_diagrams() {
         new BotApplicationWorkbenchWindow(bot).createNewDiagram();
         new BotApplicationWorkbenchWindow(bot).createNewDiagram();
-
+        
         var newEnv = "Production";
         var modEnv = "MOD_TEST";
         var modDesc = "Testing description";
@@ -126,8 +130,8 @@ public class EnvironmentDialogIT {
 
         assertEnvExist(modEnv);
         envDialog = envExplorerBot.open(modEnv);
-        assertEquals(envDialog.getName(), modEnv);
-        assertEquals(envDialog.getDescription(), modDesc);
+        assertEquals(modEnv, envDialog.getName());
+        assertEquals(modDesc, envDialog.getDescription());
         envDialog.close();
     }
 

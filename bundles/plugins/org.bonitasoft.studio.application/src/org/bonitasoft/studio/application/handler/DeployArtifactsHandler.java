@@ -53,14 +53,15 @@ import org.bonitasoft.studio.application.ui.control.model.FileStoreArtifact;
 import org.bonitasoft.studio.application.ui.control.model.RepositoryModel;
 import org.bonitasoft.studio.application.ui.control.model.RepositoryStore;
 import org.bonitasoft.studio.application.ui.control.model.TenantArtifact;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.ActiveOrganizationProvider;
+import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.bonitasoft.studio.common.repository.model.DeployOptions;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.configuration.EnvironmentProviderFactory;
 import org.bonitasoft.studio.designer.core.operation.IndexingUIDOperation;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
@@ -148,7 +149,7 @@ public class DeployArtifactsHandler {
             if (Stream.of(validator.getStatus().getChildren()).anyMatch(s -> s.matches(IStatus.WARNING))) {
                 progressService.busyCursorWhile(monitor -> {
                     try {
-                        repositoryAccessor.getCurrentRepository().orElseThrow().migrate(monitor);
+                        repositoryAccessor.getCurrentRepository().orElseThrow().migrate(MigrationReport.emptyReport(), monitor);
                         validator.run(monitor);
                     } catch (CoreException | MigrationException e) {
                         BonitaStudioLog.error(e);

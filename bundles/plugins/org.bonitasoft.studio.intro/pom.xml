@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.bonitasoft.studio.bundles</groupId>
         <artifactId>plugins</artifactId>
-        <version>7.15.9-SNAPSHOT</version>
+        <version>8.0.4-SNAPSHOT</version>
     </parent>
     <groupId>org.bonitasoft.studio.bundles.plugins</groupId>
     <artifactId>org.bonitasoft.studio.intro</artifactId>
@@ -40,11 +40,11 @@
                             <baseImgPath>${basedir}/content/images/Logo-Welcome-Community-Without-Version.png</baseImgPath>
                             <outputImagePath>${basedir}/content/images/logo-community.png</outputImagePath>
                             <outputImageFormat>png</outputImageFormat>
-                            <xLocation>192</xLocation>
-                            <yLocation>78</yLocation>
-                            <italic>true</italic>
-                            <fontSize>35</fontSize>
-                            <color>#0b4361</color>
+                            <xLocation>198</xLocation>
+                            <yLocation>77</yLocation>
+                            <italic>false</italic>
+                            <fontSize>38</fontSize>
+                            <color>#002395</color>
                             <bold>true</bold>
                             <versionLabel>${branding.version.short}</versionLabel>
                         </configuration>
@@ -58,11 +58,11 @@
                             <baseImgPath>${basedir}/content/images/Logo-Welcome-Community-Dark-Without-Version.png</baseImgPath>
                             <outputImagePath>${basedir}/content/images/logo-community-dark.png</outputImagePath>
                             <outputImageFormat>png</outputImageFormat>
-                            <xLocation>192</xLocation>
-                            <yLocation>78</yLocation>
-                            <italic>true</italic>
-                            <fontSize>35</fontSize>
-                            <color>#4a5568</color>
+                            <xLocation>198</xLocation>
+                            <yLocation>77</yLocation>
+                            <italic>false</italic>
+                            <fontSize>38</fontSize>
+                            <color>#526fcd</color>
                             <bold>true</bold>
                             <versionLabel>${branding.version.short}</versionLabel>
                         </configuration>

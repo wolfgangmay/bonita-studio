@@ -14,52 +14,67 @@
  */
 package org.bonitasoft.studio.businessobject.ui.handler;
 
-import org.bonitasoft.engine.bdm.model.BusinessObject;
-import org.bonitasoft.engine.bdm.model.BusinessObjectModel;
-import org.bonitasoft.engine.bdm.model.field.FieldType;
-import org.bonitasoft.engine.bdm.model.field.SimpleField;
+import java.lang.reflect.InvocationTargetException;
+
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelRepositoryStore;
-import org.bonitasoft.studio.businessobject.editor.editor.ui.control.attribute.AttributeEditionControl;
-import org.bonitasoft.studio.businessobject.editor.editor.ui.control.businessObject.BusinessObjectList;
-import org.bonitasoft.studio.businessobject.helper.PackageHelper;
+import org.bonitasoft.studio.businessobject.i18n.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.ui.dialog.ExceptionDialogHandler;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.progress.IProgressService;
 
 public class DefineBusinessDataModelHandler {
 
     @Execute
-    public void defineBusinessDataModel(RepositoryAccessor repositoryAccessor) {
-        BusinessObjectModelRepositoryStore<BusinessObjectModelFileStore> bomRepositoryStore = repositoryAccessor
+    public void defineBusinessDataModel(RepositoryAccessor repositoryAccessor, IProgressService progressService) {
+        var bomRepositoryStore = repositoryAccessor
                 .getRepositoryStore(BusinessObjectModelRepositoryStore.class);
-        BusinessObjectModelFileStore bdmFileStore = bomRepositoryStore.getChild(BusinessObjectModelFileStore.BOM_FILENAME,
+        var bdmFileStore = bomRepositoryStore.getChild(BusinessObjectModelFileStore.BOM_FILENAME,
                 false);
         if (bdmFileStore == null) {
-            bdmFileStore = createBdmFileStore(bomRepositoryStore);
+            try {
+                progressService.run(true, false, monitor -> {
+                    try {
+                        createBdmFileStore(repositoryAccessor, monitor);
+                    } catch (CoreException e) {
+                        throw new InvocationTargetException(e);
+                    }
+                });
+            } catch (InvocationTargetException | InterruptedException e) {
+                new ExceptionDialogHandler().openErrorDialog(Display.getCurrent().getActiveShell(),
+                       new CoreException(Status.error("Failed to create the BDM.", e)));
+                return;
+            }
+            bdmFileStore = bomRepositoryStore.getChild(
+                    BusinessObjectModelFileStore.BOM_FILENAME,
+                    true);
+            if (bdmFileStore == null) {
+                new ExceptionDialogHandler().openErrorDialog(Display.getCurrent().getActiveShell(),
+                        new CoreException(Status.error("Failed to create the BDM.")));
+            }
         }
-        bdmFileStore.open();
+        if(bdmFileStore != null) {
+            bdmFileStore.open();
+        }
     }
 
-    private BusinessObjectModelFileStore createBdmFileStore(
-            BusinessObjectModelRepositoryStore<BusinessObjectModelFileStore> repository) {
-        BusinessObjectModelFileStore fileStore = (BusinessObjectModelFileStore) repository
-                .createRepositoryFileStore(BusinessObjectModelFileStore.BOM_FILENAME);
-        BusinessObjectModel bdm = new BusinessObjectModel();
-        bdm.getBusinessObjects().add(createFirstBusinessObject());
-        fileStore.save(bdm);
-        return fileStore;
-    }
-
-    private BusinessObject createFirstBusinessObject() {
-        String defaultName = String.format("%s.%s", PackageHelper.defaultPackageName(),
-                BusinessObjectList.DEFAULT_BO_NAME);
-        var bo = new BusinessObject(defaultName);
-        SimpleField stringField = new SimpleField();
-        stringField.setType(FieldType.STRING);
-        stringField.setName(AttributeEditionControl.DEFAULT_FIELD_NAME);
-        stringField.setLength(255);
-        bo.addField(stringField);
-        return bo;
+    private void createBdmFileStore(RepositoryAccessor repositoryAccessor,
+            IProgressMonitor monitor) throws CoreException {
+        monitor.beginTask(Messages.creatingBusinessDataModel, IProgressMonitor.UNKNOWN);
+        var bdmStore = repositoryAccessor.getRepositoryStore(BusinessObjectModelRepositoryStore.class);
+        var project = repositoryAccessor.getCurrentProject().orElseThrow();
+        if (project != null && !project.getBdmParentProject().exists()) {
+            bdmStore.createBdmModule(project, monitor);
+        }
+        // Folder link is broken, recreate it.
+        if(project != null && project.getBdmParentProject().exists() && !bdmStore.getResource().exists()) {
+            bdmStore.createBdmFolderLinkInAppProject(project);
+        }
     }
 
 }

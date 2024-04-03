@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: BonitaSoft Datas
 Bundle-SymbolicName: org.bonitasoft.studio.data;singleton:=true
-Bundle-Version: 7.15.9.qualifier
+Bundle-Version: 8.0.4.qualifier
 Bundle-Localization: plugin
 Bundle-Activator: org.bonitasoft.studio.data.DataPlugin
 Bundle-Vendor: BonitaSoft S.A.
@@ -42,7 +42,8 @@ Require-Bundle: org.eclipse.ui,
  org.bonitasoft.studio.diagram.custom,
  org.eclipse.e4.core.di,
  org.bonitasoft.studio.ui,
- org.bonitasoft.studio.groovy.ui
+ org.bonitasoft.studio.groovy.ui,
+ org.bonitasoft.studio.common.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.bonitasoft.studio.data.i18n;

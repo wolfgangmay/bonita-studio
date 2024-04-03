@@ -31,20 +31,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bonitasoft.studio.common.extension.BonitaStudioExtensionRegistryManager;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.ImportArchiveData;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
-import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.common.repository.filestore.RepositoryFileStoreComparator;
 import org.bonitasoft.studio.common.repository.model.IFileStoreContribution;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.eclipse.core.databinding.validation.IValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IFile;
@@ -58,7 +57,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
-import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.widgets.Display;
 
 import com.google.common.base.Function;
@@ -70,7 +68,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
 
     private static final String CLASS = "class";
     public static final IValidator<InputStream> DEFAULT_MODEL_VALIDATOR = is -> ValidationStatus.ok();
-    private IFolder folder;
+    protected IFolder folder;
     protected IRepository repository;
     
     public static final Map<String, Integer> REPO_STORE_ORDER = new HashMap<>();
@@ -139,7 +137,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     }
 
     @Override
-    public final T importInputStream(final String fileName, final InputStream inputStream) {
+    public T importInputStream(final String fileName, final InputStream inputStream) {
         Assert.isNotNull(inputStream);
         Assert.isNotNull(fileName);
         InputStream newIs = null;
@@ -151,17 +149,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
             if (newIs == null) {
                 return null;
             }
-            boolean exists = false;
-            try {
-                exists = getResource().members().length > 0;
-            } catch (CoreException e) {
-                BonitaStudioLog.error(e);
-            }
-            final T store = doImportInputStream(fileName, newIs);
-            if (!exists) {
-                AbstractFileStore.refreshExplorerView();
-            }
-            return store;
+            return doImportInputStream(fileName, newIs);
         } catch (final MigrationException e) {
             BonitaStudioLog.error(e);
             if (!FileActionDialog.getDisablePopup()) {
@@ -205,7 +193,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     @Override
     public T importArchiveData(String folderName, List<ImportArchiveData> importArchiveData, IProgressMonitor monitor)
             throws CoreException {
-        importArchiveData.stream().forEach(data -> {
+        importArchiveData.forEach(data -> {
             setUserChoice(data);
             try {
                 importArchiveData(data, monitor);
@@ -234,7 +222,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     protected T doImportArchiveData(ImportArchiveData importArchiveData, IProgressMonitor monitor)
             throws CoreException {
         try {
-            return importInputStream(importArchiveData.getName().split("/", 3)[2], importArchiveData.getInputStream());
+            return importInputStream(importArchiveData.getProjectRelativePath(), importArchiveData.getInputStream());
         } catch (final IOException e) {
             throw new CoreException(new Status(IStatus.ERROR, CommonRepositoryPlugin.PLUGIN_ID, e.getMessage(), e));
         }
@@ -334,7 +322,6 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
         if (file.exists()) {
             return createRepositoryFileStore(fileName);
         }
-
         return null;
     }
 
@@ -418,12 +405,16 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     protected List<IResource> listChildren() throws CoreException {
         refresh();
         final IFolder folder = getResource();
-        final FileStoreCollector collector = new FileStoreCollector(folder,
-                toArray(getCompatibleExtensions(), String.class));
+        final FileStoreCollector collector = fileStoreCollector();
         if (folder.exists()) {
             folder.accept(collector);
         }
         return collector.toList();
+    }
+    
+    protected FileStoreCollector fileStoreCollector() {
+        return new FileStoreCollector(folder,
+                toArray(getCompatibleExtensions(), String.class));
     }
 
     @Override
@@ -434,11 +425,6 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     @Override
     public void repositoryUpdated() {
         //NOTHING TO UPDATE
-    }
-
-    @Override
-    public StyledString getStyledString() {
-        return new StyledString(getDisplayName());
     }
 
     protected IRepository getRepository() {

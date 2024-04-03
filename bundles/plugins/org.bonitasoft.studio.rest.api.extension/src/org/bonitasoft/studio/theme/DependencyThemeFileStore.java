@@ -34,7 +34,6 @@ import org.bonitasoft.studio.rest.api.extension.RestAPIExtensionActivator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.swt.graphics.Image;
 
 public class DependencyThemeFileStore extends ThemeFileStore {
 
@@ -44,47 +43,37 @@ public class DependencyThemeFileStore extends ThemeFileStore {
         super(new File(theme.getArtifact().getFile()).getName(), parentStore);
         this.theme = theme;
     }
-    
+
     @Override
     protected ThemeExtensionDescriptor doGetContent() throws ReadFileStoreException {
         return new DependencyThemeExtensionDescriptor(theme);
     }
-    
+
     @Override
     public File getArchiveFile() {
         return new File(theme.getArtifact().getFile());
     }
-    
-    @Override
-    public String getDisplayName() {
-        return theme.getDisplayName();
-    }
-    
+
     @Override
     public String getDescription() {
         return theme.getDescription();
     }
-    
+
     @Override
     public String getName() {
         return getArchiveFile().getName();
     }
-    
+
     @Override
     public void importProject() throws ImportProjectException {
-       // Nothing to import
+        // Nothing to import
     }
-    
+
     @Override
     public boolean isReadOnly() {
         return true;
     }
-    
-    @Override
-    public Image getIcon() {
-        return Pics.getImage("binary.png", RestAPIExtensionActivator.getDefault());
-    }
-    
+
     @Override
     public IStatus deploy(APISession session, Map<String, Object> options, IProgressMonitor monitor) {
         GetApiSessionOperation apiSessionOperation = new GetApiSessionOperation();
@@ -100,10 +89,18 @@ public class DependencyThemeFileStore extends ThemeFileStore {
             return deployOperation.getStatus();
         } catch (InvocationTargetException | InterruptedException | BonitaHomeNotSetException | ServerAPIException
                 | UnknownAPITypeException e) {
-            return new Status(IStatus.ERROR, DependencyThemeFileStore.class, "Failed to deployed deployed",
-                    e);
+            return  Status.error("Failed to deployed deployed", e);
         } finally {
             apiSessionOperation.logout();
         }
+    }
+
+
+    @Override
+    public <X> X getAdapter(Class<X> adapter) {
+        if (adapter.isAssignableFrom(Theme.class)) {
+            return (X) theme;
+        }
+        return super.getAdapter(adapter);
     }
 }

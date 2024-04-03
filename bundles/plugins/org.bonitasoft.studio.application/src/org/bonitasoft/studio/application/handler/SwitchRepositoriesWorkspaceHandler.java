@@ -56,22 +56,21 @@ public class SwitchRepositoriesWorkspaceHandler extends AbstractHandler {
             final IProgressService progressManager = PlatformUI.getWorkbench().getProgressService();
             final IRepository repo = dialog.getRepository();
             if (repo != null) {
-                final boolean closed = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-                        .closeAllEditors(true);
-                if (closed) {
+                var currentRepo = RepositoryManager.getInstance().getCurrentRepository().orElse(null);
+                if (currentRepo == null || currentRepo.closeAllEditors(true)) {
                     final IRunnableWithProgress runnable = new IRunnableWithProgress() {
 
                         @Override
                         public void run(final IProgressMonitor monitor)
                                 throws InvocationTargetException, InterruptedException {
                             try {
-                                RepositoryManager.getInstance().switchToRepository(repo.getName(), monitor);
+                                RepositoryManager.getInstance().switchToRepository(repo.getProjectId(), monitor);
                                 Display.getDefault().asyncExec(new Runnable() {
 
                                     @Override
                                     public void run() {
                                         BonitaNotificator.openInfoNotification(Messages.switchRepositorySuccessful_Title,
-                                                NLS.bind(Messages.switchRepositorySuccessful_Message, repo.getName()));
+                                                NLS.bind(Messages.switchRepositorySuccessful_Message, repo.getProjectId()));
                                     }
                                 });
                             } catch (final Exception e) {

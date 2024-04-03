@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.bonitasoft.engine.api.PageAPI;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.IDisplayable;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.DeployCustomPageOperation;
 import org.bonitasoft.studio.la.i18n.Messages;
@@ -59,12 +60,16 @@ public class DeployThemeOperation extends DeployCustomPageOperation {
 
     @Override
     protected String getCustomPageLabel() {
-        return themeFileStore.getDisplayName();
+        try {
+            return themeFileStore.getContent().getDisplayName();
+        } catch (ReadFileStoreException e) {
+            return IDisplayable.toDisplayName(themeFileStore).orElse("");
+        }
     }
 
     @Override
     protected String taskName() {
-        return String.format(Messages.deployingTheme, themeFileStore.getDisplayName());
+        return String.format(Messages.deployingTheme, IDisplayable.toDisplayName(themeFileStore).orElse(""));
     }
 
     @Override

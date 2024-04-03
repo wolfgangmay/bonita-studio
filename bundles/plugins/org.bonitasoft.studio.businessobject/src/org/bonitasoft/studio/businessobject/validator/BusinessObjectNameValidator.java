@@ -17,20 +17,18 @@ package org.bonitasoft.studio.businessobject.validator;
 import java.util.Collection;
 import java.util.Objects;
 
-import org.bonitasoft.engine.bdm.validator.SQLNameValidator;
 import org.bonitasoft.studio.businessobject.BusinessObjectPlugin;
 import org.bonitasoft.studio.businessobject.editor.model.BusinessObject;
 import org.bonitasoft.studio.businessobject.editor.model.BusinessObjectModel;
 import org.bonitasoft.studio.businessobject.editor.model.Package;
 import org.bonitasoft.studio.businessobject.i18n.Messages;
-import org.bonitasoft.studio.common.jface.databinding.validator.InputLengthValidator;
+import org.bonitasoft.studio.common.databinding.validator.InputLengthValidator;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.osgi.util.NLS;
 
 public class BusinessObjectNameValidator implements IBDMValidator<BusinessObject> {
 

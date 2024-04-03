@@ -19,8 +19,8 @@ import org.bonitasoft.studio.common.ProductVersion;
 import org.bonitasoft.studio.common.repository.BonitaProjectNature;
 import org.bonitasoft.studio.common.repository.FakeRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
-import org.bonitasoft.studio.common.repository.model.IRepository;
-import org.bonitasoft.studio.team.TeamPlugin;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
+import org.bonitasoft.studio.team.git.TeamGitPlugin;
 import org.bonitasoft.studio.team.git.i18n.Messages;
 import org.bonitasoft.studio.validation.ModelFileCompatibilityValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
@@ -43,30 +43,47 @@ public class ValidateClonedRepository implements PostCloneTask {
     @Override
     public void execute(Repository repository, IProgressMonitor monitor) throws CoreException {
         //Do some check about version and valid cloned content
-        File projectFile = new File(repository.getDirectory().getParentFile(), ".project");
+        File projectFile = new File(repository.getDirectory().getParentFile(), IProjectDescription.DESCRIPTION_FILE_NAME);
         if (!projectFile.exists()) {
-            throw new CoreException(new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID,
+            throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
                     String.format(Messages.noBonitaProjectDescriptorFound, projectFile.getParentFile())));
         }
         try (InputStream newInputStream = Files.newInputStream(projectFile.toPath())) {
-            final IProjectDescription projectDesc = ResourcesPlugin.getWorkspace()
+            var projectDesc = ResourcesPlugin.getWorkspace()
                     .loadProjectDescription(newInputStream);
             version = projectDesc.getComment();
             if (version == null || version.isEmpty()) {
-                throw new CoreException(new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID,
+                throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
                         String.format(Messages.noVersionFoundInBonitaProjectDescriptor, projectFile)));
             }
+            // Legacy project structure
             if (Stream.of(projectDesc.getNatureIds()).noneMatch(BonitaProjectNature.NATURE_ID::equals)) {
-                throw new CoreException(new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID,
-                        String.format(Messages.noNatureFoundInBonitaProjectDescriptor, projectFile.getParent())));
+                // Current project structure
+                var appProjectFile = repository.getDirectory().getParentFile().toPath()
+                        .resolve(BonitaProject.APP_MODULE)
+                        .resolve(IProjectDescription.DESCRIPTION_FILE_NAME);
+                if(Files.exists(appProjectFile)) {
+                    try(var is = Files.newInputStream(appProjectFile)){
+                        projectDesc = ResourcesPlugin.getWorkspace()
+                                .loadProjectDescription(is);
+                        if(Stream.of(projectDesc.getNatureIds()).noneMatch(BonitaProjectNature.NATURE_ID::equals)) {
+                            throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
+                                    String.format(Messages.noNatureFoundInBonitaProjectDescriptor, projectFile.getParent())));
+                        }
+                    }
+                }else {
+                    throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
+                            String.format(Messages.noNatureFoundInBonitaProjectDescriptor, projectFile.getParent())));
+                }
+               
             }
         } catch (IOException e) {
-            throw new CoreException(new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID,
+            throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
                     String.format("Failed to read .project file '%s'", projectFile), e));
         }
         if (!ProductVersion.sameMinorVersion(version)) {
             if (!ProductVersion.canBeMigrated(version)) {
-                throw new CoreException(new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID,
+                throw new CoreException(new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID,
                         String.format(Messages.cannotMigrateRepository,
                                 version, ProductVersion.CURRENT_VERSION, ProductVersion.CURRENT_VERSION)));
             }
@@ -74,13 +91,9 @@ public class ValidateClonedRepository implements PostCloneTask {
         }
         if (ProductVersion.sameMinorVersion(version)) {
             try {
-                IRepository currentRepository;
-                var activeRepo = RepositoryManager.getInstance().getCurrentRepository();
-                if(activeRepo.isPresent()) {
-                    currentRepository =  activeRepo.get();
-                }else {
-                    currentRepository = new FakeRepository();
-                }
+                var currentRepository = RepositoryManager.getInstance()
+                        .getCurrentRepository()
+                        .orElseGet(() -> new FakeRepository());
                 ModelFileCompatibilityValidator validateModelCompatibility = new ModelFileCompatibilityValidator(
                         repository.getDirectory().getParentFile(),currentRepository);
                 validateModelCompatibility.run(monitor);
@@ -92,7 +105,7 @@ public class ValidateClonedRepository implements PostCloneTask {
                 }
             } catch (InvocationTargetException | InterruptedException | IOException e) {
                 throw new CoreException(
-                        new Status(IStatus.ERROR, TeamPlugin.PLUGIN_ID, "Failed to check models version", e));
+                        new Status(IStatus.ERROR, TeamGitPlugin.PLUGIN_ID, "Failed to check models version", e));
             }
         }
     }
@@ -102,7 +115,7 @@ public class ValidateClonedRepository implements PostCloneTask {
         Display.getDefault().syncExec(confirmMigrationRunnable);
         if (confirmMigrationRunnable.isCancelled()) {
             throw new CoreException(
-                    new Status(IStatus.CANCEL, TeamPlugin.PLUGIN_ID, Messages.cloneOperationCancelled));
+                    new Status(IStatus.CANCEL, TeamGitPlugin.PLUGIN_ID, Messages.cloneOperationCancelled));
         }
         migrationRequired = true;
     }

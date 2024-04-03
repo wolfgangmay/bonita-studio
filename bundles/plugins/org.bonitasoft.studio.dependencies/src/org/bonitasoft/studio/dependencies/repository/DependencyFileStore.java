@@ -32,7 +32,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -47,15 +46,6 @@ public class DependencyFileStore extends AbstractFileStore<InputStream> {
 
     public DependencyFileStore(final String fileName, final DependencyRepositoryStore parentStore) {
         super(fileName, parentStore);
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IRepositoryFileStore#getIcon()
-     */
-    @Override
-    public Image getIcon() {
-        return null;//Pics.getImage("jar.gif", DependenciesPlugin.getDefault());
     }
 
     @Override
@@ -110,7 +100,7 @@ public class DependencyFileStore extends AbstractFileStore<InputStream> {
             final IResource r = getResource();
             if (r != null && r.exists()) {
                 r.delete(true, AbstractRepository.NULL_PROGRESS_MONITOR);
-                final AbstractRepository repository = getRepository();
+                var repository = getRepository();
                 final IProject project = repository.getProject();
                 project.refreshLocal(IResource.DEPTH_ONE, AbstractRepository.NULL_PROGRESS_MONITOR);
                 project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD,

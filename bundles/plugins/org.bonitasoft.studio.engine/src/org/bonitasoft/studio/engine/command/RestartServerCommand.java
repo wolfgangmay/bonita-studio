@@ -14,9 +14,9 @@
  */
 package org.bonitasoft.studio.engine.command;
 
-import org.bonitasoft.studio.common.jface.MessageDialogWithPrompt;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.DatabaseHandler;
+import org.bonitasoft.studio.common.ui.jface.MessageDialogWithPrompt;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.EngineNotificationSemaphore;
 import org.bonitasoft.studio.engine.EnginePlugin;
@@ -87,10 +87,7 @@ public class RestartServerCommand extends AbstractHandler {
 
     @Override
     public boolean isEnabled() {
-        if (RepositoryManager.getInstance().hasActiveRepository()) {
-            return true;
-        }
-        return false;
+        return RepositoryManager.getInstance().hasActiveRepository();
     }
 
 }

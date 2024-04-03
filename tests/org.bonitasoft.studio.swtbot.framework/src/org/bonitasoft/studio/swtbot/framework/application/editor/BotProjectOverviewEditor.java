@@ -19,10 +19,13 @@ import static org.eclipse.swtbot.swt.finder.matchers.WidgetMatcherFactory.widget
 import static org.eclipse.swtbot.swt.finder.matchers.WidgetMatcherFactory.withId;
 import static org.eclipse.swtbot.swt.finder.matchers.WidgetMatcherFactory.withStyle;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.bonitasoft.studio.application.i18n.Messages;
+import org.bonitasoft.studio.application.views.overview.ProjectOverviewEditorPart;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
 import org.bonitasoft.studio.common.repository.core.ActiveOrganizationProvider;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.swtbot.framework.ConditionBuilder;
 import org.bonitasoft.studio.swtbot.framework.application.editor.project.BotEditProjectMetadataWizard;
 import org.bonitasoft.studio.swtbot.framework.application.editor.project.BotExtensionCard;
@@ -34,8 +37,11 @@ import org.bonitasoft.studio.swtbot.framework.la.BotApplicationEditor;
 import org.bonitasoft.studio.swtbot.framework.organization.BotOrganizationEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.swtbot.eclipse.finder.waits.Conditions;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.swt.finder.exceptions.WidgetNotFoundException;
+import org.eclipse.swtbot.swt.finder.waits.DefaultCondition;
+import org.eclipse.swtbot.swt.finder.widgets.SWTBotMenu;
 
 public class BotProjectOverviewEditor {
 
@@ -72,9 +78,27 @@ public class BotProjectOverviewEditor {
     }
 
     public BotExtensionWizard addConnectorExtension() {
-        bot.toolbarDropDownButtonWithId(SWTBotConstants.SWTBOT_ID_ADD_EXTENSION_DROPDOWN)
-                .menuItem(Messages.addConnector)
-                .click();
+        bot.waitUntilWidgetAppears(Conditions.waitForWidget(allOf(widgetOfType(ToolItem.class),
+                withId(SWTBotConstants.SWTBOT_ID_ADD_EXTENSION_DROPDOWN), withStyle(SWT.DROP_DOWN, "SWT.DROP_DOWN"))));
+       var menu = new AtomicReference<SWTBotMenu>();
+        bot.waitUntil(new DefaultCondition() {
+
+            @Override
+            public boolean test() throws Exception {
+                var connectorMenu =  bot.toolbarDropDownButtonWithId(SWTBotConstants.SWTBOT_ID_ADD_EXTENSION_DROPDOWN)
+                        .menuItem(Messages.addConnector);
+                if(connectorMenu != null) {
+                    menu.set(connectorMenu);
+                }
+                return connectorMenu != null;
+            }
+
+            @Override
+            public String getFailureMessage() {
+                return "Failed to open add connector menu";
+            }
+        }, 5000, 200);
+        menu.get().click();
         return new BotExtensionWizard(bot, String.format(Messages.importExtensionTitle,
                 org.bonitasoft.studio.common.repository.Messages.connector));
     }
@@ -87,14 +111,16 @@ public class BotProjectOverviewEditor {
     public BotProcessDiagramPerspective createDiagram() {
         int nbEditorBefore = bot.editors().size();
         bot.toolbarButtonWithId(SWTBotConstants
-                .createArtifactButtonId(org.bonitasoft.studio.diagram.custom.i18n.Messages.dashboardDiagramName)).click();
+                .createArtifactButtonId(org.bonitasoft.studio.diagram.custom.i18n.Messages.dashboardDiagramName))
+                .click();
         waitForEditor(nbEditorBefore, 30000, 100);
         return new BotProcessDiagramPerspective(bot);
     }
 
     public BotProcessDiagramPerspective openDiagram(String diagramFileName) {
         bot.toolbarButtonWithId(
-                SWTBotConstants.extensionCardId(org.bonitasoft.studio.diagram.custom.i18n.Messages.dashboardDiagramName))
+                SWTBotConstants
+                        .extensionCardId(org.bonitasoft.studio.diagram.custom.i18n.Messages.dashboardDiagramName))
                 .click();
         waitForToolbarButton(SWTBotConstants.openArtifactButtonId(diagramFileName));
         int nbEditorBefore = bot.editors().size();
@@ -113,7 +139,8 @@ public class BotProjectOverviewEditor {
 
     public BotBdmEditor openBdm() {
         int nbEditorBefore = bot.editors().size();
-        bot.toolbarButtonWithId(SWTBotConstants.openArtifactButtonId(BusinessObjectModelFileStore.BOM_FILENAME)).click();
+        bot.toolbarButtonWithId(SWTBotConstants.openArtifactButtonId(BusinessObjectModelFileStore.BOM_FILENAME))
+                .click();
         waitForEditor(nbEditorBefore, 10000, 100);
         return new BotBdmEditor(bot);
     }
@@ -164,6 +191,10 @@ public class BotProjectOverviewEditor {
                 })
                 .withFailureMessage(() -> String.format("Buton '%s' has not been found.", buttonId))
                 .create());
+    }
+
+    public void close() {
+        bot.editorById(ProjectOverviewEditorPart.ID).close();
     }
 
 }

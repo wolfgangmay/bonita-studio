@@ -12,7 +12,6 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
-import org.bonitasoft.studio.businessobject.maven.UpdateMavenProjectConfiguration;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -30,13 +29,10 @@ public abstract class AbstractMavenProjectUpdateOperation implements IWorkspaceR
     protected IStatus status = Status.OK_STATUS;
     private boolean updateAfter;
 
-    public AbstractMavenProjectUpdateOperation(boolean updateAfter) {
+    protected AbstractMavenProjectUpdateOperation(boolean updateAfter) {
         this.updateAfter = updateAfter;
     }
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.ui.actions.WorkspaceModifyOperation#execute(org.eclipse.core.runtime.IProgressMonitor)
-     */
+   
     @Override
     public void run(final IProgressMonitor monitor) throws CoreException {
         final IProject project = doRun(monitor);
@@ -44,18 +40,19 @@ public abstract class AbstractMavenProjectUpdateOperation implements IWorkspaceR
             shareProject(project, monitor);
             if (updateAfter) {
                 newUpdateMavenProjectJob(project,
-                        UpdateMavenProjectConfiguration.IS_OFFLINE,
-                        UpdateMavenProjectConfiguration.FORCE_UPDATE_DEPENDENCIES,
-                        UpdateMavenProjectConfiguration.UPDATE_CONFIGURATION,
-                        UpdateMavenProjectConfiguration.CLEAN_PROJECT,
-                        UpdateMavenProjectConfiguration.REFRESH_FROM_LOCAL).schedule();
+                        false, //offline
+                        false, // force update dependencies
+                        true, // update configuration
+                        true, //clean project
+                        true // refresh from local
+                        ).schedule();
             }
         }
         monitor.done();
     }
 
     protected void shareProject(final IProject project, final IProgressMonitor monitor) throws CoreException {
-        final IProject parentProject = getParentProject(project);
+       var parentProject = getParentProject(project);
        if (RepositoryProvider.getProvider(parentProject, "org.eclipse.egit.core.GitProvider") != null) {
             var connectProviderOperation = new ConnectProviderOperation(project,
                     new File(parentProject.getLocation().toFile(), ".git"));
@@ -64,7 +61,7 @@ public abstract class AbstractMavenProjectUpdateOperation implements IWorkspaceR
     }
 
     private IProject getParentProject(IProject project) {
-        File file = project.getLocation().toFile().getParentFile().getParentFile();
+        var file = project.getLocation().toFile().getParentFile().getParentFile().getParentFile();
         return ResourcesPlugin.getWorkspace().getRoot().getProject(file.getName());
     }
 
@@ -83,10 +80,6 @@ public abstract class AbstractMavenProjectUpdateOperation implements IWorkspaceR
                 cleanProject,
                 refreshFromLocal) {
 
-            /*
-             * (non-Javadoc)
-             * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-             */
             @Override
             public boolean belongsTo(final Object family) {
                 return Objects.equals(AbstractMavenProjectUpdateOperation.class, family);

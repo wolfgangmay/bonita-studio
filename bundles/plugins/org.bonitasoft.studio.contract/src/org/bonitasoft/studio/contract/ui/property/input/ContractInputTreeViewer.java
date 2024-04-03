@@ -14,8 +14,8 @@
  */
 package org.bonitasoft.studio.contract.ui.property.input;
 
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
-import org.bonitasoft.studio.common.widgets.GTKStyleHandler;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
+import org.bonitasoft.studio.common.ui.widgets.GTKStyleHandler;
 import org.bonitasoft.studio.contract.core.refactoring.ContractInputRefactorOperationFactory;
 import org.bonitasoft.studio.contract.i18n.Messages;
 import org.bonitasoft.studio.contract.ui.property.input.edit.ContractInputCardinalityEditingSupport;
@@ -26,7 +26,6 @@ import org.bonitasoft.studio.contract.ui.property.input.edit.InputNameObservable
 import org.bonitasoft.studio.contract.ui.property.input.labelProvider.ContractInputTypeCellLabelProvider;
 import org.bonitasoft.studio.contract.ui.property.input.labelProvider.MultipleInputCheckboxLabelProvider;
 import org.bonitasoft.studio.model.process.ContractInput;
-import org.bonitasoft.studio.model.process.ProcessPackage;
 import org.bonitasoft.studio.ui.viewer.LabelProviderBuilder;
 import org.eclipse.core.databinding.observable.set.IObservableSet;
 import org.eclipse.emf.databinding.EMFDataBindingContext;

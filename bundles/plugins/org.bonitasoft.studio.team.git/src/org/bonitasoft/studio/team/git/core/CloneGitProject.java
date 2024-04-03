@@ -12,9 +12,10 @@ import java.util.HashMap;
 
 import org.bonitasoft.studio.common.ProductVersion;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReportWriter;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.team.git.i18n.Messages;
 import org.bonitasoft.studio.team.git.ui.wizard.CustomGitCloneWizard;
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,6 +23,8 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.e4.core.commands.ECommandService;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.egit.core.GitProvider;
@@ -46,7 +49,7 @@ public class CloneGitProject extends AbstractHandler {
 
     public void execute() {
         Shell activeShell = Display.getDefault().getActiveShell();
-        CustomGitCloneWizard wizard = new CustomGitCloneWizard();
+        var wizard = new CustomGitCloneWizard();
         WizardDialog dlg = new WizardDialog(activeShell, wizard) {
 
             @Override
@@ -64,23 +67,29 @@ public class CloneGitProject extends AbstractHandler {
                 PlatformUtil.openDashboardIfNoOtherEditorOpen(true);
 
                 var reportFile = project.getFile(MigrationReportWriter.DEFAULT_REPORT_FILE_NAME);
-                if(wizard.hasBeenMigrated() && reportFile.exists()) {
+                if (wizard.hasBeenMigrated() && reportFile.exists()) {
                     try {
-                        IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), reportFile);
+                        IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(),
+                                reportFile);
                     } catch (PartInitException e) {
                         BonitaStudioLog.error(e);
                     }
                 }
-                
+                ProjectMetadata metadata;
+                try {
+                    metadata = ProjectMetadata.read(project, new NullProgressMonitor());
+                } catch (CoreException e) {
+                    BonitaStudioLog.error(e);
+                    return;
+                }
                 if (new MessageDialog(activeShell, Messages.repositoryClonedTitle, null,
-                        !wizard.hasBeenMigrated() ? String.format(Messages.repositoryClonedMsg,
-                                wizard.getRepositoryName())
-                                : migrationAfterCloneMessage(wizard),
+                        !wizard.hasBeenMigrated() ? String.format(Messages.repositoryClonedMsg, metadata.getName())
+                                : migrationAfterCloneMessage(wizard, metadata.getName()),
                         MessageDialog.INFORMATION, 0, org.bonitasoft.studio.importer.i18n.Messages.deploy,
                         IDialogConstants.CLOSE_LABEL).open() == 0) {
                     executeCommand("org.bonitasoft.studio.application.command.deployArtifacts");
                 }
-                
+
             }
         }
     }
@@ -92,8 +101,8 @@ public class CloneGitProject extends AbstractHandler {
         eHandlerService.executeHandler(parameterizedCommand);
     }
 
-    private String migrationAfterCloneMessage(CustomGitCloneWizard wizard) {
-        String migrationMsg = String.format(Messages.repositoryClonedWithMigration, wizard.getRepositoryName(),
+    private String migrationAfterCloneMessage(CustomGitCloneWizard wizard, String projectName) {
+        String migrationMsg = String.format(Messages.repositoryClonedWithMigration, projectName,
                 wizard.getOldVersion(),
                 ProductVersion.CURRENT_VERSION,
                 ProductVersion.CURRENT_VERSION);

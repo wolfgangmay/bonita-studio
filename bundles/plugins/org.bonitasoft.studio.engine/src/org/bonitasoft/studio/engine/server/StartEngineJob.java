@@ -16,24 +16,27 @@
 package org.bonitasoft.studio.engine.server;
 
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
+import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-/**
- * @author Romain Bioteau
- */
 public class StartEngineJob extends Job {
 
-    public static final Object FAMILY = StartEngineJob.class.getName();
-    private AbstractRepository repository;
+    private static final Object FAMILY = RepositoryManager.class;
+    private IRepository repository;
 
-    public StartEngineJob(String name, AbstractRepository repository) {
+    public StartEngineJob(String name, IRepository repository) {
         super(name);
         this.repository = repository;
+    }
+
+    @Override
+    public boolean belongsTo(Object family) {
+        return FAMILY.equals(family);
     }
 
     @Override
@@ -45,10 +48,6 @@ public class StartEngineJob extends Job {
             return Status.CANCEL_STATUS;
         }
         return Status.OK_STATUS;
-    }
-
-    public static Object getFamily() {
-        return FAMILY;
     }
 
 }

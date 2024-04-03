@@ -30,7 +30,7 @@ import org.eclipse.emf.edapt.migration.MigrationException;
 /**
  * @author Romain Bioteau
  */
-public interface IRepositoryStore<T extends IRepositoryFileStore<?>> extends IDisplayable {
+public interface IRepositoryStore<T extends IRepositoryFileStore<?>> {
 
     void createRepositoryStore(IRepository repository);
 
@@ -64,13 +64,14 @@ public interface IRepositoryStore<T extends IRepositoryFileStore<?>> extends IDi
     void refresh();
 
     MigrationReport migrate(IProgressMonitor monitor) throws CoreException, MigrationException;
-    
-    void migrate(IRepositoryFileStore<?> fileStore, final IProgressMonitor monitor) throws CoreException, MigrationException;
+
+    void migrate(IRepositoryFileStore<?> fileStore, final IProgressMonitor monitor)
+            throws CoreException, MigrationException;
 
     void close();
 
     void repositoryUpdated();
-    
+
     default int getImportOrder() {
         return 99;
     }

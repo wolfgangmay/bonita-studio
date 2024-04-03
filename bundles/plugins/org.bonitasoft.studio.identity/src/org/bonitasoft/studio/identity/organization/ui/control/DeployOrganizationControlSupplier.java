@@ -20,12 +20,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.bonitasoft.studio.common.jface.TableColumnSorter;
-import org.bonitasoft.studio.common.jface.databinding.validator.EmptyInputValidator;
+import org.bonitasoft.studio.common.databinding.validator.EmptyInputValidator;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.core.ActiveOrganizationProvider;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.jface.TableColumnSorter;
 import org.bonitasoft.studio.identity.IdentityPlugin;
 import org.bonitasoft.studio.identity.i18n.Messages;
 import org.bonitasoft.studio.identity.organization.model.organization.Organization;
@@ -92,9 +93,13 @@ public class DeployOrganizationControlSupplier implements ControlSupplier {
     }
 
     private void initializeOrganizationFileStore() {
-        String orgaName = orgaToDeploy.map(Organization::getName).orElse(activeOrganizationprovider.getActiveOrganization());
+        String orgaName = orgaToDeploy.map(Organization::getName)
+                .orElse(activeOrganizationprovider.getActiveOrganization());
         organizationRepositoryStore.getChildren().stream()
-                .filter(orga -> Objects.equals(orga.getDisplayName(), orgaName))
+                .filter(orga -> {
+                    String name = IDisplayable.toDisplayName(orga).orElse(null);
+                    return Objects.equals(name, orgaName);
+                })
                 .findFirst()
                 .ifPresent(fileStoreObservable::setValue);
     }
@@ -135,7 +140,8 @@ public class DeployOrganizationControlSupplier implements ControlSupplier {
     private void createOrganizationViewer(Composite mainComposite,
             IObservableValue<OrganizationFileStore> fileStoreObservable, DataBindingContext ctx) {
         TableViewer viewer = new TableViewer(mainComposite, SWT.BORDER | SWT.FULL_SELECTION | SWT.SINGLE);
-        viewer.getTable().setLayoutData(GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 120).create());
+        viewer.getTable()
+                .setLayoutData(GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 120).create());
         TableLayout layout = new TableLayout();
         layout.addColumnData(new ColumnWeightData(30));
         layout.addColumnData(new ColumnWeightData(70));
@@ -170,7 +176,8 @@ public class DeployOrganizationControlSupplier implements ControlSupplier {
         ctx.bindValue(ViewersObservables.observeSingleSelection(viewer),
                 fileStoreObservable,
                 updateValueStrategy()
-                        .withValidator(value -> value == null ? ValidationStatus.error("") : ValidationStatus.ok()).create(),
+                        .withValidator(value -> value == null ? ValidationStatus.error("") : ValidationStatus.ok())
+                        .create(),
                 updateValueStrategy().create());
 
         viewer.setInput(organizationRepositoryStore.getChildren());

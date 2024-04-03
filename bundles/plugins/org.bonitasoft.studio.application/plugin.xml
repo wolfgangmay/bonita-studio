@@ -242,6 +242,19 @@
                   visible="true">
             </separator>
             <command
+                  commandId="org.bonitasoft.studio.application.maven.testConnection.command"
+                  icon="icons/menuIcons/connectivity.png"
+                  style="push">
+               <parameter
+                     name="org.bonitasoft.studio.application.command.checkMavenConfiguration.showResult"
+                     value="true">
+               </parameter>
+            </command>
+            <separator
+                  name="org.bonitasoft.studio.application.help.separator5"
+                  visible="true">
+            </separator>
+            <command
                   commandId="org.bonitasoft.studio.application.openLog"
                   icon="icons/log.png"
                   label="%openLog_label"
@@ -802,9 +815,26 @@
             id="org.bonitasoft.studio.application.searchActivity"
             name="SearchActivity">
       </activity>
+      <activity
+            description="spiesActivity to remove from studio"
+            id="org.bonitasoft.studio.application.spiesActivity"
+            name="SpiesActivity">
+      </activity>
+      <activity
+            id="org.bonitasoft.studio.application.diagramActivity"
+            name="diagramRuntimeActivity to remove from studio">
+      </activity>
       <activityPatternBinding
             activityId="org.bonitasoft.studio.application.searchActivity"
-            pattern="org.eclipse.search.*">
+            pattern="org\.eclipse\.search\..*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.bonitasoft.studio.application.spiesActivity"
+            pattern="org\.eclipse\.pde\.spy\..*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.bonitasoft.studio.application.diagramActivity"
+            pattern="org\.eclipse\.gmf\.runtime\.diagram\.ui\..*">
       </activityPatternBinding>
    </extension>
    <extension
@@ -1058,12 +1088,9 @@
       </excludeSources>
    </extension>
    <extension
-         point="org.bonitasoft.studio.common.poststartup">
+         point="org.bonitasoft.studio.common.ui.poststartup">
       <contribution
             class="org.bonitasoft.studio.application.contribution.CheckJavaVersionPostStartupContribution">
-      </contribution>
-      <contribution
-            class="org.bonitasoft.studio.application.contribution.CheckCurrentRepositoryState">
       </contribution>
    </extension>
    <extension
@@ -1167,7 +1194,7 @@
       </viewerContribution>
    </extension>
    <extension
-         point="org.bonitasoft.studio.coolbarContributionItem">
+         point="org.bonitasoft.studio.common.ui.coolbarContributionItem">
       <coolbarItem
             class="org.bonitasoft.studio.application.coolbar.NewCoolbarItem"
             priority="0"
@@ -1217,6 +1244,9 @@
          point="org.eclipse.ui.startup">
       <startup
             class="org.bonitasoft.studio.application.BonitaStudioWorkbenchAdvisor">
+      </startup>
+      <startup
+            class="org.bonitasoft.studio.application.maven.CheckMavenConfigurationStartup">
       </startup>
    </extension>
    <extension
@@ -1318,7 +1348,7 @@
                   pattern="org.bonitasoft.studio.application.project.explorer.filters.*">
             </contentExtension>
             <contentExtension
-                  pattern="org.eclipse.ui.navigator.resources.nested.HideFolderWhenProjectIsShownAsNested">
+                  pattern="org.bonitasoft.studio.application.HideFolderWhenProjectIsShownAsNested">
             </contentExtension>
             <contentExtension
                   pattern="org.bonitasoft.studio.application.HideTopLevelProjectIfNested">
@@ -1437,6 +1467,14 @@
       </commonFilter>
       <commonFilter
             activeByDefault="true"
+            class="org.bonitasoft.studio.application.views.filters.HideFolderWhenProjectIsShownAsNested"
+            description="When a project is shown as nested under its container, folder is hidden to show only the corresponding project."
+            id="org.bonitasoft.studio.application.HideFolderWhenProjectIsShownAsNested"
+            name="Nested Projects: hide folders when project is shown as nested"
+            visibleInUI="true">
+      </commonFilter>
+      <commonFilter
+            activeByDefault="true"
             class="org.bonitasoft.studio.application.views.filters.HideEmptyRepository"
             id="org.bonitasoft.studio.application.hideEmptyFolders"
             name="Hide empty repository"
@@ -1510,6 +1548,11 @@
             id="org.bonitasoft.studio.application.extension.perspective"
             name="%projectExtensionPerspective">
       </perspective>
+      <perspective
+            class="org.bonitasoft.studio.application.perspective.ComparePerspectiveFactory"
+            id="org.bonitasoft.studio.perspective.compare"
+            name="Comapre perspective">
+      </perspective>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
@@ -1520,6 +1563,9 @@
          </hiddenMenuItem>
          <hiddenMenuItem
                id="org.eclipse.search.menu">
+         </hiddenMenuItem>
+         <hiddenMenuItem
+               id="org.eclipse.pde.spy.core.menu.e4spies">
          </hiddenMenuItem>
          <hiddenMenuItem
                id="org.eclipse.jdt.ui/org.eclipse.jdt.ui.refactoring.menu">
@@ -1608,7 +1654,7 @@
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.bonitasoft.studio.preferences.pages.BPM"
-            class="org.bonitasoft.studio.application.preference.MavenPreferencePage"
+            class="org.bonitasoft.studio.application.maven.preference.MavenPreferencePage"
             id="org.bonitasoft.studio.preferences.maven"
             name="Maven">
          <keywordReference
@@ -1624,7 +1670,7 @@
       </keyword>
    </extension>
       <extension
-         point="org.bonitasoft.studio.common.dashboardContribution">
+         point="org.bonitasoft.studio.common.ui.dashboardContribution">
       <dashboardContribution
             class="org.bonitasoft.studio.application.views.overview.DiagramOverviewContribution">
       </dashboardContribution>
@@ -1647,6 +1693,88 @@
                commandId="org.bonitasoft.studio.application.find.command"
                icon="icons/find.png">
          </image>
+      </extension>
+      <extension
+            point="org.eclipse.core.runtime.adapters">
+         <factory
+               adaptableType="org.bonitasoft.studio.application.ui.control.model.Artifact"
+               class="org.bonitasoft.studio.application.ui.control.model.DisplayableAdapterFactory">
+            <adapter
+                  type="org.bonitasoft.studio.common.ui.IDisplayable">
+            </adapter>
+         </factory>
+         <factory
+               adaptableType="org.bonitasoft.studio.common.repository.model.IRepositoryFileStore"
+               class="org.bonitasoft.studio.application.ui.control.model.DisplayableAdapterFactory">
+            <adapter
+                  type="org.bonitasoft.studio.common.ui.IDisplayable">
+            </adapter>
+         </factory>
+         <factory
+               adaptableType="org.bonitasoft.studio.common.repository.model.IRepositoryStore"
+               class="org.bonitasoft.studio.application.ui.control.model.DisplayableAdapterFactory">
+            <adapter
+                  type="org.bonitasoft.studio.common.ui.IDisplayable">
+            </adapter>
+         </factory>
+         <factory
+               adaptableType="org.bonitasoft.studio.common.repository.model.smartImport.SmartImportableModel"
+               class="org.bonitasoft.studio.application.ui.control.model.DisplayableAdapterFactory">
+            <adapter
+                  type="org.bonitasoft.studio.common.ui.IDisplayable">
+            </adapter>
+         </factory>
+         <factory
+               adaptableType="org.bonitasoft.studio.common.repository.model.smartImport.SmartImportableUnit"
+               class="org.bonitasoft.studio.application.ui.control.model.DisplayableAdapterFactory">
+            <adapter
+                  type="org.bonitasoft.studio.common.ui.IDisplayable">
+            </adapter>
+         </factory>
+      </extension>
+      <extension
+            point="org.eclipse.team.core.fileTypes">
+         <fileTypes
+               extension="proc"
+               type="text">
+         </fileTypes>
+         <extension
+               point="org.eclipse.team.core.ignore">
+            <ignore
+                  enabled="true"
+                  pattern="provided-libs">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern="bin">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern="DefaultUserScript.groovy">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern=".settings">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern="providedscripts">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern=".classpath">
+            </ignore>
+            <ignore
+                  enabled="true"
+                  pattern="Provided">
+            </ignore>
+         </extension>
+      </extension>
+      <extension
+            point="org.bonitasoft.studio.preferences.preferenceFieldEditorContribution">
+         <fieldEditor
+               class="org.bonitasoft.studio.application.maven.preference.TestMavenConnectionPreferenceContribution">
+         </fieldEditor>
       </extension>
 
 </plugin>

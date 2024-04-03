@@ -29,13 +29,9 @@ import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.GetApiSessionOperation;
 import org.bonitasoft.studio.maven.ImportProjectException;
 import org.bonitasoft.studio.maven.operation.DeployCustomPageProjectOperation;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.rest.api.extension.RestAPIExtensionActivator;
-import org.bonitasoft.studio.theme.DependencyThemeFileStore;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.swt.graphics.Image;
 
 public class DependencyRestAPIExtensionFileStore extends RestAPIExtensionFileStore {
 
@@ -58,11 +54,6 @@ public class DependencyRestAPIExtensionFileStore extends RestAPIExtensionFileSto
     }
 
     @Override
-    public String getDisplayName() {
-        return extension.getDisplayName();
-    }
-
-    @Override
     public String getDescription() {
         return extension.getDescription();
     }
@@ -75,11 +66,6 @@ public class DependencyRestAPIExtensionFileStore extends RestAPIExtensionFileSto
     @Override
     public boolean isReadOnly() {
         return true;
-    }
-
-    @Override
-    public Image getIcon() {
-        return Pics.getImage("binary.png", RestAPIExtensionActivator.getDefault());
     }
 
     @Override
@@ -97,15 +83,21 @@ public class DependencyRestAPIExtensionFileStore extends RestAPIExtensionFileSto
                     bosEngineManager.getPageAPI(apiSession),
                     new HttpClientFactory(),
                     this);
-
             deployOperation.run(monitor);
             return deployOperation.getStatus();
         } catch (InvocationTargetException | InterruptedException | BonitaHomeNotSetException | ServerAPIException
                 | UnknownAPITypeException e) {
-            return new Status(IStatus.ERROR, DependencyThemeFileStore.class, "Failed to deployed rest api extension",
-                    e);
+            return Status.error("Failed to deployed rest api extension", e);
         } finally {
             apiSessionOperation.logout();
         }
+    }
+
+    @Override
+    public <X> X getAdapter(Class<X> adapter) {
+        if (adapter.isAssignableFrom(RestAPIExtension.class)) {
+            return (X) extension;
+        }
+        return super.getAdapter(adapter);
     }
 }

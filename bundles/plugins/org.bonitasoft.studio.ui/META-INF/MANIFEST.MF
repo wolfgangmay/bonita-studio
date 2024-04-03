@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: UI Toolkit Plug In
 Bundle-SymbolicName: org.bonitasoft.studio.ui;singleton:=true
-Bundle-Version: 7.15.9.qualifier
+Bundle-Version: 8.0.4.qualifier
 Bundle-Activator: org.bonitasoft.studio.ui.UIPlugin
 Bundle-Vendor: BonitaSoft S.A.
 Bundle-Localization: plugin
@@ -62,7 +62,8 @@ Require-Bundle: org.eclipse.jface,
  org.bonitasoft.studio.preferences,
  org.bonitasoft.studio.pics,
  org.apache.commons.io,
- org.eclipse.e4.ui.css.swt.theme
+ org.eclipse.e4.ui.css.swt.theme,
+ org.bonitasoft.studio.common.ui;visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Import-Package: javax.inject;version="1.0.0",

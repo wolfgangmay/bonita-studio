@@ -21,20 +21,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.bonitasoft.studio.common.FileUtil;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
-import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.designer.core.UIDesignerServerManager;
 import org.bonitasoft.studio.engine.EnginePlugin;
 import org.bonitasoft.studio.engine.preferences.EnginePreferenceConstants;
 import org.bonitasoft.studio.swtbot.framework.ConditionBuilder;
 import org.bonitasoft.studio.swtbot.framework.application.BotApplicationWorkbenchWindow;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
+import org.bonitasoft.studio.swtbot.framework.team.git.BotGitCloneDialog;
 import org.eclipse.egit.core.GitProvider;
 import org.eclipse.egit.core.internal.util.ResourceUtil;
 import org.eclipse.egit.ui.internal.UIText;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.Ref;
@@ -60,11 +62,11 @@ public class ShareWithGitIT {
     public SWTGefBotRule gefBotRule = new SWTGefBotRule(bot);
     private org.eclipse.jgit.lib.Repository remote;
 
-
     @Before
     public void create_bare_repository() throws Exception {
+        ErrorDialog.AUTOMATED_MODE = false;
         var tmpRemotePath = Paths.get(System.getProperty("java.io.tmpdir"), "tmp_git_repo.git");
-        if(tmpRemotePath.toFile().exists()) {
+        if (tmpRemotePath.toFile().exists()) {
             FileUtil.deleteDir(tmpRemotePath.toFile());
         }
         gitRepoPath = Files.createDirectory(tmpRemotePath);
@@ -74,22 +76,28 @@ public class ShareWithGitIT {
         preferenceStore.setValue(EnginePreferenceConstants.LAZYLOAD_ENGINE, true);
     }
 
+    @After
+    public void reset() throws Exception {
+        ErrorDialog.AUTOMATED_MODE = true;
+        remote.close();
+        FileUtil.deleteDir(gitRepoPath.toFile());
+    }
+
     @Test
     public void should_share_a_new_repositroy_with_Git_and_clone_it() throws Exception {
         bot.waitUntil(new ConditionBuilder()
                 .withTest(() -> UIDesignerServerManager.getInstance().isStarted())
                 .create(), 30000);
-        
+
         BotApplicationWorkbenchWindow botApplicationWorkbenchWindow = new BotApplicationWorkbenchWindow(bot);
 
-        AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
-        assertThat(currentRepository.getName()).isEqualTo(Messages.defaultRepositoryName);
+        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
+        assertThat(currentRepository.getProjectId()).isEqualTo(ProjectMetadata.defaultMetadata().getProjectId());
         assertThat(currentRepository.isShared(GitProvider.ID))
-                .as("%s repository should not be connected", currentRepository.getName())
+                .as("%s repository should not be connected", currentRepository.getProjectId())
                 .isFalse();
 
         botApplicationWorkbenchWindow.shareWithGit()
-                .share()
                 .commitMessage("This is a test message")
                 .pushBranch().setURI(gitRepoPath.toUri().toString())
                 .next()
@@ -105,13 +113,13 @@ public class ShareWithGitIT {
         //Check that the current repo is connected to Git and clean
         currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
         assertThat(currentRepository.isShared(GitProvider.ID))
-                .as("%s repository should be connected", currentRepository.getName())
+                .as("%s repository should be connected", currentRepository.getProjectId())
                 .isTrue();
         org.eclipse.jgit.lib.Repository localRepository = ResourceUtil.getRepository(currentRepository.getProject());
         try (Git git = new Git(localRepository)) {
             Status status = git.status().call();
             assertThat(status.isClean()).as("%s project should have a clean Git status",
-                    currentRepository.getName()).isTrue();
+                    currentRepository.getProjectId()).isTrue();
         }
 
         //Check that the commit has been pushed properly
@@ -125,22 +133,14 @@ public class ShareWithGitIT {
         }
 
         //Clone created repository in another bonita project
-        botApplicationWorkbenchWindow.gitClone()
+        BotGitCloneDialog gitClone = botApplicationWorkbenchWindow.gitClone();
+        gitClone
                 .setURI(gitRepoPath.toUri().toString())
-                .next()
-                .next()
-                .finish();
-
-        currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
-        assertThat(currentRepository.getName()).isEqualTo("tmp_git_repo");
-        assertThat(currentRepository.isShared(GitProvider.ID))
-                .as("%s project should be connected", currentRepository.getName())
-                .isTrue();
+                .next();
+        bot.button(IDialogConstants.FINISH_LABEL).click();
+        bot.waitUntil(Conditions.shellIsActive(JFaceResources.getString("Problem_Occurred")));
+        bot.button(IDialogConstants.OK_LABEL).click();
+        bot.button(IDialogConstants.CANCEL_LABEL).click();
     }
 
-    @After
-    public void reset() throws Exception {
-        remote.close();
-        FileUtil.deleteDir(gitRepoPath.toFile());
-    }
 }

@@ -8,45 +8,37 @@
  *******************************************************************************/
 package org.bonitasoft.studio.rest.api.extension.core.repository;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.io.jdom.MavenJDOMWriter;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.platform.tools.CopyInputStream;
-import org.bonitasoft.studio.common.repository.ImportArchiveData;
+import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
+import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.core.migration.MavenModelMigration;
 import org.bonitasoft.studio.common.repository.core.migration.report.AsciidocMigrationReportWriter;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReportWriter;
+import org.bonitasoft.studio.common.repository.core.migration.step.BdmModelArtifactMigrationStep;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.maven.CustomPageProjectFileStore;
 import org.bonitasoft.studio.maven.CustomPageProjectRepositoryStore;
 import org.bonitasoft.studio.maven.builder.validator.AbstractCustomPageValidator;
-import org.bonitasoft.studio.maven.i18n.Messages;
 import org.bonitasoft.studio.maven.model.RestAPIExtensionArchetype;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.pics.PicsConstants;
 import org.bonitasoft.studio.rest.api.extension.core.builder.RestAPIBuilder;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.BonitaVersionMigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.Groovy3MigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.Java11MigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.RuntimeBOMMigrationStep;
-import org.codehaus.plexus.util.WriterFactory;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
@@ -54,12 +46,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.edapt.migration.MigrationException;
-import org.eclipse.swt.graphics.Image;
-import org.jdom2.Document;
-import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
-import org.jdom2.output.Format;
-import org.jdom2.output.Format.TextMode;
+import org.eclipse.m2e.core.MavenPlugin;
 
 public class RestAPIExtensionRepositoryStore extends CustomPageProjectRepositoryStore<RestAPIExtensionFileStore> {
 
@@ -68,27 +55,14 @@ public class RestAPIExtensionRepositoryStore extends CustomPageProjectRepository
     private static final List<MavenModelMigration> MIGRATION_STEPS = List.of(new Groovy3MigrationStep(),
             new Java11MigrationStep(),
             new BonitaVersionMigrationStep(),
-            new RuntimeBOMMigrationStep());
-
-    private MavenXpp3Reader mavenModelReader = new MavenXpp3Reader();
-    private MavenXpp3Writer mavenModelWriter = new MavenXpp3Writer();
-    private MavenJDOMWriter mavenModelJDOMWriter = new MavenJDOMWriter();
+            new RuntimeBOMMigrationStep(),
+            new BdmModelArtifactMigrationStep());
 
     private AsciidocMigrationReportWriter asciidocMigrationReportWriter = new AsciidocMigrationReportWriter();
 
     @Override
     public String getName() {
         return STORE_NAME;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return Messages.restApiExtensionRepositoryName;
-    }
-
-    @Override
-    public Image getIcon() {
-        return Pics.getImage(PicsConstants.restApi);
     }
 
     @Override
@@ -148,21 +122,6 @@ public class RestAPIExtensionRepositoryStore extends CustomPageProjectRepository
     }
 
     @Override
-    protected RestAPIExtensionFileStore doImportArchiveData(ImportArchiveData importArchiveData,
-            IProgressMonitor monitor) throws CoreException {
-        var fileName = importArchiveData.getName().split("/", 3)[2];
-        if (fileName.endsWith("/pom.xml")) {
-            var segments = fileName.split("/");
-            var projectName = segments[segments.length - 2];
-            var file = getResource().getFolder(projectName).getFile(MigrationReportWriter.DEFAULT_REPORT_FILE_NAME);
-            if (file.exists()) {
-                file.delete(true, new NullProgressMonitor());
-            }
-        }
-        return super.doImportArchiveData(importArchiveData, monitor);
-    }
-
-    @Override
     protected InputStream handlePreImport(String fileName, InputStream inputStream)
             throws MigrationException, IOException {
         if (fileName.endsWith("/.settings/org.eclipse.jdt.groovy.core.prefs")
@@ -176,47 +135,26 @@ public class RestAPIExtensionRepositoryStore extends CustomPageProjectRepository
             var projectName = segments[segments.length - 2];
             try (CopyInputStream copyInputStream = new CopyInputStream(inputStream);
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                Model model = mavenModelReader.read(copyInputStream.getCopy());
+                Model model = MavenPlugin.getMaven().readModel(copyInputStream.getCopy());
                 boolean hasBeenMigrated = false;
                 MigrationReport report = new MigrationReport();
+                var metadata = ProjectMetadata.read(getRepository().getProject(), new NullProgressMonitor());
                 for (MavenModelMigration step : MIGRATION_STEPS) {
-                    if (step.appliesTo(model)) {
-                        report = step.migrate(model).merge(report);
+                    if (step.appliesTo(model, metadata)) {
+                        report = step.migrate(model, metadata).merge(report);
                         hasBeenMigrated = true;
                     }
                 }
                 if (hasBeenMigrated) {
-                    var file = getResource().getFolder(projectName).getFile(MigrationReportWriter.DEFAULT_REPORT_FILE_NAME);
+                    var file = getResource().getFolder(projectName)
+                            .getFile(MigrationReportWriter.DEFAULT_REPORT_FILE_NAME);
                     asciidocMigrationReportWriter.write(report, file.getLocation().toFile().toPath());
                     file.refreshLocal(IResource.DEPTH_ONE, new NullProgressMonitor());
-
-                    SAXBuilder builder = new SAXBuilder();
-                    builder.setIgnoringBoundaryWhitespace(false);
-                    builder.setIgnoringElementContentWhitespace(false);
-
-                    var originalPomFile = copyInputStream.getFile();
-                    Document doc = null;
-                    try {
-                        doc = builder.build(originalPomFile);
-                    } catch (JDOMException e) {
-                        BonitaStudioLog.error(e);
-                    }
-                    try (Writer writer = WriterFactory.newWriter(outputStream, StandardCharsets.UTF_8.name())) {
-                        if (doc != null) {
-                            mavenModelJDOMWriter.write(model,
-                                    doc,
-                                    writer,
-                                    Format.getRawFormat()
-                                            .setEncoding("UTF-8")
-                                            .setTextMode(TextMode.PRESERVE));
-                        } else {
-                            mavenModelWriter.write(writer, model);
-                        }
-                    }
-                    return new ByteArrayInputStream(outputStream.toByteArray());
+                    MavenProjectHelper.update(copyInputStream.getFile(), model);
+                    return Files.newInputStream(copyInputStream.getFile().toPath());
                 }
                 return copyInputStream.getCopy();
-            } catch (IOException | XmlPullParserException | CoreException e) {
+            } catch (IOException | CoreException e) {
                 throw new MigrationException(e);
             }
         }
@@ -264,7 +202,7 @@ public class RestAPIExtensionRepositoryStore extends CustomPageProjectRepository
             }
         }
     }
-    
+
     @Override
     public IRepository getRepository() {
         return super.getRepository();

@@ -11,8 +11,8 @@ package org.bonitasoft.studio.rest.api.extension.ui.wizard;
 import java.lang.reflect.InvocationTargetException;
 
 import org.bonitasoft.studio.common.ProductVersion;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.maven.MavenProjectConfiguration;
 import org.bonitasoft.studio.maven.i18n.Messages;
 import org.bonitasoft.studio.maven.model.RestAPIExtensionArchetypeConfiguration;
@@ -45,11 +45,10 @@ public class NewRestAPIExtensionWizard extends Wizard {
             MavenProjectConfiguration projectConfiguration,
             IWorkspace workspace,
             WidgetFactory widgetFactory,
-            String bdmPackage,
-            String bdmVersion,
+            boolean addBdmDependency,
             RestAPIAddressResolver addressReolver) {
         this.repositoryStore = repositoryStore;
-        this.configuration = RestAPIExtensionArchetypeConfiguration.defaultArchetypeConfiguration(bdmPackage, bdmVersion);
+        this.configuration = RestAPIExtensionArchetypeConfiguration.defaultArchetypeConfiguration(addBdmDependency);
         this.configuration.setBonitaVersion(repositoryStore.getRepository().getBonitaRuntimeVersion());
         this.projectConfigurationManager = projectConfigurationManager;
         this.widgetFactory = widgetFactory;

@@ -14,35 +14,25 @@
  */
 package org.bonitasoft.studio.businessobject.core.operation;
 
-import static com.google.common.io.ByteStreams.toByteArray;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.Maven;
+import org.apache.maven.execution.BuildSuccess;
+import org.apache.maven.execution.MavenExecutionResult;
 import org.bonitasoft.engine.bdm.model.BusinessObjectModel;
-import org.bonitasoft.engine.business.data.generator.AbstractBDMJarBuilder;
-import org.bonitasoft.engine.business.data.generator.client.ClientBDMJarBuilder;
-import org.bonitasoft.engine.business.data.generator.client.ResourcesLoader;
-import org.bonitasoft.engine.business.data.generator.filter.OnlyDAOImplementationFileFilter;
-import org.bonitasoft.engine.business.data.generator.filter.WithoutDAOImplementationFileFilter;
 import org.bonitasoft.studio.businessobject.BusinessObjectPlugin;
-import org.bonitasoft.studio.businessobject.core.repository.BDMArtifactDescriptor;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
-import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelRepositoryStore;
 import org.bonitasoft.studio.businessobject.i18n.Messages;
+import org.bonitasoft.studio.common.event.BdmEvents;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
-import org.bonitasoft.studio.common.repository.core.maven.AddDependencyOperation;
-import org.bonitasoft.studio.common.repository.core.maven.RemoveDependencyOperation;
+import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
-import org.eclipse.core.resources.WorkspaceJob;
-import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -50,16 +40,13 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.embedder.ICallable;
+import org.eclipse.m2e.core.embedder.IMaven;
+import org.eclipse.m2e.core.embedder.IMavenExecutionContext;
 import org.eclipse.ui.PlatformUI;
 
 public class GenerateBDMOperation implements IRunnableWithProgress {
-
-    public static final String BDM_DEPLOYED_TOPIC = "bdm/deployed";
-    public static final String BDM_CLIENT = "bdm-client";
-    public static final String BDM_DAO = "bdm-dao";
-    public static final String MODEL = "model";
-    public static final String FILE_CONTENT = "fileContent";
-    public static final String BDM_ARTIFACT_DESCRIPTOR = "artifactDescriptor";
 
     private final BusinessObjectModelFileStore fileStore;
 
@@ -78,7 +65,7 @@ public class GenerateBDMOperation implements IRunnableWithProgress {
 
     protected void doGenerateBDM(IProgressMonitor monitor) throws InvocationTargetException {
         if (monitor == null) {
-            monitor = AbstractRepository.NULL_PROGRESS_MONITOR;
+            monitor = new NullProgressMonitor();
         }
         BusinessObjectModel model;
         try {
@@ -86,121 +73,75 @@ public class GenerateBDMOperation implements IRunnableWithProgress {
         } catch (ReadFileStoreException e1) {
             throw new InvocationTargetException(e1);
         }
+        var project = RepositoryManager.getInstance().getCurrentProject().orElseThrow();
         if (containsBusinessObjects(model)) {
             monitor.beginTask(Messages.generatingJarFromBDMModel, IProgressMonitor.UNKNOWN);
             BonitaStudioLog.debug(Messages.generatingJarFromBDMModel, BusinessObjectPlugin.PLUGIN_ID);
+            var data = new HashMap<String, Object>();
+            data.put(BdmEvents.MODEL_PROPERTY, model);
             try {
-                final Map<String, byte[]> resources = new HashMap<>();
-                // Build jar with Model
-                ResourcesLoader bundleResourcesLoader = new ResourcesLoader();
-                AbstractBDMJarBuilder builder = new ClientBDMJarBuilder(bundleResourcesLoader);
-                final byte[] modelJarContent = builder.build(model, new WithoutDAOImplementationFileFilter());
-                resources.put(BDM_CLIENT, modelJarContent);
-
-                // Build jar with DAO
-                builder = new ClientBDMJarBuilder(bundleResourcesLoader);
-                final byte[] daoJarContent = builder.build(model, new OnlyDAOImplementationFileFilter());
-                resources.put(BDM_DAO, daoJarContent);
-
-                final Map<String, Object> data = new HashMap<>();
-                data.put(MODEL, model);
-                data.put(BDM_CLIENT, resources.get(BDM_CLIENT));
-                data.put(BDM_DAO, resources.get(BDM_DAO));
-                var bdmArtifactDescriptor = fileStore.loadArtifactDescriptor();
-                data.put(BDM_ARTIFACT_DESCRIPTOR, bdmArtifactDescriptor);
-                data.put(FILE_CONTENT, new String(((BusinessObjectModelRepositoryStore) fileStore.getParentStore())
-                        .getConverter().marshall(model)));
-
-                eventBroker().send(BDM_DEPLOYED_TOPIC, data);
-
-                updateProjectBDMDependency(bdmArtifactDescriptor);
-            } catch (final Exception e) {
+                data.put(BdmEvents.FILE_CONTENT_PROPERTY,
+                        Files.readString(fileStore.getResource().getLocation().toFile().toPath()));
+            } catch (Exception e) {
                 throw new InvocationTargetException(e);
             }
-        } else {
-            removeDependency();
+            try {
+                var bdmModelProject = project.getBdmModelProject();
+                var status = mavenInstall(bdmModelProject, new NullProgressMonitor());
+                if (!status.isOK()) {
+                    throw new CoreException(status);
+                }
+                bdmModelProject.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+                data.put(BdmEvents.DEPENDENCY_PROPERTY, fileStore.getModelMavenDependency());
+            } catch (CoreException e) {
+                throw new InvocationTargetException(e);
+            }
+            eventBroker().send(BdmEvents.BDM_DEPLOYED_TOPIC, data);
         }
     }
 
-    private void updateProjectBDMDependency(BDMArtifactDescriptor bdmArtifactDescriptor) {
-        var removeBDMClientDependencyOperation = new RemoveDependencyOperation(
-                bdmArtifactDescriptor.getGroupId(),
-                GenerateBDMOperation.BDM_CLIENT,
-                bdmArtifactDescriptor.getVersion(),
-                Artifact.SCOPE_PROVIDED);
-        var addBDMClientDependencyOperation = new AddDependencyOperation(
-                bdmArtifactDescriptor.getGroupId(),
-                GenerateBDMOperation.BDM_CLIENT,
-                bdmArtifactDescriptor.getVersion(),
-                Artifact.SCOPE_PROVIDED);
-
-        try {
-            // Force a proper java project update by remove/adding the dependency in the project 
-            removeBDMClientDependencyOperation.disableAnalyze().run(new NullProgressMonitor());
-            addBDMClientDependencyOperation.disableAnalyze().run(new NullProgressMonitor());
-        } catch (CoreException e) {
-            BonitaStudioLog.error(e);
+    private IStatus mavenInstall(IProject bdmModelProject, IProgressMonitor monitor) throws CoreException {
+        IMaven maven = MavenPlugin.getMaven();
+        var mavenProject = MavenProjectHelper.getMavenProject(bdmModelProject);
+        if (mavenProject == null) {
+            return new Status(IStatus.ERROR, getClass(),
+                    "An error occured while installing the bdm artifacts. Cannot resolve the Maven project.");
         }
+        var projectRegistry = MavenPlugin.getMavenProjectRegistry();
+        List<String> goals = List.of("install");
+        var ctx = maven.createExecutionContext();
+        var request = ctx.getExecutionRequest();
+        request.setGoals(goals);
+        request.setNoSnapshotUpdates(true);
+        request.setPom(mavenProject.getFile());
+        var projectFacade = projectRegistry.getProject(bdmModelProject);
+        if(projectFacade == null) {
+            projectFacade = projectRegistry.create(bdmModelProject.getFile("pom.xml"), true, monitor);
+        }
+        var executionResult = projectRegistry.execute(projectFacade,
+                new ICallable<MavenExecutionResult>() {
 
-        new WorkspaceJob("Update Project BDM dependency") {
+                    @Override
+                    public MavenExecutionResult call(IMavenExecutionContext context, IProgressMonitor monitor)
+                            throws CoreException {
+                        return maven.lookup(Maven.class).execute(request);
+                    }
 
-            @Override
-            public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                // Update bdm model and dao list cache
-                var currentRepository = fileStore.getRepositoryAccessor().getCurrentRepository().orElse(null);
-                if (currentRepository != null) {
-                    BusinessObjectModelRepositoryStore businessObjectModelRepositoryStore = currentRepository
-                            .getRepositoryStore(BusinessObjectModelRepositoryStore.class);
-                    businessObjectModelRepositoryStore.allBusinessObjectDao(currentRepository.getJavaProject());
-                }
-                return Status.OK_STATUS;
-            }
-        }.schedule();
+                }, monitor);
+
+        if (!(executionResult.getBuildSummary(executionResult.getProject()) instanceof BuildSuccess)) {
+            return Status.error("An error occured while installing the bdm artifacts.",
+                    executionResult.getExceptions().get(0));
+        }
+        return Status.OK_STATUS;
     }
 
     protected IEventBroker eventBroker() {
         return PlatformUI.getWorkbench().getService(IEventBroker.class);
     }
 
-    protected void removeDependency() {
-        try {
-            BDMArtifactDescriptor loadArtifactDescriptor = fileStore.loadArtifactDescriptor();
-            RemoveDependencyOperation operation = new RemoveDependencyOperation(loadArtifactDescriptor.getGroupId(),
-                    BDM_CLIENT, loadArtifactDescriptor.getVersion(), Artifact.SCOPE_PROVIDED);
-            new WorkspaceJob("Remove Project BDM dependency") {
-
-                @Override
-                public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                    operation.disableAnalyze().run(monitor);
-                    return Status.OK_STATUS;
-                }
-            }.schedule();
-        } catch (CoreException e) {
-            BonitaStudioLog.error(e);
-        }
-    }
-
     private boolean containsBusinessObjects(final BusinessObjectModel bom) {
         return bom != null && !bom.getBusinessObjects().isEmpty();
-    }
-
-    protected Map<String, byte[]> retrieveContent(final byte[] zipContent) throws IOException {
-        Assert.isNotNull(zipContent);
-        final Map<String, byte[]> result = new HashMap<>();
-        try (ByteArrayInputStream is = new ByteArrayInputStream(zipContent);
-                ZipInputStream zis = new ZipInputStream(is);) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                final String entryName = entry.getName();
-                if (entryName.contains(MODEL) && entryName.endsWith(".jar")) {
-                    result.put(BDM_CLIENT, toByteArray(zis));
-                }
-                if (entryName.contains("dao") && entryName.endsWith(".jar")) {
-                    result.put(BDM_DAO, toByteArray(zis));
-                }
-            }
-        }
-        return result;
     }
 
 }

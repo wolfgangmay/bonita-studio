@@ -19,10 +19,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.bonitasoft.studio.common.jface.ValidationDialog;
+import org.bonitasoft.studio.common.core.IRunnableWithStatus;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
+import org.bonitasoft.studio.common.repository.model.IRepository;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.jface.ValidationDialog;
 import org.bonitasoft.studio.designer.core.operation.IndexingUIDOperation;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
@@ -35,6 +38,7 @@ import org.bonitasoft.studio.validation.ui.view.ValidationViewPart;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -70,7 +74,7 @@ public class BatchValidationHandler extends AbstractHandler {
         }
         final IProgressService service = PlatformUI.getWorkbench().getProgressService();
         final Map<?, ?> parameters = event.getParameters();
-        AbstractRepository currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
+        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
         DiagramRepositoryStore diagramRepositoryStore = currentRepository
                 .getRepositoryStore(DiagramRepositoryStore.class);
         boolean clearProcessComputedProcesses = !diagramRepositoryStore.hasComputedProcesses();
@@ -101,6 +105,12 @@ public class BatchValidationHandler extends AbstractHandler {
         MultiStatus aggregatedStatus = new MultiStatus(ValidationPlugin.PLUGIN_ID, -1, null, null);
         try {
             service.run(true, true, monitor -> {
+                // can the repository self-validate ? (e.g. for git constraints on .gitignore)
+                IRunnableWithStatus repositoryValidator = Adapters.adapt(currentRepository, IRunnableWithStatus.class);
+                if (repositoryValidator != null) {
+                    repositoryValidator.run(monitor);
+                    aggregatedStatus.add(repositoryValidator.getStatus());
+                }
                 validateModelCompatibility.run(monitor);
                 aggregatedStatus.addAll(validateModelCompatibility.getStatus());
                 if (!checkAllModelVersion && aggregatedStatus.getSeverity() == IStatus.ERROR) {
@@ -117,7 +127,7 @@ public class BatchValidationHandler extends AbstractHandler {
         } catch (final InterruptedException e) {
             //Validation cancelled
         } finally {
-            if(clearProcessComputedProcesses) {
+            if (clearProcessComputedProcesses) {
                 diagramRepositoryStore.resetComputedProcesses();
             }
         }
@@ -125,8 +135,8 @@ public class BatchValidationHandler extends AbstractHandler {
         if (!checkAllModelVersion && aggregatedStatus.getSeverity() == IStatus.ERROR) {
             MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.validationFailedTitle,
                     Stream.of(aggregatedStatus.getChildren()).filter(s -> s.getSeverity() == IStatus.ERROR)
-                    .findFirst().map(IStatus::getMessage)
-                    .orElseThrow());
+                            .findFirst().map(IStatus::getMessage)
+                            .orElseThrow());
             if (currentDiagramStore != null && validateModelCompatibility.getStatus().getSeverity() == IStatus.ERROR) {
                 Display.getDefault()
                         .asyncExec(() -> PlatformUI.getWorkbench()
@@ -185,7 +195,7 @@ public class BatchValidationHandler extends AbstractHandler {
     }
 
     private void addAllProjectDiagrams(final ProcessValidationOperation validateOperation,
-            AbstractRepository currentRepository) {
+            IRepository currentRepository) {
         DiagramRepositoryStore diagramRepositoryStore = currentRepository
                 .getRepositoryStore(DiagramRepositoryStore.class);
         diagramRepositoryStore.getChildren().stream()
@@ -250,7 +260,7 @@ public class BatchValidationHandler extends AbstractHandler {
                     try {
                         service.run(true, false, monitor -> {
                             try {
-                                RepositoryManager.getInstance().getCurrentRepository().orElseThrow().migrate(monitor);
+                                RepositoryManager.getInstance().getCurrentRepository().orElseThrow().migrate(MigrationReport.emptyReport(), monitor);
                             } catch (CoreException | MigrationException e) {
                                 throw new InvocationTargetException(e);
                             }
@@ -269,11 +279,10 @@ public class BatchValidationHandler extends AbstractHandler {
             }
         } else if (statusContainsError(aggregatedStatus)) {
             final String errorMessage = Messages.validationErrorFoundMessage + " "
-                    + currentDiagramStore.getDisplayName();
+                    + IDisplayable.toDisplayName(currentDiagramStore).orElse("");
             final int result = new ValidationDialog(Display.getDefault().getActiveShell(),
                     Messages.validationFailedTitle, errorMessage,
                     ValidationDialog.OK_SEEDETAILS).open();
-
             if (result == ValidationDialog.SEE_DETAILS) {
                 IWorkbenchPart openedEditor = currentDiagramStore.getOpenedEditor();
                 if (openedEditor == null) {

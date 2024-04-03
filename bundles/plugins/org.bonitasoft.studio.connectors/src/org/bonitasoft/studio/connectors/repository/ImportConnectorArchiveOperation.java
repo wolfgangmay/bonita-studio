@@ -19,22 +19,23 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import org.bonitasoft.studio.common.NamingUtils;
-import org.bonitasoft.studio.common.ProjectUtil;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.common.repository.store.SourceRepositoryStore;
+import org.bonitasoft.studio.common.ui.IDisplayable;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.bonitasoft.studio.connector.model.definition.ConnectorDefinition;
 import org.bonitasoft.studio.connector.model.definition.DocumentRoot;
 import org.bonitasoft.studio.connector.model.definition.util.ConnectorDefinitionResourceFactoryImpl;
@@ -108,21 +109,16 @@ public class ImportConnectorArchiveOperation implements IRunnableWithProgress {
             status = ValidationStatus.error("input file not set");
             return;
         }
-        final File tmp = new File(ProjectUtil.getBonitaStudioWorkFolder(), "tmpImportConnectorDir");
-        tmp.delete();
-        tmp.mkdir();
         try {
-            PlatformUtil.unzipZipFiles(zipFile, tmp, monitor);
+            var tmp = Files.createTempDirectory("tmpImportConnectorDir");
+            PlatformUtil.unzipZipFiles(zipFile, tmp.toFile(), monitor);
+            FileActionDialog.activateYesNoToAll();
+            importConnectorDefinition(tmp.toFile());
+            importConnectorImplementation(tmp.toFile());
+            PlatformUtil.delete(tmp.toFile(), monitor);
+            RepositoryManager.getInstance().getCurrentRepository().orElseThrow().build(monitor);
         } catch (final Exception e) {
             BonitaStudioLog.error(e);
-        }
-
-        try {
-            FileActionDialog.activateYesNoToAll();
-            importConnectorDefinition(tmp);
-            importConnectorImplementation(tmp);
-            PlatformUtil.delete(tmp, monitor);
-            RepositoryManager.getInstance().getCurrentRepository().orElseThrow().build(monitor);
         } finally {
             FileActionDialog.deactivateYesNoToAll();
         }
@@ -137,17 +133,17 @@ public class ImportConnectorArchiveOperation implements IRunnableWithProgress {
         if (files != null) {
             for (final File implFile : files) {
                 final IRepositoryStore implStore = getImplementationStore();
-                
+
                 try (final FileInputStream fis = new FileInputStream(implFile)) {
                     IStatus validationStatus = implStore.validate(implFile.getName(), fis);
-                    if(validationStatus.getSeverity() == IStatus.ERROR) {
+                    if (validationStatus.getSeverity() == IStatus.ERROR) {
                         status = validationStatus;
                         return;
                     }
                 } catch (IOException e1) {
                     BonitaStudioLog.error(e1);
-                } 
-                
+                }
+
                 try (final FileInputStream fis = new FileInputStream(implFile);) {
                     implStore.importInputStream(implFile.getName(), fis);
                 } catch (final Exception e) {
@@ -182,17 +178,17 @@ public class ImportConnectorArchiveOperation implements IRunnableWithProgress {
             for (final File defFile : files) {
                 final IRepositoryStore defStore = getDefinitionStore();
                 IRepositoryFileStore fileStore = null;
-                
+
                 try (final FileInputStream fis = new FileInputStream(defFile)) {
                     IStatus validationStatus = defStore.validate(defFile.getName(), fis);
-                    if(validationStatus.getSeverity() == IStatus.ERROR) {
+                    if (validationStatus.getSeverity() == IStatus.ERROR) {
                         status = validationStatus;
                         return;
                     }
                 } catch (IOException e1) {
                     BonitaStudioLog.error(e1);
-                } 
-                
+                }
+
                 try (final FileInputStream fis = new FileInputStream(defFile)) {
                     final ConnectorDefinition connectorDefinition = toConnectorDefinition(defFile);
                     if (connectorDefinition == null) {
@@ -204,8 +200,8 @@ public class ImportConnectorArchiveOperation implements IRunnableWithProgress {
                                         connectorDefinition.getVersion())) {
                             fileStore = defStore.importInputStream(defFile.getName(), fis);
                         } else {
-                            status = ValidationStatus.warning(
-                                    Messages.bind(Messages.providedDefinitionAlreadyExists, existingDef.getDisplayName()));
+                            status = ValidationStatus.warning(Messages.bind(Messages.providedDefinitionAlreadyExists,
+                                    IDisplayable.toDisplayName(existingDef).orElse("")));
                         }
                     }
                 } catch (final Exception e) {
@@ -381,7 +377,8 @@ public class ImportConnectorArchiveOperation implements IRunnableWithProgress {
 
     protected boolean isImplementationJar(final String jarName,
             final ConnectorImplementation impl) {
-        return (NamingUtils.toConnectorImplementationFilename(impl.getImplementationId(), impl.getImplementationVersion(),
+        return (NamingUtils.toConnectorImplementationFilename(impl.getImplementationId(),
+                impl.getImplementationVersion(),
                 false) + ".jar").equals(jarName);
     }
 }

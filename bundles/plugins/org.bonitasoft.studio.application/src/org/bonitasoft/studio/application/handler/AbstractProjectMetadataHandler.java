@@ -27,19 +27,22 @@ import javax.inject.Named;
 import org.bonitasoft.studio.application.operation.SetProjectMetadataOperation;
 import org.bonitasoft.studio.application.ui.control.ProjectMetadataPage;
 import org.bonitasoft.studio.common.CommandExecutor;
+import org.bonitasoft.studio.common.Strings;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
+import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.ui.dialog.ExceptionDialogHandler;
 import org.bonitasoft.studio.ui.wizard.WizardBuilder;
 import org.bonitasoft.studio.ui.wizard.WizardPageBuilder;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.wizard.IWizardContainer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 public abstract class AbstractProjectMetadataHandler {
@@ -50,13 +53,25 @@ public abstract class AbstractProjectMetadataHandler {
             MavenProjectHelper mavenProjectHelper,
             ExceptionDialogHandler exceptionDialogHandler) {
 
-        ProjectMetadata metadata = initialMetadata(repositoryAccessor);
-
+        ProjectMetadata metadata;
+        try {
+            metadata = initialMetadata(repositoryAccessor);
+        } catch (CoreException e) {
+            exceptionDialogHandler.openErrorDialog(activeShell, e);
+            return;
+        }
         List<WizardPageBuilder> pages = createPages(repositoryAccessor, metadata);
 
         createWizard(repositoryAccessor, mavenProjectHelper, exceptionDialogHandler, metadata, pages)
                 .open(activeShell, getFinishLabel())
-                .ifPresent(s ->  new CommandExecutor().executeCommand("org.bonitasoft.studio.application.show.overview.command", Collections.emptyMap()));
+                .ifPresent(s -> {
+                    AbstractFileStore.refreshExplorerView();
+                    Display.getDefault()
+                            .asyncExec(() -> new CommandExecutor().executeCommand(
+                                    "org.bonitasoft.studio.application.show.overview.command",
+                                    Collections.emptyMap()));
+                });
+
     }
 
     protected WizardBuilder<IStatus> createWizard(RepositoryAccessor repositoryAccessor,
@@ -89,7 +104,7 @@ public abstract class AbstractProjectMetadataHandler {
         return IDialogConstants.FINISH_LABEL;
     }
 
-    protected abstract ProjectMetadata initialMetadata(RepositoryAccessor repositoryAccessor);
+    protected abstract ProjectMetadata initialMetadata(RepositoryAccessor repositoryAccessor) throws CoreException;
 
     protected abstract boolean isNewProject();
 
@@ -102,6 +117,9 @@ public abstract class AbstractProjectMetadataHandler {
             RepositoryAccessor repositoryAccessor,
             MavenProjectHelper mavenProjectHelper,
             ExceptionDialogHandler exceptionDialogHandler) {
+        if (Strings.isNullOrEmpty(metadata.getArtifactId())) {
+            metadata.setArtifactId(ProjectMetadata.toArtifactId(metadata.getName()));
+        }
         SetProjectMetadataOperation operation = createOperation(mavenProjectHelper, metadata, repositoryAccessor);
         try {
             container.run(true, false, operation);

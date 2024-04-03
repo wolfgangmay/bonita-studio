@@ -35,13 +35,11 @@ import org.bonitasoft.studio.common.repository.core.migration.report.MigrationRe
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.store.AbstractRepositoryStore;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.emf.edapt.migration.MigrationException;
-import org.eclipse.swt.graphics.Image;
 
 public class DependencyRepositoryStore extends AbstractRepositoryStore<DependencyFileStore> {
 
@@ -56,7 +54,6 @@ public class DependencyRepositoryStore extends AbstractRepositoryStore<Dependenc
     private Map<String, String> runtimeDependencies;
     private ProjectDependenciesResolver projectDependenciesResolver = new ProjectDependenciesResolver(
             RepositoryManager.getInstance().getAccessor());
-  
 
     @Override
     public void createRepositoryStore(IRepository repository) {
@@ -65,7 +62,7 @@ public class DependencyRepositoryStore extends AbstractRepositoryStore<Dependenc
 
     @Override
     public IFolder getResource() {
-        if(repository != null && repository.getProject() != null) {
+        if (repository != null && repository.getProject() != null) {
             return repository.getProject().getFolder(getName());
         }
         return null;
@@ -153,16 +150,6 @@ public class DependencyRepositoryStore extends AbstractRepositoryStore<Dependenc
     }
 
     @Override
-    public String getDisplayName() {
-        return STORE_NAME;
-    }
-
-    @Override
-    public Image getIcon() {
-        return null;
-    }
-
-    @Override
     public Set<String> getCompatibleExtensions() {
         return extensions;
     }
@@ -224,8 +211,6 @@ public class DependencyRepositoryStore extends AbstractRepositoryStore<Dependenc
     public MigrationReport migrate(IProgressMonitor monitor) throws CoreException, MigrationException {
         return MigrationReport.emptyReport();
     }
-
-    
 
     public Optional<DependencyFileStore> findDependencyByName(String jarName) {
         return getChildren().stream()

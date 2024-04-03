@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
 import org.bonitasoft.engine.bdm.model.BusinessObject;
 import org.bonitasoft.engine.bdm.model.field.RelationField;
 import org.bonitasoft.studio.common.ProductVersion;
-import org.bonitasoft.studio.common.jface.MessageDialogWithPrompt;
 import org.bonitasoft.studio.common.model.ModelSearch;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.ui.jface.MessageDialogWithPrompt;
 import org.bonitasoft.studio.contract.core.mapping.treeMaching.BusinessDataStore;
 import org.bonitasoft.studio.contract.core.mapping.treeMaching.TreeResult;
 import org.bonitasoft.studio.contract.core.mapping.treeMaching.resolver.ContractToBusinessDataResolver;
@@ -54,7 +54,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CreateFormFromContractOperation extends CreateUIDArtifactOperation {
 
@@ -110,7 +109,7 @@ public class CreateFormFromContractOperation extends CreateUIDArtifactOperation 
                         Messages.createReadOnlWidgetsMessage,
                         Messages.createReadOnlWidgetsdetails,
                         new OpenSystemBrowserListener(FORM_GENERATION_DOCUMENTATION_LINK),
-                        SWT.NONE).getReturnCode();
+                        SWT.NONE);
                 buildReadOnlyAttributes = returnCode == 2;
             });
         }

@@ -17,18 +17,19 @@ package org.bonitasoft.studio.tests.applicationDescriptor;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.ui.IDisplayable;
 import org.bonitasoft.studio.la.LivingApplicationPlugin;
 import org.bonitasoft.studio.la.application.handler.NewApplicationHandler;
-import org.bonitasoft.studio.la.application.repository.ApplicationFileStore;
 import org.bonitasoft.studio.la.application.repository.ApplicationRepositoryStore;
 import org.bonitasoft.studio.swtbot.framework.application.BotApplicationWorkbenchWindow;
 import org.bonitasoft.studio.swtbot.framework.la.OpenApplicationWizardBot;
+import org.bonitasoft.studio.swtbot.framework.rule.EditorMatcherExceptOverview;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
-import org.bonitasoft.studio.tests.util.EditorMatcherExceptOverview;
 import org.bonitasoft.studio.ui.util.StringIncrementer;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
@@ -111,7 +112,8 @@ public class OpenExistingApplicationIT {
     private String findNewApplicationName() {
         List<String> existingApplicationNameList = repositoryAccessor
                 .getRepositoryStore(ApplicationRepositoryStore.class)
-                .getChildren().stream().map(ApplicationFileStore::getDisplayName).collect(Collectors.toList());
+                .getChildren().stream().map(IDisplayable::toDisplayName).filter(Optional::isPresent).map(Optional::get)
+                .collect(Collectors.toList());
         String newName = StringIncrementer.getNextIncrement(NewApplicationHandler.DEFAULT_FILE_NAME,
                 existingApplicationNameList);
         return newName;

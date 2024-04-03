@@ -20,11 +20,11 @@ import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.studio.common.repository.model.IDeployable;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IValidable;
+import org.bonitasoft.studio.common.ui.IDisplayable;
 import org.eclipse.core.databinding.validation.ValidationStatus;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.jface.viewers.StyledString;
-import org.eclipse.swt.graphics.Image;
 
 public class FileStoreArtifact implements Artifact, IValidable {
 
@@ -34,21 +34,6 @@ public class FileStoreArtifact implements Artifact, IValidable {
     public FileStoreArtifact(Object parent, IRepositoryFileStore fStore) {
         this.parent = parent;
         this.fStore = fStore;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return fStore.getDisplayName();
-    }
-
-    @Override
-    public Image getIcon() {
-        return fStore.getIcon();
-    }
-
-    @Override
-    public StyledString getStyledString() {
-        return fStore.getStyledString();
     }
 
     @Override
@@ -74,7 +59,8 @@ public class FileStoreArtifact implements Artifact, IValidable {
         if (fStore instanceof IDeployable) {
             return ((IDeployable) fStore).deploy(session, options, monitor);
         }
-        return ValidationStatus.error(String.format("%s is not deployable.", fStore.getDisplayName()));
+        return ValidationStatus.error(
+                String.format("%s is not deployable.", Adapters.adapt(fStore, IDisplayable.class).getDisplayName()));
     }
 
     @Override

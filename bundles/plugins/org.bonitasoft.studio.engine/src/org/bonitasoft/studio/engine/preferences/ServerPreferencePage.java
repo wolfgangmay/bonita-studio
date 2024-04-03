@@ -28,11 +28,11 @@ import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.platform.PlatformLoginException;
 import org.bonitasoft.engine.platform.PlatformLogoutException;
 import org.bonitasoft.engine.session.SessionNotFoundException;
-import org.bonitasoft.studio.common.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.net.PortSelector;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.ui.jface.BonitaErrorDialog;
 import org.bonitasoft.studio.designer.core.UIDesignerServerManager;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.BOSWebServerManager;
@@ -281,7 +281,7 @@ public class ServerPreferencePage extends AbstractBonitaPreferencePage implement
 
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
-                    BOSWebServerManager.getInstance().resetServer(monitor);
+                    BOSWebServerManager.getInstance().resetServer(true, monitor);
                     return Status.OK_STATUS;
                 }
             }.schedule();

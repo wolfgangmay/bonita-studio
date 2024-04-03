@@ -121,7 +121,7 @@ public class BuildAndDeployRestAPIExtensionIT {
             var deployRestAPIExtensionOperation = new DeployCustomPageProjectOperation(
                     BOSEngineManager.getInstance().getPageAPI(sessionOperation.execute()),
                     new HttpClientFactory(), fileStore);
-            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation);
+            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation::run);
             StatusAssert.assertThat(deployRestAPIExtensionOperation.getStatus()).isOK();
             final Page deployedPage = deployRestAPIExtensionOperation.getDeployedPage();
             assertThat(deployedPage).isNotNull();
@@ -144,7 +144,7 @@ public class BuildAndDeployRestAPIExtensionIT {
             var deployRestAPIExtensionOperation = new DeployCustomPageProjectOperation(
                     BOSEngineManager.getInstance().getPageAPI(sessionOperation.execute()),
                     new HttpClientFactory(), fileStore);
-            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation);
+            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation::run);
             StatusAssert.assertThat(deployRestAPIExtensionOperation.getStatus()).isOK();
             final Page updatedPage = deployRestAPIExtensionOperation.getDeployedPage();
             assertThat(updatedPage).isNotNull();
@@ -169,7 +169,7 @@ public class BuildAndDeployRestAPIExtensionIT {
             var deployRestAPIExtensionOperation = new DeployCustomPageProjectOperation(
                     BOSEngineManager.getInstance().getPageAPI(sessionOperation.execute()),
                     new HttpClientFactory(), fileStore);
-            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation);
+            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation::run);
             StatusAssert.assertThat(deployRestAPIExtensionOperation.getStatus()).isOK();
             final Page deployedPage = deployRestAPIExtensionOperation.getDeployedPage();
             assertThat(deployedPage).isNotNull();
@@ -189,7 +189,7 @@ public class BuildAndDeployRestAPIExtensionIT {
             var deployRestAPIExtensionOperation = new DeployCustomPageProjectOperation(
                     BOSEngineManager.getInstance().getPageAPI(sessionOperation.execute()),
                     new HttpClientFactory(), fileStore);
-            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation);
+            PlatformUI.getWorkbench().getProgressService().run(true, false, deployRestAPIExtensionOperation::run);
             assertThat(deployRestAPIExtensionOperation.getStatus()).isNotOK();
         } finally {
             sessionOperation.logout();

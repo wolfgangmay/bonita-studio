@@ -31,8 +31,13 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.internal.core.IInternalDebugCoreConstants;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.ui.PreferenceConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.team.internal.ui.IPreferenceIds;
+import org.eclipse.team.internal.ui.TeamUIPlugin;
+import org.eclipse.team.internal.ui.history.IFileHistoryConstants;
 import org.eclipse.ui.IWorkbenchPreferenceConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.IPreferenceConstants;
@@ -76,9 +81,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer impleme
 
         initDefaultDebugPreferences();
 
-        final IPreferenceStore jdtUIStore = getJDTPreferenceStore();
+        var jdtUIStore = getJdtUiPreferenceStore();
         jdtUIStore.setValue(PreferenceConstants.EDITOR_MARK_OCCURRENCES, Boolean.FALSE);
-
+        
+        var coreOptions= JavaCore.getOptions();
+        coreOptions.put(JavaCore.COMPILER_PB_MISSING_SERIAL_VERSION, JavaCore.IGNORE);
+        JavaCore.setOptions(coreOptions);
+        
         IPreferenceStore preferenceStore = getIDEPreferenceStore();
         try {
             preferenceStore.setDefault(
@@ -90,25 +99,32 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer impleme
         } catch (IOException e) {
             BonitaStudioLog.error(e);
         }
-        
+
         IEclipsePreferences groovyCorePreferenceStore = getGroovyCorePreferenceStore();
-        groovyCorePreferenceStore.putBoolean(org.eclipse.jdt.groovy.core.Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, false);
-        groovyCorePreferenceStore.putBoolean(org.eclipse.jdt.groovy.core.Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        groovyCorePreferenceStore.putBoolean(org.eclipse.jdt.groovy.core.Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH,
+                false);
+        groovyCorePreferenceStore.putBoolean(org.eclipse.jdt.groovy.core.Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
+                false);
         try {
             groovyCorePreferenceStore.flush();
         } catch (BackingStoreException e) {
-           BonitaStudioLog.error(e);
+            BonitaStudioLog.error(e);
         }
+
+        TeamUIPlugin.getPlugin().getPreferenceStore()
+                .setValue(IFileHistoryConstants.PREF_GENERIC_HISTORYVIEW_EDITOR_LINKING,
+                        true);
+        TeamUIPlugin.getPlugin().getPreferenceStore().setValue(IPreferenceIds.SYNCHRONIZING_COMPLETE_PERSPECTIVE,
+                MessageDialogWithToggle.NEVER);
     }
 
-    protected IPreferenceStore getIDEPreferenceStore() {
+    IPreferenceStore getIDEPreferenceStore() {
         return IDEWorkbenchPlugin.getDefault().getPreferenceStore();
     }
-    
-    protected IEclipsePreferences getGroovyCorePreferenceStore() {
+
+    IEclipsePreferences getGroovyCorePreferenceStore() {
         return InstanceScope.INSTANCE.getNode(org.eclipse.jdt.groovy.core.Activator.PLUGIN_ID);
     }
-    
 
     protected void initializeWorkbenchPreferences() {
         IScopeContext context = DefaultScope.INSTANCE;
@@ -118,11 +134,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer impleme
         node.putBoolean(IPreferenceConstants.RUN_IN_BACKGROUND, false);
     }
 
-    protected IPreferenceStore getJDTPreferenceStore() {
+    IPreferenceStore getJdtUiPreferenceStore() {
         return PreferenceConstants.getPreferenceStore();
     }
-
-    protected IPreferenceStore getAPIPreferenceStore() {
+   
+    IPreferenceStore getAPIPreferenceStore() {
         return PrefUtil.getAPIPreferenceStore();
     }
 
@@ -131,11 +147,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer impleme
         node.put(ResourcesPlugin.PREF_ENCODING, "UTF-8");
     }
 
-    protected IPreferenceStore getWebBrowserPreferenceStore() {
+    IPreferenceStore getWebBrowserPreferenceStore() {
         return WebBrowserUIPlugin.getInstance().getPreferenceStore();
     }
 
-    protected IPreferenceStore getBonitaPreferenceStore() {
+    IPreferenceStore getBonitaPreferenceStore() {
         return BonitaStudioPreferencesPlugin.getDefault().getPreferenceStore();
     }
 
@@ -190,8 +206,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer impleme
 
     protected void initDefaultDebugPreferences() {
         if (PlatformUI.isWorkbenchRunning()) {
-            DebugUIPlugin.getDefault().getPreferenceStore().setDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT, false);
-            DebugUIPlugin.getDefault().getPreferenceStore().setDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_ERR, false);
+            DebugUIPlugin.getDefault().getPreferenceStore().setDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT,
+                    false);
+            DebugUIPlugin.getDefault().getPreferenceStore().setDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_ERR,
+                    false);
             DebugPlugin.getDefault().getPluginPreferences().setDefault(
                     IInternalDebugCoreConstants.PREF_ENABLE_STATUS_HANDLERS,
                     false);

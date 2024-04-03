@@ -8,13 +8,20 @@
     <artifactId>bonita-projet-template</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <properties>
+        <maven.compiler.release>11</maven.compiler.release>
         <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+        <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
+        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+        <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
+        <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
+        <flatten-maven-plugin.version>1.3.0</flatten-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+        <maven-deploy-plugin.version>3.0.0</maven-deploy-plugin.version>
+        <maven-dependency-plugin.version>3.3.0</maven-dependency-plugin.version>
     </properties>
     
      <!-- 
@@ -161,55 +168,98 @@
             <artifactId>groovy-servlet</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.bonitasoft.engine.data</groupId>
+            <artifactId>bonita-business-data-generator</artifactId>
+            <version>${bonita.runtime.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bonitasoft.engine.data</groupId>
+            <artifactId>bonita-business-data-client-resources</artifactId>
+            <version>${bonita.runtime.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>${maven-install-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.bonitasoft.maven</groupId>
-                    <artifactId>bonita-project-maven-plugin</artifactId>
-                    <version>${bonita-project-maven-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>${build-helper-maven-plugin.version}</version>
-                </plugin>
-                <plugin>
-                   <artifactId>maven-dependency-plugin</artifactId>
-                   <version>${maven-dependency-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>de.qaware.maven</groupId>
-                    <artifactId>go-offline-maven-plugin</artifactId>
-                    <version>1.2.8</version>
-                    <configuration>
-                        <dynamicDependencies>
-                            <DynamicDependency>
-                                <groupId>org.codehaus.plexus</groupId>
-                                <artifactId>plexus-utils</artifactId>
-                                <version>1.1</version>
-                                <repositoryType>PLUGIN</repositoryType>
-                            </DynamicDependency>
-                            <DynamicDependency>
-                                <groupId>org.sonatype.sisu.inject</groupId>
-                                <artifactId>guice-bean-containers</artifactId>
-                                <version>2.3.0</version>
-                                <repositoryType>PLUGIN</repositoryType>
-                            </DynamicDependency>
-                            <DynamicDependency>
-                                <groupId>org.sonatype.sisu.inject</groupId>
-                                <artifactId>guice-plexus-shim</artifactId>
-                                <version>2.3.0</version>
-                                <repositoryType>PLUGIN</repositoryType>
-                            </DynamicDependency>
-                        </dynamicDependencies>
-                    </configuration>
-                </plugin>
+           <plugins>
+             <plugin>
+              <artifactId>maven-install-plugin</artifactId>
+              <version>${maven-install-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <version>${maven-compiler-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-clean-plugin</artifactId>
+              <version>${maven-clean-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>${maven-jar-plugin.version}</version>
+            </plugin>
+             <plugin>
+              <artifactId>maven-source-plugin</artifactId>
+              <version>${maven-source-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-resources-plugin</artifactId>
+              <version>${maven-resources-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-deploy-plugin</artifactId>
+              <version>${maven-deploy-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <version>${maven-dependency-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <artifactId>maven-shade-plugin</artifactId>
+              <version>${maven-shade-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>flatten-maven-plugin</artifactId>
+              <version>${flatten-maven-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <groupId>org.bonitasoft.maven</groupId>
+              <artifactId>bonita-project-maven-plugin</artifactId>
+              <version>${bonita-project-maven-plugin.version}</version>
+            </plugin>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>build-helper-maven-plugin</artifactId>
+              <version>${build-helper-maven-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>de.qaware.maven</groupId>
+                <artifactId>go-offline-maven-plugin</artifactId>
+                <version>1.2.8</version>
+                <configuration>
+                    <dynamicDependencies>
+                        <DynamicDependency>
+                            <groupId>org.codehaus.plexus</groupId>
+                            <artifactId>plexus-utils</artifactId>
+                            <version>1.1</version>
+                            <repositoryType>PLUGIN</repositoryType>
+                        </DynamicDependency>
+                        <DynamicDependency>
+                            <groupId>org.sonatype.sisu.inject</groupId>
+                            <artifactId>guice-bean-containers</artifactId>
+                            <version>2.3.0</version>
+                            <repositoryType>PLUGIN</repositoryType>
+                        </DynamicDependency>
+                        <DynamicDependency>
+                            <groupId>org.sonatype.sisu.inject</groupId>
+                            <artifactId>guice-plexus-shim</artifactId>
+                            <version>2.3.0</version>
+                            <repositoryType>PLUGIN</repositoryType>
+                        </DynamicDependency>
+                    </dynamicDependencies>
+                </configuration>
+            </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -225,7 +275,32 @@
                 <artifactId>maven-install-plugin</artifactId>
             </plugin>
             <plugin>
+              <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-clean-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-resources-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <artifactId>maven-shade-plugin</artifactId>
+            </plugin>
+             <plugin>
               <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>flatten-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

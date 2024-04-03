@@ -19,9 +19,9 @@ import java.util.List;
 
 import org.bonitasoft.studio.common.Messages;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
-import org.bonitasoft.studio.common.jface.databinding.DialogSupport;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
+import org.bonitasoft.studio.common.ui.jface.databinding.DialogSupport;
 import org.bonitasoft.studio.model.process.AbstractProcess;
 import org.bonitasoft.studio.model.process.MainProcess;
 import org.eclipse.core.databinding.DataBindingContext;
@@ -100,7 +100,7 @@ public class OpenNameAndVersionForDiagramDialog extends OpenNameAndVersionDialog
         final ISWTObservableValue observePoolNameText = SWTObservables.observeText(poolNameText, SWT.Modify);
         ControlDecorationSupport.create(dbc.bindValue(observePoolNameText,
                 PojoProperties.value("newName").observe(pnv),
-                poolUpdateStrategy(Messages.name),
+                nameUpdateStrategy(),
                 null), SWT.LEFT);
 
         final Label poolVersion = new Label(pnvCompo, SWT.NONE);
@@ -111,7 +111,7 @@ public class OpenNameAndVersionForDiagramDialog extends OpenNameAndVersionDialog
         final ISWTObservableValue observePoolVersionText = SWTObservables.observeText(poolVersionText, SWT.Modify);
         ControlDecorationSupport.create(dbc.bindValue(observePoolVersionText,
                 PojoProperties.value("newVersion").observe(pnv),
-                poolUpdateStrategy(Messages.version),
+                versionUpdateStrategy(),
                 null), SWT.LEFT);
 
         if (isForceNameUpdate()) {

@@ -17,20 +17,19 @@ package org.bonitasoft.studio.application.handler;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.maven.model.Model;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.application.operation.SetProjectMetadataOperation;
 import org.bonitasoft.studio.common.RedirectURLBuilder;
-import org.bonitasoft.studio.common.jface.MessageDialogWithLink;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
-import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
+import org.bonitasoft.studio.common.ui.jface.MessageDialogWithLink;
 import org.bonitasoft.studio.ui.dialog.ExceptionDialogHandler;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.IWizardContainer;
@@ -62,23 +61,23 @@ public class EditProjectMetadataHandler extends AbstractProjectMetadataHandler {
     }
 
     @Override
-    protected ProjectMetadata initialMetadata(RepositoryAccessor repositoryAccessor) {
+    protected ProjectMetadata initialMetadata(RepositoryAccessor repositoryAccessor) throws CoreException {
         var currentRepository = repositoryAccessor.getCurrentRepository().orElseThrow();
-        return ProjectMetadata.read(currentRepository.getProject());
+        return ProjectMetadata.read(currentRepository.getProject(), new NullProgressMonitor());
     }
 
     @Override
     protected Optional<IStatus> performFinish(IWizardContainer container, ProjectMetadata metadata,
             RepositoryAccessor repositoryAccessor, MavenProjectHelper mavenProjectHelper,
             ExceptionDialogHandler exceptionDialogHandler) {
-        if (targetRuntimeVersionChanged(metadata, repositoryAccessor.getCurrentRepository().orElseThrow().getProject(),
-                mavenProjectHelper)
+        if (targetRuntimeVersionChanged(metadata, repositoryAccessor.getCurrentProject().orElseThrow())
                 && new MessageDialogWithLink(Display.getDefault().getActiveShell(),
                         Messages.updateTargetRuntimeVersionConfirmTitle,
                         null,
                         Messages.updateTargetRuntimeVersionConfirmMsg,
                         MessageDialog.CONFIRM,
-                        new String[] { String.format(Messages.updateTo, metadata.getBonitaRuntimeVersion()), IDialogConstants.CANCEL_LABEL },
+                        new String[] { String.format(Messages.updateTo, metadata.getBonitaRuntimeVersion()),
+                                IDialogConstants.CANCEL_LABEL },
                         0,
                         RedirectURLBuilder.createURI("735")).open() == 1) {
             return Optional.empty();
@@ -86,16 +85,17 @@ public class EditProjectMetadataHandler extends AbstractProjectMetadataHandler {
         return super.performFinish(container, metadata, repositoryAccessor, mavenProjectHelper, exceptionDialogHandler);
     }
 
-    private boolean targetRuntimeVersionChanged(ProjectMetadata metadata, IProject project, MavenProjectHelper helper) {
+    private boolean targetRuntimeVersionChanged(ProjectMetadata metadata, BonitaProject project) {
         try {
-            Model mavenModel = helper.getMavenModel(project);
+            var currentMetadata = project.getProjectMetadata(new NullProgressMonitor());
             return !Objects.equals(
-                    mavenModel.getProperties().getProperty(ProjectDefaultConfiguration.BONITA_RUNTIME_VERSION),
+                    currentMetadata.getBonitaRuntimeVersion(),
                     metadata.getBonitaRuntimeVersion());
         } catch (CoreException e) {
             BonitaStudioLog.error(e);
             return false;
         }
+       
     }
 
 }

@@ -17,13 +17,12 @@ package org.bonitasoft.studio.common.repository.core.maven;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.ProductVersion;
-import org.bonitasoft.studio.common.jface.databinding.StatusToMarkerSeverity;
 import org.bonitasoft.studio.common.repository.BonitaProjectNature;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
+import org.bonitasoft.studio.common.ui.jface.databinding.StatusToMarkerSeverity;
 import org.eclipse.core.databinding.validation.IValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IFile;
@@ -36,6 +35,8 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.m2e.core.MavenPlugin;
 
 public class BonitaProjectBuilder extends IncrementalProjectBuilder {
 
@@ -74,13 +75,28 @@ public class BonitaProjectBuilder extends IncrementalProjectBuilder {
 
     private void validateTargetRuntimeVersion(IProject project) throws CoreException {
         project.deleteMarkers(TARGET_RUNTIME_VERSION_MARKER_TYPE, true, IResource.DEPTH_ONE);
-        Model model = new MavenProjectHelper().getMavenModel(project);
-        String runtimeVersion = model.getProperties().getProperty(ProjectDefaultConfiguration.BONITA_RUNTIME_VERSION);
-        if (project.isAccessible() && !Objects.equals(runtimeVersion, ProductVersion.BONITA_RUNTIME_VERSION)) {
-            IStatus status = RUNTIME_VERSION_VALIDATOR.validate(runtimeVersion);
-            IMarker marker = project.createMarker(TARGET_RUNTIME_VERSION_MARKER_TYPE);
-            marker.setAttribute(IMarker.SEVERITY, new StatusToMarkerSeverity(status).toMarkerSeverity());
-            marker.setAttribute(IMarker.MESSAGE, status.getMessage() + Messages.editTargetRuntimeVersionFromProjectOverview);
+        var mavenProjectFacade = MavenPlugin.getMavenProjectRegistry().getProject(project);
+        if (mavenProjectFacade != null) {
+            var mavenProject = mavenProjectFacade.getMavenProject();
+            if (mavenProject == null) {
+                try {
+                    mavenProject = mavenProjectFacade.getMavenProject(new NullProgressMonitor());
+                } catch (CoreException e) {
+                    // The validation can be run on a project with unresolvable dependencies
+                    // This can happen if the validation is triggered on project in a old Bonita version
+                    // Just ignore this validation pass
+                    return;
+                }
+            }
+            String runtimeVersion = mavenProject.getProperties()
+                    .getProperty(ProjectDefaultConfiguration.BONITA_RUNTIME_VERSION);
+            if (project.isAccessible() && !Objects.equals(runtimeVersion, ProductVersion.BONITA_RUNTIME_VERSION)) {
+                IStatus status = RUNTIME_VERSION_VALIDATOR.validate(runtimeVersion);
+                IMarker marker = project.createMarker(TARGET_RUNTIME_VERSION_MARKER_TYPE);
+                marker.setAttribute(IMarker.SEVERITY, new StatusToMarkerSeverity(status).toMarkerSeverity());
+                marker.setAttribute(IMarker.MESSAGE,
+                        status.getMessage() + Messages.editTargetRuntimeVersionFromProjectOverview);
+            }
         }
     }
 

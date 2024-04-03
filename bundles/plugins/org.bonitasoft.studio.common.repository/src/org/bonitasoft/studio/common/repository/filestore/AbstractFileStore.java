@@ -28,9 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bonitasoft.studio.common.CommandExecutor;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -42,6 +40,8 @@ import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -57,7 +57,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
@@ -97,7 +96,7 @@ public abstract class AbstractFileStore<T>
         doCheckModelVersion();
         return doGetContent();
     }
-    
+
     /**
      * Retrieve content without checking model compatibility
      */
@@ -148,28 +147,11 @@ public abstract class AbstractFileStore<T>
     }
 
     @Override
-    public String getDisplayName() {
-        if (getName().indexOf('.') != -1) {
-            return getName().substring(0, getName().lastIndexOf('.'));
-        }
-        return getName();
-    }
-
-    @Override
     public boolean canBeDeleted() {
         return !isReadOnly();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.model.IDisplayable#getStyledString()
-     */
-    @Override
-    public StyledString getStyledString() {
-        return new StyledString(getName());
-    }
-
-    public AbstractRepository getRepository() {
+    public IRepository getRepository() {
         return RepositoryManager.getInstance().getCurrentRepository().orElse(null);
     }
 
@@ -207,7 +189,7 @@ public abstract class AbstractFileStore<T>
         if (canBeDeleted()) {
             fireFileStoreEvent(new FileStoreChangeEvent(EventType.PRE_DELETE, this));
             doDelete();
-            if(getParentStore() != null) {
+            if (getParentStore() != null) {
                 getParentStore().refresh();
             }
             refreshExplorerView();
@@ -233,27 +215,18 @@ public abstract class AbstractFileStore<T>
         if (!isReadOnly()) {
             fireFileStoreEvent(new FileStoreChangeEvent(EventType.PRE_SAVE, this));
             IResource resource = getResource();
-            boolean exists = resource.exists();
             checkParentExists(resource);
             doSave(content);
-            if (PlatformUI.isWorkbenchRunning()) {
-                new WorkspaceJob("Refresh resources...") {
-
-                    @Override
-                    public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                        getResource().refreshLocal(IResource.DEPTH_ZERO, monitor);
-                        if (!exists) {
-                            refreshExplorerView();
-                        }
-                        return Status.OK_STATUS;
-                    }
-                }.schedule();
+            try {
+                getResource().refreshLocal(IResource.DEPTH_ZERO, new NullProgressMonitor());
+            } catch (CoreException e) {
+                BonitaStudioLog.error(e);
             }
             fireFileStoreEvent(new FileStoreChangeEvent(EventType.POST_SAVE, this));
         } else {
             Display.getDefault().syncExec(
                     () -> MessageDialog.openWarning(Display.getDefault().getActiveShell(), Messages.readOnlyFileTitle,
-                            Messages.bind(Messages.readOnlyFileWarning, getDisplayName())));
+                            Messages.bind(Messages.readOnlyFileWarning, getName())));
         }
     }
 
@@ -571,12 +544,11 @@ public abstract class AbstractFileStore<T>
         }
         return ValidationStatus.ok();
     }
-    
 
     public void setMigrationReport(MigrationReport report) {
         this.report = report;
     }
-    
+
     @Override
     public MigrationReport getMigrationReport() {
         return report;

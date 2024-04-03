@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import org.bonitasoft.studio.common.NamingUtils;
 import org.bonitasoft.studio.common.editingdomain.BonitaEditingDomainUtil;
 import org.bonitasoft.studio.common.emf.tools.EMFResourceUtil;
-import org.bonitasoft.studio.common.emf.tools.RemoveDanglingReferences;
+import org.bonitasoft.studio.common.gmf.tools.RemoveDanglingReferences;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.platform.tools.CopyInputStream;
 import org.bonitasoft.studio.common.repository.ImportArchiveData;
@@ -46,8 +46,6 @@ import org.bonitasoft.studio.model.process.MainProcess;
 import org.bonitasoft.studio.model.process.ProcessPackage;
 import org.bonitasoft.studio.model.process.diagram.part.ProcessDiagramEditorUtil;
 import org.bonitasoft.studio.model.process.provider.ProcessItemProviderAdapterFactory;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.pics.PicsConstants;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
@@ -70,7 +68,6 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.gmf.runtime.notation.Diagram;
 import org.eclipse.gmf.runtime.notation.util.NotationAdapterFactory;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
 public class DiagramRepositoryStore extends AbstractEMFRepositoryStore<DiagramFileStore> {
@@ -89,16 +86,6 @@ public class DiagramRepositoryStore extends AbstractEMFRepositoryStore<DiagramFi
     @Override
     public String getName() {
         return STORE_NAME;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return Messages.diagrams;
-    }
-
-    @Override
-    public Image getIcon() {
-        return Pics.getImage(PicsConstants.diagram);
     }
 
     @Override
@@ -341,7 +328,7 @@ public class DiagramRepositoryStore extends AbstractEMFRepositoryStore<DiagramFi
             diagram.eResource().getContents().removeIf(this::isFormDiagram);
 
             applyTransformations(diagram);
-
+            
             try {
                 diagramResource.save(ProcessDiagramEditorUtil.getSaveOptions());
             } catch (final IOException e) {

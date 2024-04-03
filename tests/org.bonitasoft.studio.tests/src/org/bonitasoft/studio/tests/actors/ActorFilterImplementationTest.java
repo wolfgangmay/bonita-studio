@@ -7,11 +7,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.bonitasoft.studio.common.NamingUtils;
-import org.bonitasoft.studio.common.jface.FileActionDialog;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
 import org.bonitasoft.studio.common.repository.ClassGenerator;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.connector.model.definition.ConnectorDefinition;
 import org.bonitasoft.studio.connector.model.definition.ConnectorDefinitionFactory;
 import org.bonitasoft.studio.connector.model.i18n.Messages;
@@ -19,11 +19,12 @@ import org.bonitasoft.studio.connector.model.implementation.ConnectorImplementat
 import org.bonitasoft.studio.identity.actors.repository.ActorFilterDefRepositoryStore;
 import org.bonitasoft.studio.identity.actors.repository.ActorFilterImplRepositoryStore;
 import org.bonitasoft.studio.swtbot.framework.conditions.AssertionCondition;
+import org.bonitasoft.studio.swtbot.framework.rule.EditorMatcherExceptOverview;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
-import org.bonitasoft.studio.tests.util.EditorMatcherExceptOverview;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEclipseEditor;
+import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.swt.finder.SWTBot;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
@@ -121,7 +122,7 @@ public class ActorFilterImplementationTest implements SWTBotConstants {
             }
         }, 30000);
         bot.waitUntil(new AssertionCondition() {
-            
+
             @Override
             protected void makeAssert() throws Exception {
                 SWTBotEclipseEditor editor = ActorFilterImplementationTest.this.bot.activeEditor().toTextEditor();
@@ -129,10 +130,8 @@ public class ActorFilterImplementationTest implements SWTBotConstants {
                 assertTrue("Invalid file length", editor.getText().length() > 0);
                 containsError(editor.getStyles(0, 0, length));
             }
-        },10000);
-    
-        
-        
+        }, 10000);
+
         removeImplementation(id);
     }
 
@@ -324,12 +323,13 @@ public class ActorFilterImplementationTest implements SWTBotConstants {
                 .toConnectorDefinitionFilename("testEdit", "1.0.0", true), true);
         assertNotNull(file);
         file.delete();
-        bot.closeAllEditors();
+        var matcher = new EditorMatcherExceptOverview();
+        bot.editors(matcher).forEach(SWTBotEditor::close);
         bot.waitUntil(new ICondition() {
 
             @Override
             public boolean test() throws Exception {
-                return bot.editors(new EditorMatcherExceptOverview()).isEmpty();
+                return bot.editors(matcher).isEmpty();
             }
 
             @Override

@@ -18,12 +18,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import java.util.Collections;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -33,6 +36,7 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,10 +54,12 @@ class BonitaStudioApplicationTest {
     @BeforeEach
     void setUp() throws Exception {
         application = spy(new BonitaStudioApplication(Display.getDefault()));
-        doNothing().when(application).initWorkspaceLocation();
-        doNothing().when(application).openErrorDialog(eq(Display.getDefault()), anyString());
+        doReturn(null).when(application).initLocations(nullable(Shell.class), eq(Collections.EMPTY_MAP));
+        doNothing().when(application).openErrorDialog(any(Display.class), anyString());
         doReturn(false).when(application).isWorkbenchRunning();
-        doReturn(IApplication.EXIT_OK).when(application).createAndRunWorkbench(any(Display.class));
+        doReturn(IApplication.EXIT_OK).when(application).createAndRunWorkbench(any());
+        // do not dispose display for other tests
+        doNothing().when(application).disposeDisplay(any(Display.class));
     }
 
     @AfterEach
@@ -62,7 +68,7 @@ class BonitaStudioApplicationTest {
     }
 
     @Test
-    void shoul_start_run_workbench_if_java_version_is_valid() throws Exception {
+    void should_start_run_workbench_if_java_version_is_valid() throws Exception {
         doReturn("11").when(application).getJavaVersion();
 
         final Object result = application.start(null);
@@ -72,7 +78,7 @@ class BonitaStudioApplicationTest {
     }
 
     @Test
-    void shoul_start_exit_if_java_version_is_not_valid() throws Exception {
+    void exit_if_java_version_is_not_valid() throws Exception {
         doReturn("1.8").when(application).getJavaVersion();
 
         application.start(null);
@@ -82,7 +88,7 @@ class BonitaStudioApplicationTest {
     }
 
     @Test
-    void should_start_add_auto_build_job_listener_that_cancel_autobuild_jobs_until_workbench_is_ready()
+    void add_auto_build_job_listener_that_cancel_autobuild_jobs_until_workbench_is_ready()
             throws Exception {
         doReturn("11").when(application).getJavaVersion();
 
@@ -114,5 +120,4 @@ class BonitaStudioApplicationTest {
 
         verify(application, times(2)).cancelAutoBuildJobDuringStartup(any(IJobChangeEvent.class));
     }
-
 }

@@ -10,8 +10,8 @@ import static org.eclipse.swtbot.swt.finder.waits.Conditions.shellIsActive;
 import java.util.Objects;
 
 import org.bonitasoft.studio.application.i18n.Messages;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.swtbot.framework.ConditionBuilder;
 import org.bonitasoft.studio.swtbot.framework.SWTBotTestUtil;
@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
 @RunWith(SWTBotJunit4ClassRunner.class)
 public class TestSeveralLocalRepositories {
 
-    private AbstractRepository currentRepo;
+    private IRepository currentRepo;
 
     private final SWTGefBot bot = new SWTGefBot();
 
@@ -46,8 +46,8 @@ public class TestSeveralLocalRepositories {
 
     @After
     public void tearDown() throws Exception {
-        if (!RepositoryManager.getInstance().getCurrentRepository().equals(currentRepo)) {
-            RepositoryManager.getInstance().switchToRepository(currentRepo.getName(), new NullProgressMonitor());
+        if (!RepositoryManager.getInstance().getCurrentRepository().filter(currentRepo::equals).isPresent()) {
+            RepositoryManager.getInstance().switchToRepository(currentRepo.getProjectId(), new NullProgressMonitor());
         }
         SWTBotTestUtil.waitUntilRootShellIsActive(bot);
     }
@@ -67,9 +67,9 @@ public class TestSeveralLocalRepositories {
 
         ICondition condition = new ConditionBuilder()
                 .withTest(() -> Objects.equals(testRepoName,
-                        RepositoryManager.getInstance().getCurrentRepository().orElseThrow().getName()))
+                        RepositoryManager.getInstance().getCurrentProject().orElseThrow().getDisplayName()))
                 .withFailureMessage(() -> String.format("The project name should be %s, but is %s", testRepoName,
-                        RepositoryManager.getInstance().getCurrentRepository().orElseThrow().getName()))
+                        RepositoryManager.getInstance().getCurrentProject().orElseThrow().getDisplayName()))
                 .create();
         bot.waitUntil(condition, 120000);
 

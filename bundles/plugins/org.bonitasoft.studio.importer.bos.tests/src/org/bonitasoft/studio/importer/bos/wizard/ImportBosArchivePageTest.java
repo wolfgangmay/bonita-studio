@@ -22,6 +22,7 @@ import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.importer.bos.handler.SwitchRepositoryStrategy;
 import org.bonitasoft.studio.importer.bos.model.BosArchive;
+import org.bonitasoft.studio.importer.bos.model.DefaultBosArchiveEntryHandler;
 import org.bonitasoft.studio.importer.bos.model.ImportArchiveModel;
 import org.bonitasoft.studio.importer.bos.operation.ImportConflictsChecker;
 import org.bonitasoft.studio.swt.rules.RealmWithDisplay;
@@ -110,14 +111,16 @@ public class ImportBosArchivePageTest {
         when(repo.getRepositoryStoreByName("diagrams")).thenReturn(Optional.of(diagramStore));
         when(repo.getRepositoryStoreByName("application_resources")).thenReturn(Optional.of(appRessourcesStore));
         when(repo.getRepositoryStoreByName("lib")).thenReturn(Optional.of(libStore));
-        when(repo.getName()).thenReturn(name);
+        when(repo.getProjectId()).thenReturn(name);
         when(repo.getProject()).thenReturn(mock(IProject.class));
         return repo;
     }
 
     private BosArchive newBosArchive(File archiveFile) throws ZipException, IOException {
         final BosArchive bosArchive = spy(new BosArchive(archiveFile));
-        doReturn(Status.OK_STATUS).when(bosArchive).validateFile(any(), any());
+        var entryHandler = spy(new DefaultBosArchiveEntryHandler(archiveFile));
+        doReturn(entryHandler).when(bosArchive).getBosArchiveEntryHandler();
+        doReturn(Status.OK_STATUS).when(entryHandler).validateFile(any(), any());
         return bosArchive;
     }
 

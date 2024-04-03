@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 
 import org.bonitasoft.studio.common.extension.ExtensionContextInjectionFactory;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.DatabaseHandler;
 import org.bonitasoft.studio.common.repository.jdt.JDTTypeHierarchyManager;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
@@ -40,18 +42,20 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.emf.edapt.migration.MigrationException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AbstractRepositoryTest {
+@ExtendWith(MockitoExtension.class)
+class AbstractRepositoryTest {
 
     @Mock
     private IWorkspace workspace;
     @Mock
     private IProject project;
+    @Mock
+    private BonitaProject bonitaProject;
     @Mock
     private ExtensionContextInjectionFactory extensionContextInjectionFactory;
     @Mock
@@ -66,7 +70,7 @@ public class AbstractRepositoryTest {
     private IEventBroker eventBroker;
 
     @Test
-    public void should_not_refresh_project_when_deleting_a_closed_repository() throws Exception {
+    void should_not_refresh_project_when_deleting_a_closed_repository() throws Exception {
         final AbstractRepository repository = newRepository();
 
         repository.delete(monitor);
@@ -75,7 +79,7 @@ public class AbstractRepositoryTest {
     }
 
     @Test
-    public void should_refresh_project_when_deleting_an_open_repository() throws Exception {
+    void should_refresh_project_when_deleting_an_open_repository() throws Exception {
         final AbstractRepository repository = newRepository();
         doReturn(true).when(project).isOpen();
 
@@ -85,7 +89,7 @@ public class AbstractRepositoryTest {
     }
 
     @Test
-    public void should_return_the_correct_file_store_when_two_resources_have_the_same_name() throws Exception {
+    void should_return_the_correct_file_store_when_two_resources_have_the_same_name() throws Exception {
         IResource resource1 = mock(IResource.class);
         IResource resource2 = mock(IResource.class);
         when(resource1.getName()).thenReturn("name.xml");
@@ -115,11 +119,11 @@ public class AbstractRepositoryTest {
     }
 
     private AbstractRepository newRepository() throws CoreException, MigrationException {
-        return spy(new TestRepository(workspace, project,
+        lenient().doReturn(project).when(bonitaProject).getAppProject();
+        return spy(new TestRepository(workspace, bonitaProject,
                 extensionContextInjectionFactory,
                 jdtTypeHierarchyManager, 
-                eventBroker,
-                true));
+                eventBroker));
     }
     
 }

@@ -27,9 +27,9 @@ import org.bonitasoft.studio.application.ui.control.model.RepositoryModel;
 import org.bonitasoft.studio.application.ui.control.model.RepositoryStore;
 import org.bonitasoft.studio.application.ui.control.model.TenantArtifact;
 import org.bonitasoft.studio.businessobject.core.repository.BusinessObjectModelFileStore;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.model.IDeployable;
+import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.ITenantResource;
@@ -47,18 +47,18 @@ public class RepositoryModelBuilder {
         if (currentRepository != null) {
             currentRepository.getAllStores();
             List<RepositoryStore> stores = createStore(currentRepository);
-            return new RepositoryModel(currentRepository.getName(), stores);
+            return new RepositoryModel(currentRepository.getProjectId(), stores);
         }
         return null;
     }
 
-    public RepositoryModel create(AbstractRepository currentRepository,
+    public RepositoryModel create(IRepository currentRepository,
             List<IRepositoryStore<? extends IRepositoryFileStore>> repositoryStores) {
         List<RepositoryStore> stores = repositoryStores.stream().map(this::fillStore).collect(Collectors.toList());
-        return new RepositoryModel(currentRepository.getName(), stores);
+        return new RepositoryModel(currentRepository.getProjectId(), stores);
     }
 
-    private List<RepositoryStore> createStore(AbstractRepository repository) {
+    private List<RepositoryStore> createStore(IRepository repository) {
         return repository.getAllStores()
                 .stream()
                 .filter(repositoryStore -> repositoryStore.getChildren().stream()

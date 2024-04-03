@@ -13,14 +13,12 @@ import java.util.stream.Collectors;
 import org.bonitasoft.studio.common.extension.BonitaStudioExtensionRegistryManager;
 import org.bonitasoft.studio.common.extension.ExtensionContextInjectionFactory;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
-import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
-import org.bonitasoft.studio.common.repository.IBonitaProjectListener;
-import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.core.DatabaseHandler;
 import org.bonitasoft.studio.common.repository.core.ProjectDependenciesStore;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
+import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
+import org.bonitasoft.studio.common.repository.jdt.JDTTypeHierarchyManager;
 import org.bonitasoft.studio.common.repository.migration.ProcessModelTransformation;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
@@ -33,11 +31,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
-import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.jdt.core.IJavaProject;
 
 public class FakeRepository implements IRepository {
 
@@ -61,11 +57,6 @@ public class FakeRepository implements IRepository {
     @Override
     public boolean isLoaded() {
         return false;
-    }
-
-    @Override
-    public String getName() {
-        return null;
     }
 
     @Override
@@ -94,7 +85,7 @@ public class FakeRepository implements IRepository {
     }
 
     @Override
-    public void close() {
+    public void close(IProgressMonitor monitor) {
 
     }
 
@@ -146,27 +137,12 @@ public class FakeRepository implements IRepository {
     }
 
     @Override
-    public String getVersion() {
-        return null;
-    }
-
-    @Override
     public List<IRepositoryStore<? extends IRepositoryFileStore>> getAllSharedStores() {
         return null;
     }
 
     @Override
     public List<IRepositoryStore<? extends IRepositoryFileStore>> getAllExportableStores() {
-        return null;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return null;
-    }
-
-    @Override
-    public Image getIcon() {
         return null;
     }
 
@@ -201,7 +177,7 @@ public class FakeRepository implements IRepository {
     }
 
     @Override
-    public void migrate(IProgressMonitor monitor) throws CoreException, MigrationException {
+    public void migrate(MigrationReport report, IProgressMonitor monitor) throws CoreException, MigrationException {
 
     }
 
@@ -241,12 +217,45 @@ public class FakeRepository implements IRepository {
     }
 
     @Override
-    public boolean closeAllEditors() {
+    public boolean closeAllEditors(boolean save) {
         return false;
     }
 
     @Override
     public String getBonitaRuntimeVersion() {
+        return null;
+    }
+
+    @Override
+    public List<IBonitaProjectListener> getProjectListeners() {
+        return null;
+    }
+
+    @Override
+    public void build(IProgressMonitor monitor) {
+    }
+
+    @Override
+    public IJavaProject getJavaProject() {
+        return null;
+    }
+
+    @Override
+    public JDTTypeHierarchyManager getJdtTypeHierarchyManager() {
+        return null;
+    }
+
+    @Override
+    public void disableOpenIntroListener() {
+    }
+
+    @Override
+    public boolean isOpenIntroListenerEnabled() {
+        return false;
+    }
+
+    @Override
+    public String getProjectId() {
         return null;
     }
 

@@ -107,7 +107,7 @@ public class ExportBosArchiveHandler {
     }
 
     private String getDefaultName(RepositoryAccessor repositoryAccessor) {
-        return repositoryAccessor.getCurrentRepository().orElseThrow().getName() + "_"
+        return repositoryAccessor.getCurrentProject().orElseThrow().getId() + "_"
                 + new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date()) + ".bos";
     }
 

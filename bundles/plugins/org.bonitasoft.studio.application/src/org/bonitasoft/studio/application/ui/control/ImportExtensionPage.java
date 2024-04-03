@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.application.i18n.Messages;
-import org.bonitasoft.studio.common.jface.databinding.validator.EmptyInputValidator;
+import org.bonitasoft.studio.common.databinding.validator.EmptyInputValidator;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.core.FileInputStreamSupplier;
 import org.bonitasoft.studio.common.repository.core.maven.FileDependencyLookupOperation;
@@ -38,7 +38,7 @@ import org.bonitasoft.studio.common.repository.core.maven.MavenRepositoryRegistr
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup.Status;
 import org.bonitasoft.studio.common.repository.ui.validator.MavenIdValidator;
-import org.bonitasoft.studio.common.widgets.CustomStackLayout;
+import org.bonitasoft.studio.common.ui.widgets.CustomStackLayout;
 import org.bonitasoft.studio.preferences.BonitaThemeConstants;
 import org.bonitasoft.studio.preferences.dialog.BonitaPreferenceDialog;
 import org.bonitasoft.studio.ui.databinding.ComputedValueBuilder;
@@ -189,7 +189,8 @@ public class ImportExtensionPage implements ControlSupplier {
         ctx.bindValue(PojoProperties.value("topControl").observe(stackLayout), importModeObservable,
                 UpdateStrategyFactory.neverUpdateValueStrategy().create(),
                 UpdateStrategyFactory.updateValueStrategy()
-                        .withConverter(IConverter.<ImportMode, Composite> create(o -> o != null ? compositeFor(o) : null))
+                        .withConverter(
+                                IConverter.<ImportMode, Composite> create(o -> o != null ? compositeFor(o) : null))
                         .create());
     }
 

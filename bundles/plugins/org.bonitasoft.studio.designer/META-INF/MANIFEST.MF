@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: UI Designer Plugin
 Bundle-SymbolicName: org.bonitasoft.studio.designer;singleton:=true
-Bundle-Version: 7.15.9.qualifier
+Bundle-Version: 8.0.4.qualifier
 Bundle-ClassPath: .,
  lib/ui-designer-backend-contract.jar
 Bundle-Activator: org.bonitasoft.studio.designer.UIDesignerPlugin
@@ -56,7 +56,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions,
  org.eclipse.wst.server.core,
  org.eclipse.osgi.services,
- org.eclipse.e4.core.services
+ org.eclipse.e4.core.services,
+ org.bonitasoft.studio.common.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Import-Package: javax.annotation;version="1.2.0",

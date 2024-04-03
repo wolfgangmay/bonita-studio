@@ -78,6 +78,7 @@ import org.bonitasoft.studio.tests.exporter.bpmn.BPMNGatewayExportImportTest;
 import org.bonitasoft.studio.tests.exporter.bpmn.BPMNSequenceFlowDefaultFlowExportImportTest;
 import org.bonitasoft.studio.tests.expressionEditor.ExpressionEditorIT;
 import org.bonitasoft.studio.tests.expressionEditor.TestPatternExpressionViewer;
+import org.bonitasoft.studio.tests.git.GitCloneIT;
 import org.bonitasoft.studio.tests.git.ShareWithGitIT;
 import org.bonitasoft.studio.tests.importer.bos.ImportBOSArchiveWizardIT;
 import org.bonitasoft.studio.tests.importer.bpmn2.ImportBPMMNFileIT;
@@ -87,7 +88,7 @@ import org.bonitasoft.studio.tests.organization.TestOrganizationPassword;
 import org.bonitasoft.studio.tests.preferences.MavenConfigurationIT;
 import org.bonitasoft.studio.tests.processzoo.examples.TestWebPurchase;
 import org.bonitasoft.studio.tests.project.ProjectCompositionIT;
-import org.bonitasoft.studio.tests.project.ProjectOverviewdIT;
+import org.bonitasoft.studio.tests.project.ProjectOverviewIT;
 import org.bonitasoft.studio.tests.projectExplorer.ProjectExplorerBdmIT;
 import org.bonitasoft.studio.tests.projectExplorer.ProjectExplorerConnectorIT;
 import org.bonitasoft.studio.tests.projectExplorer.ProjectExplorerDiagramIT;
@@ -108,7 +109,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         EnvironmentDialogIT.class,
         ProjectCompositionIT.class,
-        ProjectOverviewdIT.class,
+        ProjectOverviewIT.class,
         RichTextEditorIT.class,
         DiagramTests.class,
         DeleteCommandTest.class,
@@ -191,7 +192,8 @@ import org.junit.runners.Suite;
         ApplicationDescriptorOverviewIT.class,
         ApplicationDescriptorIT.class,
         MavenConfigurationIT.class,
-        ShareWithGitIT.class
+        ShareWithGitIT.class,
+        GitCloneIT.class
 })
 public class SWTBotTestSuite {
 

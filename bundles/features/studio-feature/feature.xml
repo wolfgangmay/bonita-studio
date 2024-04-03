@@ -2,7 +2,7 @@
 <feature
       id="studio-feature"
       label="Studio"
-      version="7.15.9.qualifier"
+      version="8.0.4.qualifier"
       provider-name="Bonitasoft S.A.">
 
    <description>
@@ -10,7 +10,7 @@
    </description>
 
    <copyright>
-      Copyright (C) 2009-2022 Bonitasoft S.A.
+      Copyright (C) 2009-2023 Bonitasoft S.A.
 Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
 This program is free software: you can redistribute it and/or
 modify
@@ -28,7 +28,7 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
    </copyright>
 
    <license url="">
-      Copyright (C) 2009-2021 Bonitasoft S.A.
+      Copyright (C) 2009-2023 Bonitasoft S.A.
 Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
 This program is free software: you can redistribute it and/or
 modify
@@ -251,6 +251,10 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <includes
          id="org.eclipse.m2e.sse.ui.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.eclipse.platform"
          version="0.0.0"/>
 
    <plugin
@@ -611,13 +615,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
          unpack="false"/>
 
    <plugin
-         id="org.bonitasoft.studio.team"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.bonitasoft.studio.team.git"
          download-size="0"
          install-size="0"
@@ -682,6 +679,13 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio.identity"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.bonitasoft.studio.common.ui"
          download-size="0"
          install-size="0"
          version="0.0.0"

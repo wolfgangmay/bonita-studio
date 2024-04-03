@@ -19,11 +19,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bonitasoft.studio.common.ProjectUtil;
-import org.bonitasoft.studio.common.jface.SWTBotConstants;
+import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.engine.i18n.Messages;
 import org.bonitasoft.studio.swtbot.framework.SWTBotTestUtil;
 import org.bonitasoft.studio.swtbot.framework.conditions.BonitaBPMConditions;
@@ -34,11 +35,11 @@ import org.bonitasoft.studio.swtbot.framework.draw.BotGefProcessDiagramEditor;
 import org.bonitasoft.studio.swtbot.framework.projectExplorer.ProjectExplorerBot;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.swtbot.eclipse.finder.waits.Conditions;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.eclipse.gef.finder.widgets.SWTBotGefEditor;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
+import org.eclipse.swtbot.swt.finder.waits.Conditions;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotShell;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTree;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTreeItem;
@@ -49,7 +50,7 @@ import org.junit.runner.RunWith;
 @RunWith(SWTBotJunit4ClassRunner.class)
 public class BarExporterTest {
 
-    final public static String EditorTitleRegex = "(.*)\\s\\((.*)\\)";
+    private static final String EditorTitleRegex = "(.*)\\s\\((.*)\\)";
 
     private final SWTGefBot bot = new SWTGefBot();
 
@@ -57,7 +58,7 @@ public class BarExporterTest {
     public SWTGefBotRule gefBotRule = new SWTGefBotRule(bot);
 
     @Test
-    public void testServerBuild() {
+    public void testServerBuild() throws IOException {
 
         SWTBotTestUtil.createNewDiagram(bot);
         final SWTBotEditor activeEditor = bot.activeEditor();
@@ -97,7 +98,7 @@ public class BarExporterTest {
         bot.waitUntil(Conditions.shellIsActive(Messages.buildTitle));
 
         // select and check created Diagram in the Tree
-        final SWTBotTree tree = bot.treeWithLabel("Select processes to export");
+        final SWTBotTree tree = bot.treeWithLabel(Messages.selectProcessesToExport);
         final SWTBotTreeItem diagramTreeItem = tree.getTreeItem(editorTitle);
 
         // check the diagram to export
@@ -127,11 +128,9 @@ public class BarExporterTest {
             assertFalse("Error: Pool selected is not the good one.", !poolName.equals("Pool" + i));
         }
         // create tmp directory to write diagrams
-        final File tmpBarFolder = new File(ProjectUtil.getBonitaStudioWorkFolder(), "testExportBar");
-        tmpBarFolder.deleteOnExit();
-        tmpBarFolder.mkdirs();
+        var tmpBarFolder = Files.createTempDirectory("testExportBar");
         //set the path where files are saved
-        final String tmpBarFolderPath = tmpBarFolder.getAbsolutePath();
+        final String tmpBarFolderPath = tmpBarFolder.toFile().getAbsolutePath();
         bot.comboBoxWithLabel(Messages.destinationPath + " *").setText(tmpBarFolderPath);
 
         // click 'Finish' button to close 'Build' shell

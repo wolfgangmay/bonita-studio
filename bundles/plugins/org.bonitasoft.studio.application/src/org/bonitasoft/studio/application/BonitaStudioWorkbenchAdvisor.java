@@ -17,14 +17,12 @@ package org.bonitasoft.studio.application;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.maven.cli.configuration.SettingsXmlConfigurationProcessor;
 import org.bonitasoft.studio.application.contribution.IPreShutdownContribution;
 import org.bonitasoft.studio.application.contribution.RecoverWorkspaceContribution;
 import org.bonitasoft.studio.application.dialog.ExitDialog;
@@ -32,35 +30,29 @@ import org.bonitasoft.studio.application.handler.OpenReleaseNoteHandler;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.common.DateUtil;
 import org.bonitasoft.studio.common.FileUtil;
-import org.bonitasoft.studio.common.ProjectUtil;
-import org.bonitasoft.studio.common.RedirectURLBuilder;
 import org.bonitasoft.studio.common.extension.BonitaStudioExtensionRegistryManager;
 import org.bonitasoft.studio.common.extension.IPostStartupContribution;
-import org.bonitasoft.studio.common.jface.MessageDialogWithLink;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.net.PortSelector;
-import org.bonitasoft.studio.common.platform.tools.PlatformUtil;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.ActiveOrganizationProvider;
-import org.bonitasoft.studio.common.repository.core.maven.DependencyGetOperation;
 import org.bonitasoft.studio.common.repository.core.maven.contribution.InstallBonitaMavenArtifactsOperation;
-import org.bonitasoft.studio.common.repository.core.maven.migration.model.GAV;
 import org.bonitasoft.studio.common.repository.core.maven.repository.MavenRepositories;
+import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.designer.core.UIDesignerServerManager;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.BOSWebServerManager;
 import org.bonitasoft.studio.engine.EnginePlugin;
 import org.bonitasoft.studio.engine.preferences.EnginePreferenceConstants;
-import org.bonitasoft.studio.engine.server.StartEngineJob;
 import org.bonitasoft.studio.model.process.diagram.part.ProcessDiagramEditorPlugin;
 import org.bonitasoft.studio.preferences.BonitaPreferenceConstants;
 import org.bonitasoft.studio.preferences.BonitaStudioPreferencesPlugin;
 import org.bonitasoft.studio.preferences.BonitaThemeConstants;
-import org.bonitasoft.studio.preferences.dialog.BonitaPreferenceDialog;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -78,17 +70,15 @@ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.di.InjectionException;
 import org.eclipse.e4.ui.css.swt.theme.IThemeEngine;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.IDialogBlockedHandler;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.embedder.IMavenConfiguration;
-import org.eclipse.m2e.core.repository.IRepository;
-import org.eclipse.m2e.core.repository.IRepositoryRegistry;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorReference;
@@ -128,16 +118,15 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
         public void run(final IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
             monitor.beginTask(Messages.shuttingDown, IProgressMonitor.UNKNOWN);
             UIDesignerServerManager.getInstance().stop();
-            Job.getJobManager().cancel(StartEngineJob.FAMILY);
+            Job.getJobManager().cancel(RepositoryManager.class);
             RepositoryManager.getInstance().getCurrentRepository()
-                    .ifPresent(AbstractRepository::disableOpenIntroListener);
+                    .ifPresent(org.bonitasoft.studio.common.repository.model.IRepository::disableOpenIntroListener);
             executePreShutdownContribution();
             new ActiveOrganizationProvider().flush();
             if (BOSWebServerManager.getInstance().serverIsStarted() && BOSEngineManager.getInstance().isRunning()) {
                 BOSEngineManager.getInstance().stop();
             }
             deleteH2DatabasesFiles();
-            FileUtil.deleteDir(ProjectUtil.getBonitaStudioWorkFolder());
             deleteTomcatTempDir();
             monitor.done();
         }
@@ -446,7 +435,7 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
         disableInternalWebBrowser();
         setSystemProperties();
         configureGradleScriptContentType();
-    }
+     }
 
     private void configureGradleScriptContentType() {
         // Avoid error logs to be written by the groovy eclipse editor plugin
@@ -484,24 +473,18 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
         } catch (IOException e) {
             BonitaStudioLog.error(e);
         }
-        var initializeProjectJob = new Job("Initialize project") {
-
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                // Ensure the local repository contains Bonita artifacts
-                try {
-                    new InstallBonitaMavenArtifactsOperation(MavenPlugin.getMaven().getLocalRepository())
-                            .execute(monitor);
-                } catch (CoreException e) {
-                    return e.getStatus();
-                }
-                RepositoryManager.getInstance().getAccessor().start(monitor);
-                return Status.OK_STATUS;
-            }
+        var initializeProjectJob = new WorkspaceJob("Initialize project") {
 
             @Override
             public boolean belongsTo(Object family) {
                 return RepositoryManager.class.equals(family);
+            }
+
+            @Override
+            public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+                RepositoryManager.getInstance().installRequiredMavenDependencies(monitor);
+                RepositoryManager.getInstance().getAccessor().start(monitor);
+                return Status.OK_STATUS;
             }
         };
         initializeProjectJob.addJobChangeListener(new JobChangeAdapter() {
@@ -679,7 +662,7 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
             Stream.of(activePage.getViewReferences())
                     .filter(vr -> Objects.equals("org.eclipse.ui.browser.view", vr.getId()))
                     .forEach(activePage::hideView);
-            Job.getJobManager().cancel(StartEngineJob.FAMILY);
+            Job.getJobManager().cancel(RepositoryManager.class);
             final boolean returnValue = super.preShutdown();
             if (returnValue) {
                 try {
@@ -704,73 +687,6 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
         }
         // Force groovy plugin startup
         GroovyPlugin.getDefault();
-        new Job("Setup internal maven repository") {
-
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                new InstallBonitaMavenArtifactsOperation(MavenRepositories.internalRepository()).execute(monitor);
-                try {
-                    testMavenCentralAccess(monitor);
-                } catch (InvocationTargetException | InterruptedException e) {
-                    return new Status(IStatus.ERROR, getClass(), e.getMessage());
-                }
-                return Status.OK_STATUS;
-            }
-
-            private void testMavenCentralAccess(IProgressMonitor monitor)
-                    throws InvocationTargetException, InterruptedException {
-                // Use an arbitrary artifact (small) to test maven central access
-                var operation = new DependencyGetOperation(
-                        new GAV("org.bonitasoft.engine", "bonita-engine", "7.12.1", null, "pom", null));
-                MavenPlugin.getRepositoryRegistry().getRepositories(IRepositoryRegistry.SCOPE_SETTINGS).stream()
-                        .map(IRepository::getUrl)
-                        .forEach(operation::addRemoteRespository);
-                operation.run(monitor);
-                var result = operation.getResult();
-                if (result == null) {
-                    IMavenConfiguration mavenConfiguration = MavenPlugin.getMavenConfiguration();
-                    var userSettingsFile = mavenConfiguration.getUserSettingsFile() != null
-                            ? new File(mavenConfiguration.getUserSettingsFile())
-                            : SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE;
-                    Display.getDefault().syncExec(() -> {
-                        var message = Messages.cannotReachMavenCentralRepositoryMessage;
-                        if (userSettingsFile.exists()) {
-                            message = message + System.lineSeparator()
-                                    + String.format(Messages.validateExistingMavenConfigurationMessage,
-                                            userSettingsFile.getAbsolutePath());
-                        }
-                        int buttonId = new MessageDialogWithLink(Display.getDefault().getActiveShell(),
-                                Messages.cannotReachMavenCentralRepositoryTitle,
-                                null,
-                                message,
-                                MessageDialog.WARNING,
-                                new String[] { IDialogConstants.IGNORE_LABEL,
-                                        Messages.retry,
-                                        Messages.configure },
-                                0,
-                                URI.create(RedirectURLBuilder.create("728"))).open();
-                        if (buttonId == 2) {
-                            BonitaPreferenceDialog dialog = new BonitaPreferenceDialog(
-                                    new Shell(Display.getDefault()));
-                            dialog.create();
-                            dialog.setSelectedPreferencePage(BonitaPreferenceDialog.MAVEN_PAGE_ID);
-                            dialog.open();
-                            try {
-                                testMavenCentralAccess(monitor);
-                            } catch (InvocationTargetException | InterruptedException e) {
-                                BonitaStudioLog.error(e);
-                            }
-                        } else if (buttonId == 1) {
-                            try {
-                                testMavenCentralAccess(monitor);
-                            } catch (InvocationTargetException | InterruptedException e) {
-                                BonitaStudioLog.error(e);
-                            }
-                        }
-                    });
-                }
-            }
-        }.schedule();
 
         final long startupDuration = System.currentTimeMillis() - BonitaStudioApplication.START_TIME;
         BonitaStudioLog.info("Startup duration : " + DateUtil.getDisplayDuration(startupDuration),
@@ -790,12 +706,32 @@ public class BonitaStudioWorkbenchAdvisor extends WorkbenchAdvisor implements IS
         }
 
         ApplicationPlugin.getDefault().getPreferenceStore().setValue(FIRST_STARTUP, false);
+        // Use a dummy block handler to avoid blocked job dialog to open
+        Dialog.setBlockedHandler(new IDialogBlockedHandler() {
+
+            @Override
+            public void clearBlocked() {
+                // No default behavior
+            }
+
+            @Override
+            public void showBlocked(IProgressMonitor blocking,
+                    IStatus blockingStatus, String blockedName) {
+                // No default behavior
+            }
+
+            @Override
+            public void showBlocked(Shell parentShell, IProgressMonitor blocking,
+                    IStatus blockingStatus, String blockedName) {
+                // No default behavior
+            }
+        });
     }
 
     private void executePostStartupContributions() {
         final IConfigurationElement[] elements = BonitaStudioExtensionRegistryManager.getInstance()
                 .getConfigurationElements(
-                        "org.bonitasoft.studio.common.poststartup"); //$NON-NLS-1$
+                        "org.bonitasoft.studio.common.ui.poststartup"); //$NON-NLS-1$
         for (final IConfigurationElement elem : elements) {
             final Workbench workbench = (Workbench) PlatformUI.getWorkbench();
             try {
