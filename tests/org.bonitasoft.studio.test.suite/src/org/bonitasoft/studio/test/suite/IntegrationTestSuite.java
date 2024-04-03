@@ -20,19 +20,16 @@ import org.bonitasoft.studio.tests.TestFullScenario;
 import org.bonitasoft.studio.tests.TestPatchedBundles;
 import org.bonitasoft.studio.tests.TestPathSize;
 import org.bonitasoft.studio.tests.TestSpecificWizardIds;
-import org.bonitasoft.studio.tests.actors.TestImportActorFilter;
 import org.bonitasoft.studio.tests.bar.ExportBarIT;
 import org.bonitasoft.studio.tests.bar.TestExportProcessBar;
 import org.bonitasoft.studio.tests.bug.TestBugs;
 import org.bonitasoft.studio.tests.businessobject.DeployBDMOperationIT;
 import org.bonitasoft.studio.tests.businessobject.ImportLegacyBDMIT;
 import org.bonitasoft.studio.tests.conditions.TestConditions;
-import org.bonitasoft.studio.tests.conditions.TestDecisionTableToGroovy;
 import org.bonitasoft.studio.tests.configuration.TestConfigurationSynhronizer;
 import org.bonitasoft.studio.tests.connectors.DatabaseDriverConfigurationIT;
 import org.bonitasoft.studio.tests.connectors.GroovyConnectorIT;
 import org.bonitasoft.studio.tests.connectors.TestConnectorOperationIT;
-import org.bonitasoft.studio.tests.connectors.TestImportConnector;
 import org.bonitasoft.studio.tests.connectors.TestWebserviceVersionForBPMNImport;
 import org.bonitasoft.studio.tests.data.DataRefactorIT;
 import org.bonitasoft.studio.tests.deploy.TestDeployCommand;
@@ -49,12 +46,10 @@ import org.bonitasoft.studio.tests.importer.api.ProcBuilderTests;
 import org.bonitasoft.studio.tests.importer.bos.ImportBOSArchiveIT;
 import org.bonitasoft.studio.tests.importer.bpmn2.TestImportBPMN2;
 import org.bonitasoft.studio.tests.migration.DocumentMigrationIT;
-import org.bonitasoft.studio.tests.migration.EdaptHistoryIT;
+import org.bonitasoft.studio.tests.organization.ImportOrganizationIT;
 import org.bonitasoft.studio.tests.organization.TestExportOrganization;
-import org.bonitasoft.studio.tests.organization.TestImportOrganization;
 import org.bonitasoft.studio.tests.parameter.TestParametersRefactoring;
 import org.bonitasoft.studio.tests.parameter.TestProcessParameters;
-import org.bonitasoft.studio.tests.processzoo.TestProcessZoo;
 import org.bonitasoft.studio.tests.properties.TestMessageRefactoring;
 import org.bonitasoft.studio.tests.repository.TestImportExportAndDeleteRepository;
 import org.bonitasoft.studio.tests.repository.TestImportRepository;
@@ -78,7 +73,6 @@ import org.junit.runners.Suite;
         BonitaProjectIT.class,
         TestPatchedBundles.class,
         TestSpecificWizardIds.class,
-        EdaptHistoryIT.class,
         TestBugs.class,
         ProductVersionIT.class,
         TestFullScenario.class,
@@ -87,9 +81,7 @@ import org.junit.runners.Suite;
         TestSearchIndexRefactoring.class,
         TestConditions.class,
         TestPathSize.class,
-        TestImportConnector.class,
-        TestImportActorFilter.class,
-        TestImportOrganization.class,
+        ImportOrganizationIT.class,
         TestExportOrganization.class,
         TestDocumentRefactoring.class,
         RefactorDocumentOperationTest.class,
@@ -98,10 +90,8 @@ import org.junit.runners.Suite;
         ProcBuilderTests.class,
         TestImportRepository.class,
         TestImportBPMN2.class,
-        TestDecisionTableToGroovy.class,
         TestSubprocessEventExport.class,
         DatabaseDriverConfigurationIT.class,
-        TestProcessZoo.class,
         ImportBOSArchiveIT.class,
         TestExportProcessBar.class,
         BPMNImportExportTest.class,

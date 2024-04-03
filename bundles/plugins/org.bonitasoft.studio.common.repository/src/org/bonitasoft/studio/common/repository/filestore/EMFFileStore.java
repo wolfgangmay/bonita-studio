@@ -40,7 +40,7 @@ public abstract class EMFFileStore<T extends EObject> extends AbstractFileStore<
 
     protected Resource eResource;
 
-    public EMFFileStore(final String fileName, final IRepositoryStore<? extends EMFFileStore<T>> store) {
+    protected EMFFileStore(final String fileName, final IRepositoryStore<? extends EMFFileStore<T>> store) {
         super(fileName, store);
     }
 
@@ -143,7 +143,7 @@ public abstract class EMFFileStore<T extends EObject> extends AbstractFileStore<
 
     @Override
     public IFile getResource() {
-        return getParentStore().getResource().getFile(getName());
+    	return (IFile) super.getResource();
     }
 
 }

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Bonita Studio Groovy Editor
 Bundle-SymbolicName: org.bonitasoft.studio.groovy;singleton:=true
-Bundle-Version: 8.0.4.qualifier
+Bundle-Version: 9.0.4.qualifier
 Bundle-Activator: org.bonitasoft.studio.groovy.GroovyPlugin
 Bundle-Vendor: BonitaSoft S.A.
 Require-Bundle: org.eclipse.ui,
@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.ui,
  org.bonitasoft.studio.pics,
  org.codehaus.groovy.eclipse,
  org.eclipse.draw2d,
- org.bonitasoft.studio.model,
+ org.bonitasoft.bpm.model,
  org.codehaus.groovy.eclipse.codeassist,
  org.eclipse.gmf.runtime.common.ui.action,
  org.eclipse.gmf.runtime.common.ui,
@@ -29,21 +29,17 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.launching,
  org.bonitasoft.studio.common.repository,
  org.codehaus.groovy.eclipse.core,
- org.bonitasoft.studio.connectors.model,
+ org.bonitasoft.bpm.connector.model,
  org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.quickfix,
  com.google.guava,
  org.eclipse.e4.core.di,
  org.eclipse.jdt.ui,
- org.bonitasoft.studio.common.ui
+ org.bonitasoft.studio.common.ui,
+ org.bonitasoft.engine.bonita-client,
+ org.eclipse.m2e.core.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Import-Package: javax.inject;version="1.0.0",
- org.bonitasoft.engine.api,
- org.bonitasoft.engine.bpm,
- org.bonitasoft.engine.bpm.bar,
- org.bonitasoft.engine.bpm.document,
- org.bonitasoft.engine.connector,
- org.bonitasoft.engine.expression,
  org.eclipse.jdt.core,
  org.eclipse.ui.part
 Bundle-ActivationPolicy: lazy

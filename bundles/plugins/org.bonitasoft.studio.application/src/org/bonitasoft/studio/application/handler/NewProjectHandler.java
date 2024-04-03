@@ -74,6 +74,7 @@ public class NewProjectHandler extends AbstractProjectMetadataHandler {
 
     protected SetProjectMetadataOperation createOperation(MavenProjectHelper mavenProjectHelper,
             ProjectMetadata metadata, RepositoryAccessor repositoryAccessor) {
+        metadata.setIncludeAdminApp(true);
         return new SetProjectMetadataOperation(metadata, repositoryAccessor, mavenProjectHelper)
                 .additionalDependencies(bonitaMarketplacePage.getSelectedDependencies().stream()
                         .map(BonitaArtifactDependency::toMavenDependency)

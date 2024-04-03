@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scripting Plug-in
 Bundle-SymbolicName: org.bonitasoft.studio.scripting;singleton:=true
-Bundle-Version: 8.0.4.qualifier
+Bundle-Version: 9.0.4.qualifier
 Bundle-Activator: org.bonitasoft.studio.scripting.ScriptingPlugin
 Bundle-Vendor: BonitaSoft S.A.
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.bonitasoft.studio.expression.editor,
- org.bonitasoft.studio.model,
+ org.bonitasoft.bpm.model,
  org.bonitasoft.studio.common,
  org.bonitasoft.studio.pics,
  org.eclipse.core.databinding,

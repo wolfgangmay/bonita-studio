@@ -14,12 +14,12 @@
  */
 package org.bonitasoft.studio.validation.constraints;
 
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorParameter;
+import org.bonitasoft.bpm.model.expression.AbstractExpression;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.process.Connector;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
-import org.bonitasoft.studio.model.connectorconfiguration.ConnectorParameter;
-import org.bonitasoft.studio.model.expression.AbstractExpression;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.process.Connector;
 import org.bonitasoft.studio.validation.i18n.Messages;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.ecore.EObject;
@@ -64,16 +64,16 @@ public class ProvidedScriptsDeprecationConstraint extends AbstractLiveValidation
             return context.createSuccessStatus();
         }
         if(scriptText.contains("BonitaTypes.")){
-            return context.createFailureStatus(Messages.bonitaTypesProvidedScriptDeprecationMessage);
+            return context.createFailureStatus(Messages.bonitaTypesProvidedScriptRemovedMessage);
         }
         if(scriptText.contains("BonitaXML.")){
-            return context.createFailureStatus(Messages.bonitaXMLProvidedScriptDeprecationMessage);
+            return context.createFailureStatus(Messages.bonitaXMLProvidedScriptRemovedMessage);
         }
         if(scriptText.contains("BonitaUsers.")){
-            return context.createFailureStatus(Messages.bonitaUsersProvidedScriptDeprecationMessage);
+            return context.createFailureStatus(Messages.bonitaUsersProvidedScriptRemovedMessage);
         }
         if(scriptText.contains("BonitaSql.")){
-            return context.createFailureStatus(Messages.bonitaSqlProvidedScriptDeprecationMessage);
+            return context.createFailureStatus(Messages.bonitaSqlProvidedScriptRemovedMessage);
         }
         return context.createSuccessStatus();
     }

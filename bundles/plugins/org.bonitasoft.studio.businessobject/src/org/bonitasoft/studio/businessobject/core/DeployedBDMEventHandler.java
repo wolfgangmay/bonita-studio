@@ -29,49 +29,50 @@ import org.osgi.service.event.EventHandler;
 
 public class DeployedBDMEventHandler implements EventHandler {
 
-    @PostConstruct
-    public void registerHandler(IEventBroker eventBroker) {
-        eventBroker.subscribe(BdmEvents.BDM_DEPLOYED_TOPIC, this);
-    }
+	@PostConstruct
+	public void registerHandler(IEventBroker eventBroker) {
+		eventBroker.subscribe(BdmEvents.BDM_DEPLOYED_TOPIC, this);
+	}
 
-    @Override
-    public void handleEvent(final Event event) {
-        var dependency = event.getProperty(BdmEvents.DEPENDENCY_PROPERTY);
-        if (dependency instanceof Dependency) {
-            var parametrized = parametrized((Dependency) dependency);
-            var addBDMClientDependencyOperation = new AddDependencyOperation(parametrized);
-            try {
-                addBDMClientDependencyOperation.disableAnalyze().run(new NullProgressMonitor());
-                RepositoryManager.getInstance().getCurrentProject().ifPresent(p -> {
-                    try {
-                        p.getAppProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
-                    } catch (CoreException e) {
-                        BonitaStudioLog.error(e);
-                    }
-                });
-            } catch (CoreException e) {
-                BonitaStudioLog.error(e);
-            }
+	@Override
+	public void handleEvent(final Event event) {
+		var dependency = event.getProperty(BdmEvents.DEPENDENCY_PROPERTY);
+		if (dependency instanceof Dependency) {
+			var parametrized = parametrized((Dependency) dependency);
+			var addBDMClientDependencyOperation = new AddDependencyOperation(parametrized);
+			try {
+				addBDMClientDependencyOperation.disableAnalyze().run(new NullProgressMonitor());
+				var project = RepositoryManager.getInstance().getCurrentProject();
+				project.ifPresent(p -> {
+					try {
+						p.getAppProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+					} catch (CoreException e) {
+						BonitaStudioLog.error(e);
+					}
+				});
+			} catch (CoreException e) {
+				BonitaStudioLog.error(e);
+			}
 
-            new WorkspaceJob("Update Project BDM dependency") {
+			new WorkspaceJob("Update Project BDM dependency") {
 
-                @Override
-                public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-                    // Update bdm model and dao list cache
-                    RepositoryManager.getInstance().getCurrentRepository()
-                            .map(r -> r.getRepositoryStore(BusinessObjectModelRepositoryStore.class))
-                            .ifPresent(BusinessObjectModelRepositoryStore::updateBusinessObjectDao);
-                    return Status.OK_STATUS;
-                }
-            }.schedule();
-        }
-    }
+				@Override
+				public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+					// Update bdm model and dao list cache
+					RepositoryManager.getInstance().getCurrentRepository()
+							.map(r -> r.getRepositoryStore(BusinessObjectModelRepositoryStore.class))
+							.ifPresent(BusinessObjectModelRepositoryStore::updateBusinessObjectDao);
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+		}
+	}
 
-    private static Dependency parametrized(Dependency modelMavenDependency) {
-        var dep = modelMavenDependency.clone();
-        dep.setGroupId("${project.groupId}");
-        dep.setVersion("${project.version}");
-        return dep;
-    }
+	private static Dependency parametrized(Dependency modelMavenDependency) {
+		var dep = modelMavenDependency.clone();
+		dep.setGroupId("${project.groupId}");
+		dep.setVersion("${project.version}");
+		return dep;
+	}
 
 }

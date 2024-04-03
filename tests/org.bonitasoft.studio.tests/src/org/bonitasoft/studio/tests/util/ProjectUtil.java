@@ -25,6 +25,7 @@ import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.maven.RemoveDependencyOperation;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.configuration.repository.EnvironmentFileStore;
@@ -55,10 +56,10 @@ public class ProjectUtil {
 
     public static void removeUserExtensions() throws CoreException {
         IProject project = RepositoryManager.getInstance().getAccessor().getCurrentRepository().orElseThrow().getProject();
-        Model mavenModel = new MavenProjectHelper().getMavenModel(project);
+        Model mavenModel = MavenProjectHelper.getMavenModel(project);
         var dependenciesToRemove = mavenModel.getDependencies()
                 .stream()
-                .filter(not(ProjectDefaultConfiguration::isInternalDependency))
+                .filter(not(AppProjectConfiguration::isInternalDependency))
                 .collect(Collectors.toList());
         if (!dependenciesToRemove.isEmpty()) {
             new RemoveDependencyOperation(dependenciesToRemove).run(new NullProgressMonitor());

@@ -16,13 +16,13 @@ package org.bonitasoft.studio.validation.constraints.process;
 
 import java.util.List;
 
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.process.Container;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Container;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.Pool;
 import org.bonitasoft.studio.validation.constraints.AbstractLiveValidationMarkerConstraint;
 import org.bonitasoft.studio.validation.i18n.Messages;
 import org.eclipse.core.runtime.IStatus;
@@ -49,7 +49,7 @@ public class UniqueContainerIdConstraint extends AbstractLiveValidationMarkerCon
 
             final Pool p = (Pool) eObj;
             DiagramRepositoryStore diagramStore = RepositoryManager.getInstance().getCurrentRepository().orElseThrow().getRepositoryStore(DiagramRepositoryStore.class);
-            List<AbstractProcess> allProcesses = diagramStore.hasComputedProcesses() ? diagramStore.getComputedProcesses() : diagramStore.getAllProcesses();
+            List<Pool> allProcesses = diagramStore.hasComputedProcesses() ? diagramStore.getComputedProcesses() : diagramStore.getAllProcesses();
             for (final AbstractProcess other_p : allProcesses) {
                 if (!EcoreUtil.equals(p, other_p)
                         && !sameEObjectId(p, other_p)

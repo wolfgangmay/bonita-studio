@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -48,15 +49,10 @@ import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.core.migration.report.AsciidocMigrationReportWriter;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReportWriter;
+import org.bonitasoft.studio.common.repository.core.migration.step.RemoveLegacyFolderStep;
 import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
 import org.bonitasoft.studio.common.repository.jdt.JDTTypeHierarchyManager;
-import org.bonitasoft.studio.common.repository.migration.ProcessModelTransformation;
-import org.bonitasoft.studio.common.repository.migration.transformation.ConditionExpressionTransformation;
-import org.bonitasoft.studio.common.repository.migration.transformation.DatabaseDriverJarReferenceFragmentTransformation;
-import org.bonitasoft.studio.common.repository.migration.transformation.DiagramVersionTransformation;
-import org.bonitasoft.studio.common.repository.migration.transformation.JavaGetterExpressionTransformation;
-import org.bonitasoft.studio.common.repository.migration.transformation.UIPathConnectorDefinitionTransformation;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
@@ -97,13 +93,6 @@ public abstract class AbstractRepository implements IRepository {
     private static final String REPOSITORY_STORE_EXTENSION_POINT_ID = "org.bonitasoft.studio.repositoryStore";
 
     public static final IProgressMonitor NULL_PROGRESS_MONITOR = new NullProgressMonitor();
-
-    private static final List<ProcessModelTransformation> PROCESS_MODEL_TRANSFORMATIONS = List.of(
-            new DiagramVersionTransformation(),
-            new UIPathConnectorDefinitionTransformation(),
-            new JavaGetterExpressionTransformation(),
-            new ConditionExpressionTransformation(),
-            new DatabaseDriverJarReferenceFragmentTransformation());
 
     private static final String CLASS = "class";
 
@@ -416,7 +405,8 @@ public abstract class AbstractRepository implements IRepository {
         return asStoreList(stores);
     }
 
-    private List<IRepositoryStore<? extends IRepositoryFileStore>> asStoreList(SortedMap<Class<?>, IRepositoryStore<? extends IRepositoryFileStore>> stores) {
+    private List<IRepositoryStore<? extends IRepositoryFileStore>> asStoreList(
+            SortedMap<Class<?>, IRepositoryStore<? extends IRepositoryFileStore>> stores) {
         return stores.values().stream()
                 .distinct()
                 .sorted(new RepositoryStoreComparator())
@@ -605,6 +595,9 @@ public abstract class AbstractRepository implements IRepository {
     @Override
     public java.util.Optional<IRepositoryStore<? extends IRepositoryFileStore>> getRepositoryStoreByName(
             final String storeName) {
+    	if(RemoveLegacyFolderStep.legacyRepositories().contains(storeName)) {
+    		return Optional.empty();
+    	}
         return getAllStores().stream().filter(store -> Objects.equals(store.getName(), storeName)).findFirst();
     }
 
@@ -623,10 +616,10 @@ public abstract class AbstractRepository implements IRepository {
     @Override
     public void migrate(MigrationReport report, IProgressMonitor monitor) throws CoreException, MigrationException {
         Assert.isNotNull(project);
-        
+
         // Force deps analysis before migration
         getProjectDependenciesStore().analyze(new NullProgressMonitor());
-        
+
         var orderedStores = getAllStores().stream()
                 .sorted(Comparator.comparingInt(IRepositoryStore::getImportOrder))
                 .collect(Collectors.toList());
@@ -714,11 +707,6 @@ public abstract class AbstractRepository implements IRepository {
         if (!projectListeners.contains(listener)) {
             projectListeners.add(listener);
         }
-    }
-
-    @Override
-    public List<ProcessModelTransformation> getProcessModelTransformations() {
-        return PROCESS_MODEL_TRANSFORMATIONS;
     }
 
     @Override

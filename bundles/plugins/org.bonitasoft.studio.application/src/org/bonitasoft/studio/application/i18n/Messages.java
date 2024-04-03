@@ -450,6 +450,12 @@ public class Messages extends NLS {
     public static String noAuthenticationForBar;
     public static String invalidBarCredentials;
     public static String saveWorkspaceBackupArchive;
+	public static String addProjectExtension;
+	public static String importProjectExtensionTitle;
+	public static String importProjectExtensionDesc;
+	public static String selectProjectExtensionsFromList;
+    public static String enterpriseOnly;
+    public static String configureBARTooltip;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);

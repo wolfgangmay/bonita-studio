@@ -2,7 +2,7 @@
 <feature
       id="studio-feature"
       label="Studio"
-      version="8.0.4.qualifier"
+      version="9.0.4.qualifier"
       provider-name="Bonitasoft S.A.">
 
    <description>
@@ -257,6 +257,15 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
          id="org.eclipse.platform"
          version="0.0.0"/>
 
+   <requires>
+      <import feature="org.bonitasoft.bpm.definitions.feature" version="8.0.0.qualifier"/>
+      <import feature="org.bonitasoft.bonita2bpmn.feature" version="8.0.0.qualifier"/>
+      <import feature="org.bonitasoft.project.report.model.feature" version="0.2.0.qualifier"/>
+      <import feature="com.fasterxml.jackson.feature" version="2.15.2.qualifier"/>
+      <import feature="org.bonitasoft.artifacts.model.feature" version="1.0.0.qualifier"/>
+      <import feature="org.bonitasoft.bonita2bar.feature" version="8.0.0.qualifier"/>
+   </requires>
+
    <plugin
          id="org.bonitasoft.studio"
          download-size="0"
@@ -280,13 +289,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio.diagram.custom"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.bonitasoft.studio.model.edit"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -349,13 +351,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
          unpack="false"/>
 
    <plugin
-         id="org.bonitasoft.studio.model"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.bonitasoft.studio.properties"
          download-size="0"
          install-size="0"
@@ -391,13 +386,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
          unpack="false"/>
 
    <plugin
-         id="org.omg.schema.spec.bpmn"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.bonitasoft.studio.common.repository"
          download-size="0"
          install-size="0"
@@ -413,13 +401,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio.groovy.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.bonitasoft.studio.model.edit.custom"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -461,13 +442,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
          unpack="false"/>
 
    <plugin
-         id="org.bonitasoft.studio.connectors.model"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.bonitasoft.studio.connectors"
          download-size="0"
          install-size="0"
@@ -490,13 +464,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio-models"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.bonitasoft.studio.migration"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -574,13 +541,6 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio.la"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="javax.activation"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -686,6 +646,20 @@ along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
    <plugin
          id="org.bonitasoft.studio.common.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.bonitasoft.engine.bonita-client"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.bonitasoft.engine.bonita-common"
          download-size="0"
          install-size="0"
          version="0.0.0"

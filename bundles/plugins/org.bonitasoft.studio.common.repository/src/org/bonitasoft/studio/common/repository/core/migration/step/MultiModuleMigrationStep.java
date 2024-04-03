@@ -65,7 +65,8 @@ public class MultiModuleMigrationStep implements MigrationStep {
             }
             Files.createDirectory(app);
             storeFolders().stream()
-                    .filter(not(BonitaProject.BDM_MODULE::equals))
+                    .filter(not(BonitaProject.BDM_MODULE::equals)
+                    		.and(not(BonitaProject.EXTENSIONS_MODULE::equals)))
                     .filter(folderName -> Files.exists(project.resolve(folderName)))
                     .forEach(moveStoreFolders(project, app));
             var migrationNotes = project.resolve(MigrationReportWriter.DEFAULT_REPORT_FILE_NAME);
@@ -162,6 +163,6 @@ public class MultiModuleMigrationStep implements MigrationStep {
 
     @Override
     public boolean appliesTo(String sourceVersion) {
-        return Version.parseVersion(sourceVersion).compareTo(new Version("7.16.0")) < 0;
+        return Version.parseVersion(sourceVersion).compareTo(new Version("8.0.0")) < 0;
     }
 }
