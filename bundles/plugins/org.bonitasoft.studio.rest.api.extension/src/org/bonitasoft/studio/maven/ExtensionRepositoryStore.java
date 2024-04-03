@@ -48,6 +48,7 @@ import org.bonitasoft.studio.rest.api.extension.core.repository.PathTemplate;
 import org.bonitasoft.studio.rest.api.extension.core.repository.RestAPIExtensionFileStore;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.BonitaVersionMigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.Groovy3MigrationStep;
+import org.bonitasoft.studio.rest.api.extension.core.repository.migration.GroovyCompilerPluginStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.Java11MigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.ParentMigrationStep;
 import org.bonitasoft.studio.rest.api.extension.core.repository.migration.RuntimeBOMMigrationStep;
@@ -55,7 +56,6 @@ import org.bonitasoft.studio.theme.DependencyThemeFileStore;
 import org.bonitasoft.studio.theme.ThemeFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
@@ -82,7 +82,8 @@ public class ExtensionRepositoryStore
             new Java11MigrationStep(),
             new BonitaVersionMigrationStep(),
             new RuntimeBOMMigrationStep(),
-            new BdmModelArtifactMigrationStep());
+            new BdmModelArtifactMigrationStep(),
+            new GroovyCompilerPluginStep());
 
     private static final List<MavenModelMigration> MIGRATION_STEPS = List.of(
             new ParentMigrationStep());
@@ -261,7 +262,7 @@ public class ExtensionRepositoryStore
         for (ExtensionProjectFileStore fStore : filesToMigrate) {
             migrate(fStore, monitor);
         }
-        new UpdateMavenProjectJob(getBonitaProject().getExtensionsProjects().toArray(IProject[]::new),
+        new UpdateMavenProjectJob(getBonitaProject().getExtensionsProjects(),
                 false,
                 false,
                 true,
