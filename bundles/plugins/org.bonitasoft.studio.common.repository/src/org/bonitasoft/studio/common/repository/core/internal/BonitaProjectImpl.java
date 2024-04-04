@@ -177,6 +177,7 @@ public class BonitaProjectImpl implements BonitaProject {
     @Override
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
+        // schedule the 3 jobs immediately with the same rule to ensure sequencing
         BuildScheduler.scheduleJobWithBuildRule(new Job("Refresh resources") {
 
             @Override
@@ -196,7 +197,6 @@ public class BonitaProjectImpl implements BonitaProject {
         var job = new UpdateMavenProjectJob(getRelatedProjects(), false, false,
                 updateConfiguration,
                 true, true);
-        // schedule the 2 jobs immediately with the same rule to ensure sequencing
         job.setPriority(Job.INTERACTIVE);
         BuildScheduler.scheduleJobWithBuildRule(job);
         BuildScheduler.scheduleJobWithBuildRule(
