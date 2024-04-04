@@ -24,6 +24,7 @@ import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.Messages;
+import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.internal.team.GitProjectImpl;
@@ -176,6 +177,22 @@ public class BonitaProjectImpl implements BonitaProject {
     @Override
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
+        BuildScheduler.scheduleJobWithBuildRule(new Job("Refresh resources") {
+
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
+                if (accessor != null) {
+                    var repository = accessor.getCurrentRepository().orElse(null);
+                    if (repository != null) {
+                        for (var store : repository.getAllStores()) {
+                            store.refresh();
+                        }
+                    }
+                }
+                return Status.OK_STATUS;
+            }
+        });
         var job = new UpdateMavenProjectJob(getRelatedProjects(), false, false,
                 updateConfiguration,
                 true, true);
@@ -228,6 +245,8 @@ public class BonitaProjectImpl implements BonitaProject {
             return (T) appProject;
         } else if (GitProject.class.equals(adapter)) {
             return (T) new GitProjectImpl(getParentProject());
+        } else if (RepositoryAccessor.class.equals(adapter)) {
+            return (T) RepositoryManager.getInstance().getAccessor();
         } else if (IJavaProject.class.equals(adapter)) {
             if (appProject.exists() && appProject.isAccessible()) {
                 return (T) JavaCore.create(appProject);

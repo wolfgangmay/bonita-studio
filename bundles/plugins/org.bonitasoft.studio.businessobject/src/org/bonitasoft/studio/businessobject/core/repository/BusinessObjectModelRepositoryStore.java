@@ -208,6 +208,13 @@ public class BusinessObjectModelRepositoryStore<F extends AbstractBDMFileStore<?
         }
         return fileStore;
     }
+    
+    @Override
+    public void refresh() {
+        super.refresh();
+        // Check if bdm resource link is consistent
+        createBdmFolderLinkInAppProject(getBonitaProject());
+    }
 
     public IFolder createBdmModule(BonitaProject project, IProgressMonitor monitor) throws CoreException {
         var parentProject = project.getParentProject();
