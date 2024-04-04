@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
@@ -41,15 +42,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
+
+import com.google.common.base.Objects;
 
 public class BonitaProjectImpl implements BonitaProject {
 
@@ -80,7 +81,10 @@ public class BonitaProjectImpl implements BonitaProject {
 
     private Model getMavenModel() throws CoreException {
         var appProject = getAppProject();
-        var mavenFacade = MavenPlugin.getMavenProjectRegistry().create(appProject, new NullProgressMonitor());
+        var mavenFacade = MavenPlugin.getMavenProjectRegistry().getProjects().stream()
+                .filter(facade -> Objects.equal(appProject, facade.getProject()))
+                .findFirst()
+                .orElse(null);
         if (mavenFacade != null && mavenFacade.getMavenProject() != null) {
             return mavenFacade.getMavenProject().getModel();
         }
@@ -169,33 +173,33 @@ public class BonitaProjectImpl implements BonitaProject {
     public void refresh(IProgressMonitor monitor) throws CoreException {
         refresh(false, monitor);
     }
-    
+
     @Override
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
-        new Job("Refresh resources") {
-
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
-                        if (accessor != null) {
-                            var repository = accessor.getCurrentRepository().orElse(null);
-                            if (repository != null) {
-                                for (var store : repository.getAllStores()) {
-                                    store.refresh();
-                                }
-                            }
-                        }
-                        return Status.OK_STATUS;
-                    }
-                }.schedule();
-        var job = new UpdateMavenProjectJob(getRelatedProjects().toArray(IProject[]::new), false, false,
-                updateConfiguration,
-                true, true);
-        job.addJobChangeListener(new JobChangeAdapter() {
+        // schedule the 3 jobs immediately with the same rule to ensure sequencing
+        BuildScheduler.scheduleJobWithBuildRule(new Job("Refresh resources") {
 
             @Override
-            public void done(IJobChangeEvent event) {
+            protected IStatus run(IProgressMonitor monitor) {
+                var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
+                if (accessor != null) {
+                    var repository = accessor.getCurrentRepository().orElse(null);
+                    if (repository != null) {
+                        for (var store : repository.getAllStores()) {
+                            store.refresh();
+                        }
+                    }
+                }
+                return Status.OK_STATUS;
+            }
+        });
+        var job = new UpdateMavenProjectJob(getRelatedProjects(), false, false,
+                updateConfiguration,
+                true, true);
+        job.setPriority(Job.INTERACTIVE);
+        BuildScheduler.scheduleJobWithBuildRule(job);
+        BuildScheduler.scheduleJobWithBuildRule(
                 new Job("Analyze project dependencies") {
 
                     @Override
@@ -205,10 +209,7 @@ public class BonitaProjectImpl implements BonitaProject {
                                 .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
                         return Status.OK_STATUS;
                     }
-                }.schedule();
-            }
-        });
-        job.schedule();
+                });
     }
 
     @Override
@@ -273,11 +274,11 @@ public class BonitaProjectImpl implements BonitaProject {
         }
         gitProject.commitAll(commitMessage, monitor);
     }
-    
+
     @Override
     public void addModule(IProject parentProject, String module, IProgressMonitor monitor) throws CoreException {
         var parentModel = MavenProjectHelper.getMavenModel(parentProject);
-        if(parentModel != null && parentModel.getModules().stream().noneMatch(module::equals)) {
+        if (parentModel != null && parentModel.getModules().stream().noneMatch(module::equals)) {
             parentModel.getModules().add(module);
             MavenProjectHelper.saveModel(parentProject, parentModel, new NullProgressMonitor());
         }
@@ -293,7 +294,7 @@ public class BonitaProjectImpl implements BonitaProject {
             moduleFolder.delete(true, new NullProgressMonitor());
         }
     }
-    
+
     @Override
     public IScopeContext getScopeContext() {
         return new ProjectScope(getAppProject());
