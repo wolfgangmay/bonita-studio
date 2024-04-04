@@ -175,6 +175,7 @@ public class ExtensionRepositoryStore
                 BonitaStudioLog.error(e);
             }
         }
+        createExtensionFolderLinkInAppProject(getBonitaProject());
     }
 
     @Override
