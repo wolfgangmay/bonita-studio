@@ -10,9 +10,9 @@
 		<version>10.1.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.bonitasoft.studio</groupId>
-	<artifactId>all-in-one</artifactId>
-	<packaging>eclipse-repository</packaging>
+  <groupId>org.bonitasoft.studio</groupId>
+  <artifactId>all-in-one</artifactId>
+  <packaging>eclipse-repository</packaging>
 
 	<properties>
 		<product.short.name>BonitaStudioCommunity</product.short.name>
@@ -21,64 +21,64 @@
         <root.dir>${project.build.directory}/${product.short.name}-${branding.version}</root.dir>
 	</properties>
 
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.eclipse.tycho</groupId>
-					<artifactId>target-platform-configuration</artifactId>
-					<version>${tychoVersion}</version>
-					<executions>
-						<execution>
-							<id>default-target-platform</id>
-							<phase>none</phase>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho</groupId>
-					<artifactId>tycho-p2-publisher-plugin</artifactId>
-					<version>${tychoVersion}</version>
-					<executions>
-						<execution>
-							<id>default-publish-products</id>
-							<phase>none</phase>
-						</execution>
-						<execution>
-							<id>default-publish-categories</id>
-							<phase>none</phase>
-						</execution>
-						<execution>
-							<id>default-attach-artifacts</id>
-							<phase>none</phase>
-						</execution>
-						<execution>
-							<id>default-publish-osgi-ee</id>
-							<phase>none</phase>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho</groupId>
-					<artifactId>tycho-p2-repository-plugin</artifactId>
-					<version>${tychoVersion}</version>
-					<executions>
-						<execution>
-							<id>default-publish-products</id>
-							<phase>none</phase>
-						</execution>
-						<execution>
-							<id>default-assemble-repository</id>
-							<phase>none</phase>
-						</execution>
-						<execution>
-							<id>default-archive-repository</id>
-							<phase>none</phase>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>target-platform-configuration</artifactId>
+          <version>${tychoVersion}</version>
+          <executions>
+            <execution>
+              <id>default-target-platform</id>
+              <phase>none</phase>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-publisher-plugin</artifactId>
+          <version>${tychoVersion}</version>
+          <executions>
+            <execution>
+              <id>default-publish-products</id>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>default-publish-categories</id>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>default-attach-artifacts</id>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>default-publish-osgi-ee</id>
+              <phase>none</phase>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-repository-plugin</artifactId>
+          <version>${tychoVersion}</version>
+          <executions>
+            <execution>
+              <id>default-publish-products</id>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>default-assemble-repository</id>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>default-archive-repository</id>
+              <phase>none</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
 
 		<plugins>
 			<plugin>
@@ -180,7 +180,7 @@
 				</executions>
 			</plugin>
 
-        	<!-- Create a proper bundles.info for all-in-one --> 
+          <!-- Create a proper bundles.info for all-in-one --> 
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>groovy-maven-plugin</artifactId>
@@ -193,7 +193,7 @@
                         <configuration>
                             <source>
                                 project.properties["branding.version.short"] = "${branding.version}".replaceAll('-.*', '')
-                           		def versionPattern = ~"([1-9]\\d*)\\.(\\d+)\\.(\\d+)(?:-([a-zA-Z0-9]+))?"
+                               def versionPattern = ~"([1-9]\\d*)\\.(\\d+)\\.(\\d+)(?:-([a-zA-Z0-9]+))?"
                                 def matcher = "${project.version}" =~ versionPattern
                                 def result = matcher[0..-1][0]
                                 project.properties["product.major.version"] = "${result[1]}.${result[2]}".toString()
@@ -207,7 +207,7 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                        	<defaults>
+                          <defaults>
                                <products.dir>${project.build.directory}/products/${productId}</products.dir>
                             </defaults>
                             <source>${project.basedir}/verify-packaging.groovy</source>
@@ -298,44 +298,6 @@
 						<configuration>
 							<executable>${BITROCK_HOME}/bin/builder</executable>
 						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>windows-codesign</id>
-			 <properties>
-                <codesign.argLine>sign -username="${env.ESIGNER_CREDS_USR}" -password="${env.ESIGNER_CREDS_PSW}" -credential_id="${env.ESIGNER_CREDENTIAL_ID}" -totp_secret="${env.ESIGNER_TOTP}" -override</codesign.argLine>
-            </properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>exec-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>sign-x86_64-exe</id>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-								<configuration>
-									<executable>CodeSignTool</executable>
-									<commandlineArgs>${codesign.argLine} -input_file_path=${project.build.directory}/products/${productId}/win32/win32/x86_64/${product.short.name}.exe</commandlineArgs>
-								</configuration>
-							</execution>
-							<execution>
-								<id>sign-installer-x86_64-exe</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-								<configuration>
-                                    <executable>CodeSignTool</executable>
-                                    <commandlineArgs>${codesign.argLine} -input_file_path=${project.build.directory}/installers/output/${product.short.name}-${branding.version}-x86_64.exe</commandlineArgs>
-								</configuration>
-							</execution>
-						</executions>
 					</plugin>
 				</plugins>
 			</build>
