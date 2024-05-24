@@ -28,7 +28,7 @@ public interface DefaultPluginVersions {
 
     
     static final String MAVEN_INSTALL_PLUGIN = "maven-install-plugin";
-    static final String MAVEN_INSTALL_PLUGIN_VERSION = "3.1.2";
+    static final String MAVEN_INSTALL_PLUGIN_VERSION = "3.1.1";
     
     static final String MAVEN_COMPILER_PLUGIN = "maven-compiler-plugin";
     static final String MAVEN_COMPILER_PLUGIN_VERSION = "3.13.0";
@@ -74,7 +74,7 @@ public interface DefaultPluginVersions {
     static final String BONITA_PROJECT_MAVEN_PLUGIN_DEFAULT_VERSION = "1.0.0";
 
     static final String BUILD_HELPER_MAVEN_PLUGIN = "build-helper-maven-plugin";
-    static final String BUILD_HELPER_MAVEN_PLUGIN_VERSION = "3.4.0";
+    static final String BUILD_HELPER_MAVEN_PLUGIN_VERSION = "3.6.0";
     
     static final String MAVEN_DEPENDENCY_PLUGIN = "maven-dependency-plugin";
     static final String MAVEN_DEPENDENCY_PLUGIN_VERSION = "3.6.1";
