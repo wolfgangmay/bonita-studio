@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationMenuNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeBuilder;
@@ -30,10 +31,10 @@ import org.xml.sax.SAXException;
 
 public class CloneApplicationDescriptorListener implements Listener {
 
-    private ApplicationNode application;
+    private AbstractApplicationNode application;
     private ApplicationFormPage formPage;
 
-    public CloneApplicationDescriptorListener(ApplicationNode application, ApplicationFormPage formPage) {
+    public CloneApplicationDescriptorListener(AbstractApplicationNode application, ApplicationFormPage formPage) {
         this.application = application;
         this.formPage = formPage;
     }
@@ -41,10 +42,12 @@ public class CloneApplicationDescriptorListener implements Listener {
     @Override
     public void handleEvent(Event event) {
         ApplicationNodeContainer workingCopy = formPage.getWorkingCopy();
-        ApplicationNode applicationCloned = cloneSimpleFields(incrementToken(application.getToken()));
+        AbstractApplicationNode applicationCloned = cloneSimpleFields(incrementToken(application.getToken()));
 
-        applicationCloned.setApplicationPages(clonePages(application.getApplicationPages()));
-        applicationCloned.setApplicationMenus(cloneMenus(application.getApplicationMenus()));
+        if (application instanceof ApplicationNode legacy) {
+            ((ApplicationNode) applicationCloned).setApplicationPages(clonePages(legacy.getApplicationPages()));
+            ((ApplicationNode) applicationCloned).setApplicationMenus(cloneMenus(legacy.getApplicationMenus()));
+        }
 
         workingCopy.addApplication(applicationCloned);
         formPage.addApplicationToForm(applicationCloned);
@@ -57,17 +60,25 @@ public class CloneApplicationDescriptorListener implements Listener {
         formPage.reflow();
     }
 
-    public ApplicationNode cloneSimpleFields(String newToken) {
-        ApplicationNode applicationCloned = ApplicationNodeBuilder.newApplication(newToken,
-                application.getDisplayName(), application.getVersion())
-                .withDescription(application.getDescription())
-                .withProfile(application.getProfile())
-                .withHomePage(application.getHomePage())
-                .withIconPath(application.getIconPath())
-                .withLayout(application.getLayout())
-                .withTheme(application.getTheme())
-                .create();
-        return applicationCloned;
+    public AbstractApplicationNode cloneSimpleFields(String newToken) {
+        if (application instanceof ApplicationNode legacy) {
+            return ApplicationNodeBuilder.newApplication(newToken,
+                    application.getDisplayName(), application.getVersion())
+                    .withDescription(application.getDescription())
+                    .withProfile(application.getProfile())
+                    .withHomePage(legacy.getHomePage())
+                    .withIconPath(application.getIconPath())
+                    .withLayout(legacy.getLayout())
+                    .withTheme(legacy.getTheme())
+                    .create();
+        } else {
+            return ApplicationNodeBuilder.newAdvancedApplication(newToken,
+                    application.getDisplayName(), application.getVersion())
+                    .withDescription(application.getDescription())
+                    .withProfile(application.getProfile())
+                    .withIconPath(application.getIconPath())
+                    .create();
+        }
     }
 
     private String incrementToken(String token) {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<applications xmlns="http://documentation.bonitasoft.com/application-xml-schema/1.1">
+<applications xmlns="http://documentation.bonitasoft.com/application-xml-schema/1.0">
     <application token="myAppHome" version="1.0" profile="User" homePage="home" state="ACTIVATED" layout="custompage_layoutBonita" theme="custompage_themeBonita">
         <displayName>My App</displayName>
         <description>SOme description for my app</description>
@@ -7,8 +7,4 @@
             <applicationPage customPage="custompage_home" token="home"/>
         </applicationPages>
     </application>
-    <advancedApplication token="myApp2Home" version="1.0" profile="User" state="ACTIVATED">
-        <displayName>My second App</displayName>
-        <description>Another description</description>
-    </advancedApplication>
 </applications>

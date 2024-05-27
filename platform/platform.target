@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><target sequenceNumber="1706176764" name="platform">
+<?xml version="1.0" encoding="UTF-8"?><target sequenceNumber="1716559315" name="platform">
   <locations>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-      <repository location="https://update-site.bonitasoft.com/p2/4.30"/>
+      <repository location="https://update-site.bonitasoft.com/p2/4.30/"/>
       <unit id="org.eclipse.justj.openjdk.hotspot.jre.full.feature.group" version="17.0.10.v20240120-1143"/>
       <unit id="org.eclipse.swtbot.eclipse.feature.group" version="4.1.0.202306071420"/>
       <unit id="org.eclipse.swtbot.eclipse.gef.feature.group" version="4.1.0.202306071420"/>
@@ -82,17 +82,7 @@
       <repository location="mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.0:zip" id="BonitasoftBPM"/>
     </location>
     <location missingManifest="generate" includeDependencyScopes="compile,runtime,system" includeSource="true" includeDependencyDepth="none" label="BonitaArtifactsModels" type="Maven">
-      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.0.0">
-        <description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-        <copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-        <license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-      </feature>
+      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.1.0"/>
       <dependencies>
         <dependency>
           <groupId>com.sun.activation</groupId>
@@ -115,31 +105,31 @@
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-application-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.1.0</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-bdm-access-control-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.1.0</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-business-object-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.1.0</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-organization-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.1.0</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-profile-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.1.0</version>
           <type>jar</type>
         </dependency>
         <dependency>
@@ -157,17 +147,7 @@
       </repositories>
     </location>
     <location missingManifest="generate" includeDependencyScopes="compile,runtime,system" includeSource="true" includeDependencyDepth="none" label="BonitaProjectReportModel" type="Maven">
-      <feature provider-name="Bonitasoft S.A" label="Bonita Project Report Model Feature" id="org.bonitasoft.project.report.model.feature" version="1.0.0">
-        <description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-        <copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-        <license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-      </feature>
+      <feature provider-name="Bonitasoft S.A" label="Bonita Project Report Model Feature" id="org.bonitasoft.project.report.model.feature" version="1.0.0"/>
       <dependencies>
         <dependency>
           <groupId>org.bonitasoft.maven</groupId>

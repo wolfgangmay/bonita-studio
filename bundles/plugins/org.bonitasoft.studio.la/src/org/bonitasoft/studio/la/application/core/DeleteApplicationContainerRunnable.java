@@ -21,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.SearchException;
@@ -55,7 +55,7 @@ public class DeleteApplicationContainerRunnable implements IRunnableWithProgress
 
     @Override
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-        applicationNodeContainer.getApplications().stream().forEach(applicationNode -> {
+        applicationNodeContainer.getAllApplications().stream().forEach(applicationNode -> {
             monitor.setTaskName(String.format(Messages.deletingApplication, applicationNode.getDisplayName()));
             status = delete(applicationNode);
             monitor.worked(1);
@@ -70,7 +70,7 @@ public class DeleteApplicationContainerRunnable implements IRunnableWithProgress
         return new SearchOptionsBuilder(0, 1).filter(ApplicationSearchDescriptor.TOKEN, token).done();
     }
 
-    private IStatus delete(ApplicationNode applicationNode) {
+    private IStatus delete(AbstractApplicationNode applicationNode) {
         try {
             final long applicationId = applicationAPI.searchApplications(withToken(applicationNode.getToken()))
                     .getResult().stream()

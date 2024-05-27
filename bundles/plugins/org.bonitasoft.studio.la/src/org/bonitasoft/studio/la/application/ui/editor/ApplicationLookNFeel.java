@@ -8,7 +8,7 @@
  *******************************************************************************/
 package org.bonitasoft.studio.la.application.ui.editor;
 
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.studio.la.application.ui.validator.ApplicationDescriptorValidators;
 import org.bonitasoft.studio.la.application.ui.validator.CustomLayoutValidator;
 import org.bonitasoft.studio.la.application.ui.validator.CustomThemeValidator;
@@ -36,7 +36,7 @@ public class ApplicationLookNFeel extends Composite implements IValueChangeListe
 
     public ApplicationLookNFeel(Composite parent,
             FormToolkit toolkit,
-            ApplicationNode application,
+            AbstractApplicationNode application,
             ApplicationFormPage formPage) {
         super(parent, SWT.NONE);
         toolkit.adapt(this);
@@ -52,12 +52,14 @@ public class ApplicationLookNFeel extends Composite implements IValueChangeListe
         ctx.updateTargets();
     }
 
-    private void buildLookNFeel(final DataBindingContext ctx, ApplicationNode application) {
-        final IObservableValue<String> layoutModelObservable = PojoProperties.<ApplicationNode, String> value("layout")
+    private void buildLookNFeel(final DataBindingContext ctx, AbstractApplicationNode application) {
+        final IObservableValue<String> layoutModelObservable = PojoProperties
+                .<AbstractApplicationNode, String> value("layout")
                 .observe(application);
         layoutModelObservable.addValueChangeListener(this);
 
-        final IObservableValue<String> themeModelObservable = PojoProperties.<ApplicationNode, String> value("theme")
+        final IObservableValue<String> themeModelObservable = PojoProperties
+                .<AbstractApplicationNode, String> value("theme")
                 .observe(application);
         themeModelObservable.addValueChangeListener(this);
 

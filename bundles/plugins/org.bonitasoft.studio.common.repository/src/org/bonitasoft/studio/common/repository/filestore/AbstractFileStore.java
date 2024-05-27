@@ -140,11 +140,11 @@ public abstract class AbstractFileStore<T>
 
     @Override
     public IResource getResource() {
-    	if(getParentStore().getResource() != null) {
-    		 return getParentStore().getResource().getFile(getName());
-    	}
-    	return null;
-       
+        if (getParentStore().getResource() != null) {
+            return getParentStore().getResource().getFile(getName());
+        }
+        return null;
+
     }
 
     @Override
@@ -546,6 +546,11 @@ public abstract class AbstractFileStore<T>
         return ValidationStatus.ok();
     }
 
+    /**
+     * @deprecated Just update the existing report.
+     * @param report report to set
+     */
+    @Deprecated
     public void setMigrationReport(MigrationReport report) {
         this.report = report;
     }

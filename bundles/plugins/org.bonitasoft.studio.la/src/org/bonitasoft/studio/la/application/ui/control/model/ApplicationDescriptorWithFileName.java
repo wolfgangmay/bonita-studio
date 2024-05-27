@@ -8,20 +8,34 @@
  *******************************************************************************/
 package org.bonitasoft.studio.la.application.ui.control.model;
 
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 
 public class ApplicationDescriptorWithFileName {
 
-    private ApplicationNode applicationNode;
+    private AbstractApplicationNode applicationNode;
     private String fileName;
 
-    public ApplicationDescriptorWithFileName(ApplicationNode applicationNode, String fileName) {
+    public ApplicationDescriptorWithFileName(AbstractApplicationNode applicationNode, String fileName) {
         this.applicationNode = applicationNode;
         this.fileName = fileName;
     }
 
-    public ApplicationNode getApplicationNode() {
+    public AbstractApplicationNode getApplicationNode() {
         return applicationNode;
+    }
+
+    public boolean isAdvancedApplication() {
+        return applicationNode instanceof AdvancedApplicationNode;
+    }
+
+    public AdvancedApplicationNode getAdvancedApplicationNode() {
+        return isAdvancedApplication() ? (AdvancedApplicationNode) applicationNode : null;
+    }
+
+    public ApplicationNode getLegacyApplicationNode() {
+        return isAdvancedApplication() ? null : (ApplicationNode) applicationNode;
     }
 
     public String getFileName() {

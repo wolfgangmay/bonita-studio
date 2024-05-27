@@ -17,6 +17,7 @@ package org.bonitasoft.studio.la.application.ui.provider;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
@@ -33,10 +34,9 @@ public class ApplicationFileStoreLabelProvider extends FileStoreLabelProvider {
 
     @Override
     protected void contentValidation(IRepositoryFileStore fileStore, StyledString styledString, ViewerCell cell) {
-        if (fileStore instanceof ApplicationFileStore) {
+        if (fileStore instanceof ApplicationFileStore applicationFileStore) {
             try {
-                ApplicationFileStore applicationFileStore = (ApplicationFileStore) fileStore;
-                if (!applicationFileStore.getContent().getApplications().isEmpty()) {
+                if (!applicationFileStore.getContent().getAllApplications().isEmpty()) {
                     cell.setText(appendAppTokens(applicationFileStore, styledString));
                 }
             } catch (ReadFileStoreException e) {
@@ -54,10 +54,12 @@ public class ApplicationFileStoreLabelProvider extends FileStoreLabelProvider {
     private String appendAppTokens(final ApplicationFileStore fileStore, final StyledString styledString)
             throws ReadFileStoreException {
         styledString.append("  ");
-        List<ApplicationNode> applications = fileStore.getContent().getApplications();
+        List<AbstractApplicationNode> applications = fileStore.getContent().getAllApplications();
         styledString.append(
                 applications.stream()
-                        .map(application -> "../apps/" + application.getToken())
+                        // legacy apps use ../apps/<token> while advanced app use /<token> resolved by nginx
+                        .map(application -> (application instanceof ApplicationNode ? "../apps/" : "/")
+                                + application.getToken())
                         .collect(Collectors.joining(", ")),
                 StyledString.COUNTER_STYLER);
         return styledString.getString();

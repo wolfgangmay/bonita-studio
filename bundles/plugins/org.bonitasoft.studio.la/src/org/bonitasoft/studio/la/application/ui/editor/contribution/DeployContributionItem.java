@@ -75,7 +75,8 @@ public class DeployContributionItem extends ContributionItem {
             }
         }
 
-        DeployArtifactsHandler deployHandler = new DeployArtifactsHandler(new DirtyEditorChecker(), formPage.getRepositoryAccessor());
+        DeployArtifactsHandler deployHandler = new DeployArtifactsHandler(new DirtyEditorChecker(),
+                formPage.getRepositoryAccessor());
         ApplicationFileStore applicationFileStore = formPage.getRepositoryAccessor()
                 .getRepositoryStore(ApplicationRepositoryStore.class).getChild(name, true);
         List<IRepositoryFileStore<?>> dependencies = dependencyResolver.findDependencies(applicationFileStore);
@@ -90,7 +91,7 @@ public class DeployContributionItem extends ContributionItem {
 
     @Override
     public boolean isEnabled() {
-        return !formPage.isErrorState() && !formPage.getWorkingCopy().getApplications().isEmpty();
+        return !formPage.isErrorState() && !formPage.getWorkingCopy().getAllApplications().isEmpty();
     }
 
     @Override

@@ -62,7 +62,7 @@ public class DeployWizardIT {
     public void cleanRepository() throws Exception {
         new UndeployProcessOperation(BOSEngineManager.getInstance())
                 .undeployAll().run(AbstractRepository.NULL_PROGRESS_MONITOR);
-        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();;
+        var currentRepository = RepositoryManager.getInstance().getCurrentRepository().orElseThrow();
         currentRepository.getAllStores().stream().filter(store -> !OrganizationRepositoryStore.class.isInstance(store))
                 .flatMap(store -> store.getChildren().stream())
                 .filter(IRepositoryFileStore::canBeDeleted)
@@ -135,6 +135,7 @@ public class DeployWizardIT {
                 .doesNotContain("REST API extensions");
 
         botDeployDialog.deploy();
+        botApplicationWorkbenchWindow.waitEndOfBuilds(15000);
         assertThat(bot.button(IDialogConstants.OPEN_LABEL).isEnabled()).isTrue();
         assertThat(bot.comboBox().getText()).contains("My App as User");
         bot.button(IDialogConstants.CLOSE_LABEL).click();
@@ -146,8 +147,9 @@ public class DeployWizardIT {
         assertThat(botDeployDialog.isValidateSelected()).isFalse();
         assertThat(
                 botDeployDialog.artifactsTree().getSWTBotWidget()
-                        .getTreeItem(org.bonitasoft.studio.identity.i18n.Messages.organizations).getItems()[0].isChecked())
-                                .isFalse();
+                        .getTreeItem(org.bonitasoft.studio.identity.i18n.Messages.organizations).getItems()[0]
+                                .isChecked())
+                                        .isFalse();
         assertThat(botDeployDialog.artifactsTree().getSWTBotWidget().getTreeItem("Processes").getNode("Pool")
                 .getNode("1.0  MonDiagramme-1.0.proc").isChecked()).isFalse();
         assertThat(botDeployDialog.artifactsTree().getSWTBotWidget().getTreeItem("Processes").getNode("Pool")

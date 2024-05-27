@@ -17,7 +17,7 @@ import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.DeletionException;
@@ -67,7 +67,7 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
     protected DataBindingContext ctx;
     protected ApplicationFormPage formPage;
 
-    public ApplicationOverview(Composite parent, ApplicationFormPage formPage, ApplicationNode application,
+    public ApplicationOverview(Composite parent, ApplicationFormPage formPage, AbstractApplicationNode application,
             IObservableValue<String> tokenObservable) {
         super(parent, SWT.NONE);
         this.formPage = formPage;
@@ -82,10 +82,11 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
         buildDescription(ctx, application);
     }
 
-    private void buildToken(final DataBindingContext ctx, ApplicationNode application,
+    private void buildToken(final DataBindingContext ctx, AbstractApplicationNode application,
             IObservableValue<String> tokenObservable) {
         ApplicationTokenUnicityValidator applicationTokenUnicityValidator = new ApplicationTokenUnicityValidator(
-                formPage.getRepositoryAccessor(), formPage.getWorkingCopy(), formPage.getEditor().getEditorInput().getName(),
+                formPage.getRepositoryAccessor(), formPage.getWorkingCopy(),
+                formPage.getEditor().getEditorInput().getName(),
                 tokenObservable);
 
         tokenObservable.addValueChangeListener(e -> {
@@ -110,8 +111,9 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
                 .setText(application.getToken());
     }
 
-    private void buildDisplayName(DataBindingContext ctx, ApplicationNode application) {
-        IObservableValue<String> nameModelObservable = PojoProperties.<ApplicationNode, String> value("displayName")
+    private void buildDisplayName(DataBindingContext ctx, AbstractApplicationNode application) {
+        IObservableValue<String> nameModelObservable = PojoProperties
+                .<AbstractApplicationNode, String> value("displayName")
                 .observe(application);
         nameModelObservable.addValueChangeListener(this);
 
@@ -129,8 +131,9 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
 
     }
 
-    private void buildVersion(DataBindingContext ctx, ApplicationNode application) {
-        IObservableValue<String> versionModelObservable = PojoProperties.<ApplicationNode, String> value("version")
+    private void buildVersion(DataBindingContext ctx, AbstractApplicationNode application) {
+        IObservableValue<String> versionModelObservable = PojoProperties
+                .<AbstractApplicationNode, String> value("version")
                 .observe(application);
         versionModelObservable.addValueChangeListener(this);
 
@@ -149,8 +152,9 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
                 .createIn(this);
     }
 
-    private void buildProfile(DataBindingContext ctx, ApplicationNode application) {
-        IObservableValue<String> profileModelObservable = PojoProperties.<ApplicationNode, String> value("profile")
+    private void buildProfile(DataBindingContext ctx, AbstractApplicationNode application) {
+        IObservableValue<String> profileModelObservable = PojoProperties
+                .<AbstractApplicationNode, String> value("profile")
                 .observe(application);
         profileModelObservable.addValueChangeListener(this);
 
@@ -174,7 +178,8 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
                 .fill()
                 .grabHorizontalSpace()
                 .withProposalProvider(formPage.getApplicationEditorProviders().getProfileProposalProvider())
-                .withTargetToModelStrategy(UpdateStrategyFactory.updateValueStrategy().withValidator(getProfileValidator()))
+                .withTargetToModelStrategy(
+                        UpdateStrategyFactory.updateValueStrategy().withValidator(getProfileValidator()))
                 .bindTo(profileModelObservable)
                 .withDelay(500)
                 .inContext(ctx)
@@ -182,9 +187,9 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
                 .createIn(profileComposite);
     }
 
-    private void buildDescription(DataBindingContext ctx, ApplicationNode application) {
+    private void buildDescription(DataBindingContext ctx, AbstractApplicationNode application) {
         IObservableValue<String> descriptionModelObservable = PojoProperties
-                .<ApplicationNode, String> value("description").observe(application);
+                .<AbstractApplicationNode, String> value("description").observe(application);
         descriptionModelObservable.addValueChangeListener(this);
 
         new TextAreaWidget.Builder()
@@ -225,7 +230,7 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
                     ApplicationFileStore appFileStore = formPage.getRepositoryAccessor()
                             .getRepositoryStore(ApplicationRepositoryStore.class)
                             .getChild(formPage.getEditor().getEditorInput().getName(), true);
-                    appFileStore.getContent().getApplications().stream()
+                    appFileStore.getContent().getAllApplications().stream()
                             .filter(appNode -> Objects.equals(appNode.getToken(), newToken))
                             .map(appNode -> {
                                 ApplicationNodeContainer applicationNodeContainer = new ApplicationNodeContainer();

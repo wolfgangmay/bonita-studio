@@ -70,7 +70,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     public static final IValidator<InputStream> DEFAULT_MODEL_VALIDATOR = is -> ValidationStatus.ok();
     protected IFolder folder;
     protected IRepository repository;
-    
+
     public static final Map<String, Integer> REPO_STORE_ORDER = new HashMap<>();
     static {
         REPO_STORE_ORDER.put("organizations", 1);
@@ -172,7 +172,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
                                 e).open());
             }
             return null;
-        } 
+        }
     }
 
     private T createEmptyFile(final String fileName, final InputStream inputStream) {
@@ -228,17 +228,6 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
         } catch (final IOException e) {
             throw new CoreException(new Status(IStatus.ERROR, CommonRepositoryPlugin.PLUGIN_ID, e.getMessage(), e));
         }
-    }
-
-    /**
-     * Handler use to call migration action if needed
-     *
-     * @param fileName
-     * @param resource
-     * @return A the IResource with a migrated content
-     */
-    protected IResource handlePreImport(final String fileName, final IResource resource) {
-        return resource;
     }
 
     /**
@@ -310,7 +299,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
     @Override
     public T getChild(final String fileName, boolean force) {
         Assert.isNotNull(fileName);
-        if(getResource() == null) {
+        if (getResource() == null) {
             return null;
         }
         final IFile file = getResource().getFile(fileName);
@@ -364,7 +353,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
         for (T fStore : filesToMigrate) {
             migrate(fStore, monitor);
         }
-        
+
         return MigrationReport.emptyReport();
     }
 
@@ -413,7 +402,7 @@ public abstract class AbstractRepositoryStore<T extends IRepositoryFileStore<?>>
         }
         return collector.toList();
     }
-    
+
     protected FileStoreCollector fileStoreCollector() {
         return new FileStoreCollector(getResource(),
                 toArray(getCompatibleExtensions(), String.class));

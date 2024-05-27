@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -43,7 +45,7 @@ import org.xml.sax.SAXException;
 public class ApplicationFormPart extends AbstractFormPart {
 
     private FormToolkit toolkit;
-    private ApplicationFormPage formPage;
+    protected ApplicationFormPage formPage;
     private List<ApplicationDescriptorControl> applicationDescriptorControls = new ArrayList<>();
     protected CustomPageProvider customPageProvider;
 
@@ -56,15 +58,15 @@ public class ApplicationFormPart extends AbstractFormPart {
                 repositoryAccessor.getRepositoryStore(ExtensionRepositoryStore.class));
         customPageProvider.init();
         toolkit = formPage.getToolkit();
-        if (workingCopy.getApplications().isEmpty()) {
+        if (workingCopy.getAllApplications().isEmpty()) {
             createNoApplicationsComposite(parent, formPage);
         } else {
-            workingCopy.getApplications().stream()
+            workingCopy.getAllApplications().stream()
                     .map(application -> {
                         Section section = toolkit.createSection(parent, Section.TWISTIE);
                         section.setData(BonitaThemeConstants.CSS_ID_PROPERTY_NAME,
                                 BonitaThemeConstants.EDITOR_SECTION_BAKGROUND_ID);
-                        return createApplicationDescriptorControl(formPage, application, section);
+                        return createApplicationDescriptorControl(application, section);
                     })
                     .forEach(applicationDescriptorControls::add);
             applicationDescriptorControls.stream().forEach(section -> {
@@ -77,28 +79,31 @@ public class ApplicationFormPart extends AbstractFormPart {
         }
     }
 
-    protected ApplicationDescriptorControl createApplicationDescriptorControl(ApplicationFormPage formPage,
-            ApplicationNode application,
+    protected ApplicationDescriptorControl createApplicationDescriptorControl(AbstractApplicationNode application,
             Section section) {
-        return new ApplicationDescriptorControl(
-                section,
-                application,
-                formPage,
-                customPageProvider);
+        if (application instanceof ApplicationNode legacy) {
+            return new LegacyApplicationDescriptorControl(
+                    section,
+                    legacy,
+                    formPage,
+                    customPageProvider);
+        } else {
+            return new AdvancedApplicationDescriptorControl(
+                    section,
+                    (AdvancedApplicationNode) application,
+                    formPage,
+                    customPageProvider);
+        }
     }
 
-    public void addApplicationToForm(Composite parent, ApplicationNode application) {
+    public void addApplicationToForm(Composite parent, AbstractApplicationNode application) {
         Section section = toolkit.createSection(parent, Section.TWISTIE);
         section.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
-        ApplicationDescriptorControl applicationDescriptorControl = new ApplicationDescriptorControl(
-                section,
-                application,
-                formPage,
-                customPageProvider);
+        var applicationDescriptorControl = createApplicationDescriptorControl(application, section);
         applicationDescriptorControls.add(applicationDescriptorControl);
     }
 
-    public void removeApplicationFromForm(Composite parent, ApplicationNode application) {
+    public void removeApplicationFromForm(Composite parent, AbstractApplicationNode application) {
         applicationDescriptorControls.stream()
                 .filter(applicationControl -> Objects.equals(applicationControl.getApplication(), application))
                 .findFirst()
