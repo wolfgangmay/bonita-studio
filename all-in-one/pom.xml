@@ -250,57 +250,5 @@
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>exec-installbuilder</id>
-			<activation>
-				<property>
-					<name>BITROCK_HOME</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<!-- Build installers for each platform -->
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>exec-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>linux-x86_64</id>
-								<phase>package</phase>
-								<configuration>
-									<commandlineArgs>build ${project.basedir}/installer/installer.xml --setvars project.outputDirectory=${project.build.directory}/installers/output/ bonita_studio_distribution_folder=${project.build.directory}/products/${productId}/linux/gtk/x86_64 project.installerFilename=${product.short.name}-${branding.version}-x86_64.run project.createUninstaller=1 bonita_studio_content_folder=${bonita_studio_distribution_folder} architecture=linux-x64</commandlineArgs>
-								</configuration>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>macosx-x86_64</id>
-								<phase>package</phase>
-								<configuration>
-									<commandlineArgs>build ${project.basedir}/installer/installer.xml --setvars project.outputDirectory=${project.build.directory}/installers/output/ bonita_studio_distribution_folder=${project.build.directory}/products/${productId}/macosx/cocoa/x86_64 project.installerFilename=${product.short.name}-${branding.version}.app project.createUninstaller=0 bonita_studio_content_folder=${bonita_studio_distribution_folder}/${product.short.name}-${branding.version}.app/Contents/Eclipse architecture=osx</commandlineArgs>
-								</configuration>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>win-x86_64</id>
-								<phase>package</phase>
-								<configuration>
-									<commandlineArgs>build ${project.basedir}/installer/installer.xml --setvars project.outputDirectory=${project.build.directory}/installers/output/ bonita_studio_distribution_folder=${project.build.directory}/products/${productId}/win32/win32/x86_64 project.installerFilename=${product.short.name}-${branding.version}-x86_64.exe project.createUninstaller=1 bonita_studio_content_folder=${bonita_studio_distribution_folder} architecture=windows</commandlineArgs>
-								</configuration>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<executable>${BITROCK_HOME}/bin/builder</executable>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
 	</profiles>
 </project>
