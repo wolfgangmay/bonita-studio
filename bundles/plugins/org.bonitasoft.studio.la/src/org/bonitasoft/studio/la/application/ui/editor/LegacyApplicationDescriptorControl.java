@@ -191,7 +191,7 @@ public class LegacyApplicationDescriptorControl extends ApplicationDescriptorCon
             apiSession = BOSEngineManager.getInstance().loginDefaultTenant(AbstractRepository.NULL_PROGRESS_MONITOR);
             ApplicationAPI applicationAPI = BOSEngineManager.getInstance().getApplicationAPI(apiSession);
             PageAPI pageAPI = BOSEngineManager.getInstance().getPageAPI(apiSession);
-            return !(applicationAPI.searchApplications(new SearchOptionsBuilder(0, 1)
+            return !(applicationAPI.searchIApplications(new SearchOptionsBuilder(0, 1)
                     .filter(ApplicationSearchDescriptor.TOKEN, application.getToken()).done())
                     .getCount() > 0 &&
                     pageAPI.searchPages(new SearchOptionsBuilder(0, 1)

@@ -19,8 +19,8 @@ import static java.util.Objects.requireNonNull;
 import java.lang.reflect.InvocationTargetException;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.exception.DeletionException;
@@ -72,9 +72,9 @@ public class DeleteApplicationContainerRunnable implements IRunnableWithProgress
 
     private IStatus delete(AbstractApplicationNode applicationNode) {
         try {
-            final long applicationId = applicationAPI.searchApplications(withToken(applicationNode.getToken()))
+            final long applicationId = applicationAPI.searchIApplications(withToken(applicationNode.getToken()))
                     .getResult().stream()
-                    .mapToLong(Application::getId)
+                    .mapToLong(IApplication::getId)
                     .findFirst()
                     .orElseThrow(ApplicationDescriptorNotFoundException::new);
             applicationAPI.deleteApplication(applicationId);

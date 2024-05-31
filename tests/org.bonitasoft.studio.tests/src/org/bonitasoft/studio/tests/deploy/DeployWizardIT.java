@@ -177,7 +177,7 @@ public class DeployWizardIT {
             }
             pageAPI.getPageByName("custompage_newPage");
             assertThat(appAPI
-                    .searchApplications(
+                    .searchIApplications(
                             new SearchOptionsBuilder(0, 1).filter(ApplicationSearchDescriptor.TOKEN, "myApp").done())
                     .getCount()).isEqualTo(1);
         } finally {

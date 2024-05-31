@@ -14,8 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
 import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
@@ -212,7 +212,7 @@ public class ApplicationOverview extends Composite implements IValueChangeListen
             try {
                 APISession apiSession = apiSessionOperation.execute();
                 ApplicationAPI applicationAPI = BOSEngineManager.getInstance().getApplicationAPI(apiSession);
-                Application application = applicationAPI.searchApplications(
+                IApplication application = applicationAPI.searchIApplications(
                         new SearchOptionsBuilder(0, 1).filter(ApplicationSearchDescriptor.TOKEN, oldToken).done())
                         .getResult().stream()
                         .findFirst()
