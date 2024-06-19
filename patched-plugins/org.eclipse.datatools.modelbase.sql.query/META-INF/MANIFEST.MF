@@ -3,8 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.datatools.modelbase.sql.query;singleton:=true
 Bundle-Version: 1.4.0.202311071249
-Bundle-ClassPath: org.eclipse.datatools.modelbase.sql.query_1.4.0.202305310959.jar
 Bundle-Activator: org.eclipse.datatools.modelbase.sql.query.util.SQLQueryModelPlugin
+Bundle-ClassPath: .
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
 Export-Package: org.eclipse.datatools.modelbase.sql.query,
@@ -12,8 +12,8 @@ Export-Package: org.eclipse.datatools.modelbase.sql.query,
  org.eclipse.datatools.modelbase.sql.query.impl,
  org.eclipse.datatools.modelbase.sql.query.util
 Require-Bundle: com.ibm.icu,
- org.eclipse.core.runtime,
- org.eclipse.datatools.modelbase.sql;visibility:=reexport
+ org.eclipse.datatools.modelbase.sql;visibility:=reexport,
+ org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
 Build-Jdk-Spec: 17
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
