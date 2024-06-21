@@ -34,7 +34,7 @@
 								<artifactItem>
 									<groupId>com.h2database</groupId>
 									<artifactId>h2</artifactId>
-									<version>1.4.199</version>
+									<version>1.4.200</version>
 								</artifactItem>
 							</artifactItems>
 							<outputDirectory>${lib.dir}</outputDirectory>

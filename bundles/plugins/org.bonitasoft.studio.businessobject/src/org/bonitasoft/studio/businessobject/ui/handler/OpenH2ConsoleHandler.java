@@ -50,7 +50,7 @@ import com.google.common.base.Joiner;
 
 public class OpenH2ConsoleHandler {
 
-    private static final String URL = "\"jdbc:h2:file:%s/business_data.db;MVCC=TRUE;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;\"";
+    private static final String URL = "\"jdbc:h2:file:%s/business_data.db;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;\"";
     private static final String DRIVER = "org.h2.Driver";
     private static final String USER = "sa";
     private static final int PORT = PortSelector.findFreePort();
