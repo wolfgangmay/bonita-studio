@@ -19,11 +19,13 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.FileUtil;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.maven.plugin.CreateExtensionsModulePlugin;
@@ -72,7 +74,7 @@ public class ExtensionsModuleMigrationStep implements MigrationStep {
                         .filter(File::isDirectory)
                         .filter(file -> new File(file, POM_FILE_NAME).exists())
                         .forEach(file -> moveProjects(file.toPath(), extensions, extensionsParentModel, appModel));
-                Files.delete(restApiExtensionsFolder.toPath());
+                deleteLegacyExtensionFolderIfEmpty(restApiExtensionsFolder, project);
             }
             var themesFolder = app.resolve("themes").toFile();
             if (themesFolder.exists()) {
@@ -80,7 +82,7 @@ public class ExtensionsModuleMigrationStep implements MigrationStep {
                         .filter(File::isDirectory)
                         .filter(file -> new File(file, POM_FILE_NAME).exists())
                         .forEach(file -> moveProjects(file.toPath(), extensions, extensionsParentModel, appModel));
-                Files.delete(themesFolder.toPath());
+                deleteLegacyExtensionFolderIfEmpty(themesFolder, project);
             }
             saveMavenModel(appModel, project.resolve(BonitaProject.APP_MODULE));
             MavenProjectHelper.saveModel(extensionsPomFile, extensionsParentModel);
@@ -90,13 +92,33 @@ public class ExtensionsModuleMigrationStep implements MigrationStep {
         return report;
     }
 
+    private void deleteLegacyExtensionFolderIfEmpty(File folder, Path project) throws CoreException, IOException {
+        if (folder.list().length > 0) {
+            Stream.of(folder.listFiles())
+                    .filter(File::isDirectory)
+                    .filter(file -> !new File(file, POM_FILE_NAME).exists())
+                    .forEach(extensionWithoutPom -> BonitaStudioLog.error(
+                            String.format("%s/%s/pom.xml not found ! Modules migration step cannot be performed.",
+                                    folder.getName(),
+                                    extensionWithoutPom.getName()),
+                            ExtensionsModuleMigrationStep.class));
+            throw new CoreException(Status.error(String.format(
+                    "Failed to update project layout to multi-module: Unexpected files are still present in '%s' folder post update (%s).%nMake sure only folders containing pom.xml file are present in '%s' folder before migrating.",
+                    folder.getName(),
+                    Stream.of(folder.listFiles()).map(f -> project.relativize(f.toPath()).toString())
+                            .collect(Collectors.joining(", ")),
+                    folder.getName())));
+        }
+        Files.delete(folder.toPath());
+    }
+
     private void moveProjects(Path sourceDirectory, Path extensions, Model parentModel, Model appModel) {
         try {
             Path project = extensions.resolve(sourceDirectory.getFileName());
             FileUtil.copyDirectory(sourceDirectory, project);
             parentModel.addModule(sourceDirectory.getFileName().toString());
             FileUtil.deleteDir(sourceDirectory);
-            
+
             var extensionModel = loadMavenModel(project);
             var dependency = new Dependency();
             dependency.setGroupId("${project.groupId}");
@@ -106,9 +128,9 @@ public class ExtensionsModuleMigrationStep implements MigrationStep {
             appModel.getDependencies().add(dependency);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }catch (CoreException e) {
-			throw new RuntimeException(e);
-		}
+        } catch (CoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
