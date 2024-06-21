@@ -152,6 +152,9 @@ public class RestAPIExtensionPomValidator {
             IMaven maven = MavenPlugin.getMaven();
             MavenProjectInfo info = restApiFileStore.getMavenProjectInfo();
             var projectFacade = MavenPlugin.getMavenProjectRegistry().getProject(restApiFileStore.getProject());
+            if(projectFacade == null) {
+                return null;
+            }
             MavenProject project = projectFacade.getMavenProject(AbstractRepository.NULL_PROGRESS_MONITOR);
             IMavenExecutionContext createExecutionContext = maven.createExecutionContext();
             return createExecutionContext.execute(new ICallable<MavenExecutionResult>() {
