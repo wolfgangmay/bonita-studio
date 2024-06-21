@@ -50,6 +50,7 @@ import org.eclipse.m2e.core.embedder.ICallable;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenExecutionContext;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
+import org.eclipse.ui.internal.ide.undo.ProjectDescription;
 
 public class RestAPIExtensionPomValidator {
 
@@ -65,6 +66,9 @@ public class RestAPIExtensionPomValidator {
     public List<IStatus> validate(final RestAPIExtensionFileStore restApiFileStore) throws CoreException {
         List<IStatus> result = newArrayList();
         MavenExecutionResult mavenResult = build(restApiFileStore);
+        if(mavenResult == null) {
+            return List.of(Status.error(String.format("Failed to build %s extension.", restApiFileStore.getName())));
+        }
         DependencyResolutionResult dependencyResolutionResult = mavenResult.getDependencyResolutionResult();
         validateUnresolvedDependencies(restApiFileStore, result, dependencyResolutionResult);
         validateDependenciesToUpdate(result, mavenResult.getProject());
@@ -158,6 +162,9 @@ public class RestAPIExtensionPomValidator {
         IMaven maven = MavenPlugin.getMaven();
         MavenProjectInfo info = restApiFileStore.getMavenProjectInfo();
         var projectFacade = MavenPlugin.getMavenProjectRegistry().getProject(restApiFileStore.getProject());
+        if(projectFacade == null) {
+            return null;
+        }
         MavenProject project = projectFacade.getMavenProject(AbstractRepository.NULL_PROGRESS_MONITOR);
         IMavenExecutionContext createExecutionContext = maven.createExecutionContext();
         return createExecutionContext.execute(new ICallable<MavenExecutionResult>() {

@@ -63,6 +63,7 @@ public class PomFileValidator extends AbstractCustomPageValidator {
     public boolean accept(IFile candidate) {
         RepositoryManager repositoryManager = RepositoryManager.getInstance();
         return repositoryManager.hasActiveRepository()
+                && candidate != null
                 && candidate.getLocation() != null
                 && repositoryManager.getCurrentRepository().orElseThrow().getProject().getLocation() != null
                 && repositoryManager.getCurrentRepository().orElseThrow().getProject().getLocation()
