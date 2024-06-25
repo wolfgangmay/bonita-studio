@@ -9,7 +9,7 @@
 package org.bonitasoft.studio.la.application.ui.control.model;
 
 import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
-import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
+import org.bonitasoft.engine.business.application.xml.ApplicationLinkNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 
 public class ApplicationDescriptorWithFileName {
@@ -26,16 +26,16 @@ public class ApplicationDescriptorWithFileName {
         return applicationNode;
     }
 
-    public boolean isAdvancedApplication() {
-        return applicationNode instanceof AdvancedApplicationNode;
+    public boolean isApplicationLink() {
+        return applicationNode instanceof ApplicationLinkNode;
     }
 
-    public AdvancedApplicationNode getAdvancedApplicationNode() {
-        return isAdvancedApplication() ? (AdvancedApplicationNode) applicationNode : null;
+    public ApplicationLinkNode getApplicationLinkNode() {
+        return isApplicationLink() ? (ApplicationLinkNode) applicationNode : null;
     }
 
     public ApplicationNode getLegacyApplicationNode() {
-        return isAdvancedApplication() ? null : (ApplicationNode) applicationNode;
+        return isApplicationLink() ? null : (ApplicationNode) applicationNode;
     }
 
     public String getFileName() {

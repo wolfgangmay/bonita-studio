@@ -7,8 +7,8 @@
             <applicationPage customPage="custompage_home" token="home"/>
         </applicationPages>
     </application>
-    <advancedApplication token="myApp2Home" version="1.0" profile="User" state="ACTIVATED">
+    <applicationLink token="myApp2Home" version="1.0" profile="User" state="ACTIVATED">
         <displayName>My second App</displayName>
         <description>Another description</description>
-    </advancedApplication>
+    </applicationLink>
 </applications>

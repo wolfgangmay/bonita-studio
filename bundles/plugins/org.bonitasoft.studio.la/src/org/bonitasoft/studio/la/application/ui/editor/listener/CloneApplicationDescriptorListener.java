@@ -72,7 +72,7 @@ public class CloneApplicationDescriptorListener implements Listener {
                     .withTheme(legacy.getTheme())
                     .create();
         } else {
-            return ApplicationNodeBuilder.newAdvancedApplication(newToken,
+            return ApplicationNodeBuilder.newApplicationLink(newToken,
                     application.getDisplayName(), application.getVersion())
                     .withDescription(application.getDescription())
                     .withProfile(application.getProfile())

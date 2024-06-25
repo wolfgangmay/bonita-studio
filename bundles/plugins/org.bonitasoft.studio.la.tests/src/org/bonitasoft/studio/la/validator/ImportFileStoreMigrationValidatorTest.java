@@ -47,7 +47,7 @@ public class ImportFileStoreMigrationValidatorTest {
                 String.format("%s application descriptor has been migrated to the latest schema version.",
                         "myOldApp.xml"));
         assertThat(appFileStore.getContent()).isNotNull();
-        assertThat(appFileStore.getContent().getAdvancedApplications()).isEmpty();
+        assertThat(appFileStore.getContent().getApplicationLinks()).isEmpty();
     }
 
     @Test
@@ -56,6 +56,6 @@ public class ImportFileStoreMigrationValidatorTest {
         var appFileStore = store.importInputStream("myApp.xml", new FileInputStream(appFile.getFile()));
         assertThat(appFileStore.getMigrationReport().updates()).isEmpty();
         assertThat(appFileStore.getContent()).isNotNull();
-        assertThat(appFileStore.getContent().getAdvancedApplications()).isNotEmpty();
+        assertThat(appFileStore.getContent().getApplicationLinks()).isNotEmpty();
     }
 }

@@ -82,7 +82,7 @@
       <repository location="mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.0:zip" id="BonitasoftBPM"/>
     </location>
     <location missingManifest="generate" includeDependencyScopes="compile,runtime,system" includeSource="true" includeDependencyDepth="none" label="BonitaArtifactsModels" type="Maven">
-      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.1.0"/>
+      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.1.1"/>
       <dependencies>
         <dependency>
           <groupId>com.sun.activation</groupId>
@@ -105,31 +105,31 @@
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-application-model</artifactId>
-          <version>1.1.0</version>
+          <version>1.1.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-bdm-access-control-model</artifactId>
-          <version>1.1.0</version>
+          <version>1.1.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-business-object-model</artifactId>
-          <version>1.1.0</version>
+          <version>1.1.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-organization-model</artifactId>
-          <version>1.1.0</version>
+          <version>1.1.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-profile-model</artifactId>
-          <version>1.1.0</version>
+          <version>1.1.1</version>
           <type>jar</type>
         </dependency>
         <dependency>

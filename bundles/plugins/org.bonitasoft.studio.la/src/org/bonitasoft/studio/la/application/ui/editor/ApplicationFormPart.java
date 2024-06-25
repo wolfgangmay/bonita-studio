@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import javax.xml.bind.JAXBException;
 
 import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
-import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
+import org.bonitasoft.engine.business.application.xml.ApplicationLinkNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -88,9 +88,9 @@ public class ApplicationFormPart extends AbstractFormPart {
                     formPage,
                     customPageProvider);
         } else {
-            return new AdvancedApplicationDescriptorControl(
+            return new ApplicationLinkDescriptorControl(
                     section,
-                    (AdvancedApplicationNode) application,
+                    (ApplicationLinkNode) application,
                     formPage,
                     customPageProvider);
         }

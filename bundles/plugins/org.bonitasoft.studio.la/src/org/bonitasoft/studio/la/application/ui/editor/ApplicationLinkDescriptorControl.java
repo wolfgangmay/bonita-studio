@@ -8,7 +8,7 @@
  */
 package org.bonitasoft.studio.la.application.ui.editor;
 
-import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
+import org.bonitasoft.engine.business.application.xml.ApplicationLinkNode;
 import org.bonitasoft.studio.la.application.ui.editor.customPage.CustomPageProvider;
 import org.bonitasoft.studio.la.i18n.Messages;
 import org.eclipse.jface.layout.FillLayoutFactory;
@@ -17,11 +17,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.Section;
 
 /**
- * Controls the descriptor widgets for an advanced application.
+ * Controls the descriptor widgets for an application link.
  */
-public class AdvancedApplicationDescriptorControl extends ApplicationDescriptorControl {
+public class ApplicationLinkDescriptorControl extends ApplicationDescriptorControl {
 
-    public AdvancedApplicationDescriptorControl(Section applicationSection, AdvancedApplicationNode application,
+    public ApplicationLinkDescriptorControl(Section applicationSection, ApplicationLinkNode application,
             ApplicationFormPage formPage, CustomPageProvider customPageProvider) {
         super(applicationSection, application, formPage, customPageProvider);
         Composite client = toolkit.createComposite(applicationSection);
@@ -30,7 +30,7 @@ public class AdvancedApplicationDescriptorControl extends ApplicationDescriptorC
 
         // TODO PROD-246 support with a richer editor
 
-        toolkit.createLabel(client, Messages.advancedApplicationNoSupport);
+        toolkit.createLabel(client, Messages.applicationLinkNoSupport);
 
         applicationSection.setClient(client);
     }

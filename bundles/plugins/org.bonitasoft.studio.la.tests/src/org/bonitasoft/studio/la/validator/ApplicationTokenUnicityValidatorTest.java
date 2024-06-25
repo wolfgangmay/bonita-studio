@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
-import org.bonitasoft.engine.business.application.xml.AdvancedApplicationNode;
+import org.bonitasoft.engine.business.application.xml.ApplicationLinkNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeBuilder;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
@@ -63,7 +63,7 @@ public class ApplicationTokenUnicityValidatorTest {
     }
 
     @Test
-    public void should_validation_fails_with_current_token_in_advanced() throws Exception {
+    public void should_validation_fails_with_current_token_in_link() throws Exception {
         final RepositoryAccessor repositoryAccessor = initRepositoryAccessor();
         ApplicationNodeContainer nodeContainer = new ApplicationNodeContainer();
         final ApplicationTokenUnicityValidator validator = new ApplicationTokenUnicityValidator(repositoryAccessor,
@@ -102,7 +102,7 @@ public class ApplicationTokenUnicityValidatorTest {
                 createAppWithToken("token2"),
                 createAppWithToken("token4"),
                 createAppWithToken("token4"),
-                createAdvancedAppWithToken("token5"));
+                createAppLinkWithToken("token5"));
 
         final ApplicationNodeContainer applicationNodeContainer = mock(ApplicationNodeContainer.class);
         when(applicationNodeContainer.getAllApplications()).thenReturn(applications);
@@ -130,8 +130,8 @@ public class ApplicationTokenUnicityValidatorTest {
         return applicationNode;
     }
 
-    protected AdvancedApplicationNode createAdvancedAppWithToken(String token) {
-        final AdvancedApplicationNode applicationNode = mock(AdvancedApplicationNode.class);
+    protected ApplicationLinkNode createAppLinkWithToken(String token) {
+        final ApplicationLinkNode applicationNode = mock(ApplicationLinkNode.class);
         when(applicationNode.getToken()).thenReturn(token);
         return applicationNode;
     }

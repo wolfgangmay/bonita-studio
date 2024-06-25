@@ -57,7 +57,7 @@ public class ApplicationFileStoreLabelProvider extends FileStoreLabelProvider {
         List<AbstractApplicationNode> applications = fileStore.getContent().getAllApplications();
         styledString.append(
                 applications.stream()
-                        // legacy apps use ../apps/<token> while advanced app use /<token> resolved by nginx
+                        // legacy apps use ../apps/<token> while app links use /<token> resolved by nginx
                         .map(application -> (application instanceof ApplicationNode ? "../apps/" : "/")
                                 + application.getToken())
                         .collect(Collectors.joining(", ")),
