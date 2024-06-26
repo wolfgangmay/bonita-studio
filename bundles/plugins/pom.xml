@@ -107,6 +107,7 @@
         <module>org.bonitasoft.studio.preferences.tests</module>
         <module>org.bonitasoft.studio.properties.tests</module>
         <module>org.bonitasoft.studio.rest.api.extension.tests</module>
+        <module>org.bonitasoft.studio.sqlbuilder.ex.tests</module>
         <module>org.bonitasoft.studio.ui.tests</module>
         <module>org.bonitasoft.studio.validation.tests</module>
         

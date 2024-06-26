@@ -17,8 +17,6 @@ package org.bonitasoft.studio.connectors.ui.wizard.page;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
-import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
 import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfiguration;
 import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfigurationFactory;
 import org.bonitasoft.bpm.model.process.Activity;
@@ -27,42 +25,30 @@ import org.bonitasoft.bpm.model.process.ContractInput;
 import org.bonitasoft.bpm.model.process.ContractInputType;
 import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.bpm.model.process.ProcessFactory;
+import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
 import org.eclipse.jface.viewers.Viewer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- * @author Romain Bioteau
- */
-@RunWith(MockitoJUnitRunner.class)
-public class ConnectorOutputAvailableExpressionTypeFilterTest {
+@ExtendWith(MockitoExtension.class)
+class ConnectorOutputAvailableExpressionTypeFilterTest {
 
     private ConnectorOutputAvailableExpressionTypeFilter connectorOutputAvailableExpressionTypeFilter;
 
     @Mock
     private Viewer expressionViewer;
 
-    /**
-     * @throws java.lang.Exception
-     */
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connectorOutputAvailableExpressionTypeFilter = new ConnectorOutputAvailableExpressionTypeFilter();
     }
 
-    /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
-    public void should_select_returns_true_for_contract_input_expression_in_on_finish_connector_input()
+    void should_select_returns_true_for_contract_input_expression_in_on_finish_connector_input()
             throws Exception {
         final Activity activity = ProcessFactory.eINSTANCE.createActivity();
         final Connector onFinishConnector = ProcessFactory.eINSTANCE.createConnector();
@@ -73,11 +59,12 @@ public class ConnectorOutputAvailableExpressionTypeFilterTest {
         final ContractInput input = ProcessFactory.eINSTANCE.createContractInput();
         input.setName("myInput");
         input.setType(ContractInputType.TEXT);
-        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null, ExpressionHelper.createContractInputExpression(input))).isTrue();
+        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null,
+                ExpressionHelper.createContractInputExpression(input))).isTrue();
     }
 
     @Test
-    public void should_select_returns_true_for_contract_input_expression_in_pool_on_enter_connector_input()
+    void should_select_returns_true_for_contract_input_expression_in_pool_on_enter_connector_input()
             throws Exception {
         final Pool pool = ProcessFactory.eINSTANCE.createPool();
         final Connector onEnterConnector = ProcessFactory.eINSTANCE.createConnector();
@@ -91,11 +78,12 @@ public class ConnectorOutputAvailableExpressionTypeFilterTest {
         final ContractInput input = ProcessFactory.eINSTANCE.createContractInput();
         input.setName("myInput");
         input.setType(ContractInputType.TEXT);
-        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null, ExpressionHelper.createContractInputExpression(input))).isTrue();
+        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null,
+                ExpressionHelper.createContractInputExpression(input))).isTrue();
     }
 
     @Test
-    public void should_select_returns_false_for_contract_input_expression_in_activity_on_enter_connector_input()
+    void should_select_returns_false_for_contract_input_expression_in_activity_on_enter_connector_input()
             throws Exception {
         final Activity activity = ProcessFactory.eINSTANCE.createActivity();
         final Connector onEnterConnector = ProcessFactory.eINSTANCE.createConnector();
@@ -109,8 +97,9 @@ public class ConnectorOutputAvailableExpressionTypeFilterTest {
         final ContractInput input = ProcessFactory.eINSTANCE.createContractInput();
         input.setName("myInput");
         input.setType(ContractInputType.TEXT);
-        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null, ExpressionHelper.createContractInputExpression(input)))
-                .isFalse();
+        assertThat(connectorOutputAvailableExpressionTypeFilter.select(expressionViewer, null,
+                ExpressionHelper.createContractInputExpression(input)))
+                        .isFalse();
     }
 
 }

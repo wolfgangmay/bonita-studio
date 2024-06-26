@@ -18,25 +18,20 @@ import static org.bonitasoft.bpm.model.process.builders.LaneBuilder.aLane;
 import static org.bonitasoft.bpm.model.process.builders.PoolBuilder.aPool;
 import static org.bonitasoft.bpm.model.process.builders.TaskBuilder.aTask;
 
-import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
-import org.bonitasoft.studio.assertions.StatusAssert;
-import org.bonitasoft.studio.common.databinding.validator.MultiValidator;
 import org.bonitasoft.bpm.model.process.Connector;
 import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.bpm.model.process.Task;
-import org.bonitasoft.studio.swt.rules.RealmWithDisplay;
+import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.studio.assertions.StatusAssert;
+import org.bonitasoft.studio.common.databinding.validator.MultiValidator;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.core.runtime.IStatus;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MoveConnectorWizardPageTest {
-
-    @Rule
-    public RealmWithDisplay realm = new RealmWithDisplay();
+class MoveConnectorWizardPageTest {
 
     @Test
-    public void should_return_a_valid_status_if_not_moving_a_task_connector() throws Exception {
+    void should_return_a_valid_status_if_not_moving_a_task_connector() throws Exception {
         final Pool pool = aPool().build();
         final Task task = aTask().build();
         final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool,
@@ -50,12 +45,13 @@ public class MoveConnectorWizardPageTest {
     }
 
     @Test
-    public void should_return_a_valid_status_if_moving_a_process_connector() throws Exception {
+    void should_return_a_valid_status_if_moving_a_process_connector() throws Exception {
         final Pool pool = aPool().build();
         final Task task = aTask().build();
-        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool, new WritableValue(pool, Connector.class), new WritableValue(
-                ConnectorEvent.ON_ENTER.name(),
-                String.class));
+        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool,
+                new WritableValue(pool, Connector.class), new WritableValue(
+                        ConnectorEvent.ON_ENTER.name(),
+                        String.class));
 
         final MultiValidator validator = wizardPage.selectionValidator();
 
@@ -63,12 +59,13 @@ public class MoveConnectorWizardPageTest {
     }
 
     @Test
-    public void should_return_a_warning_status_if_moving_a_connector_from_a_tasks() throws Exception {
+    void should_return_a_warning_status_if_moving_a_connector_from_a_tasks() throws Exception {
         final Pool pool = aPool().build();
         final Task task = aTask().build();
-        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool, new WritableValue(task, Connector.class), new WritableValue(
-                ConnectorEvent.ON_ENTER.name(),
-                String.class));
+        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool,
+                new WritableValue(task, Connector.class), new WritableValue(
+                        ConnectorEvent.ON_ENTER.name(),
+                        String.class));
 
         final MultiValidator validator = wizardPage.selectionValidator();
 
@@ -76,12 +73,13 @@ public class MoveConnectorWizardPageTest {
     }
 
     @Test
-    public void should_return_an_error_status_if_no_target_location_is_selected_tasks() throws Exception {
+    void should_return_an_error_status_if_no_target_location_is_selected_tasks() throws Exception {
         final Pool pool = aPool().build();
         final Task task = aTask().build();
-        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool, new WritableValue(task, Connector.class), new WritableValue(
-                ConnectorEvent.ON_ENTER.name(),
-                String.class));
+        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool,
+                new WritableValue(task, Connector.class), new WritableValue(
+                        ConnectorEvent.ON_ENTER.name(),
+                        String.class));
 
         final MultiValidator validator = wizardPage.selectionValidator();
 
@@ -89,12 +87,13 @@ public class MoveConnectorWizardPageTest {
     }
 
     @Test
-    public void should_return_an_error_status_if_target_location_is_not_a_connectable_element() throws Exception {
+    void should_return_an_error_status_if_target_location_is_not_a_connectable_element() throws Exception {
         final Pool pool = aPool().build();
         final Task task = aTask().build();
-        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool, new WritableValue(task, Connector.class), new WritableValue(
-                ConnectorEvent.ON_ENTER.name(),
-                String.class));
+        final MoveConnectorWizardPage wizardPage = new MoveConnectorWizardPage(pool,
+                new WritableValue(task, Connector.class), new WritableValue(
+                        ConnectorEvent.ON_ENTER.name(),
+                        String.class));
 
         final MultiValidator validator = wizardPage.selectionValidator();
 

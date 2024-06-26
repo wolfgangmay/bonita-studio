@@ -18,31 +18,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.bpm.connector.model.definition.Output;
 import org.bonitasoft.bpm.model.expression.Expression;
-import org.junit.Test;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
+import org.junit.jupiter.api.Test;
 
-public class DefaultDatabaseOutputAvailableExpressionTypeFilterTest {
+class DefaultDatabaseOutputAvailableExpressionTypeFilterTest {
 
     DefaultDatabaseOutputAvailableExpressionTypeFilter filter = new DefaultDatabaseOutputAvailableExpressionTypeFilter();
 
     @Test
-    public void should_accept_output_with_valid_name() {
+    void should_accept_output_with_valid_name() {
         Output element = mock(Output.class);
         when(element.getName()).thenReturn(DatabaseConnectorConstants.RESULTSET_OUTPUT);
         assertThat(filter.validateResultSetOutput(element)).isTrue();
     }
 
     @Test
-    public void should_refuse_output_with_invalid_name() {
+    void should_refuse_output_with_invalid_name() {
         Output element = mock(Output.class);
         when(element.getName()).thenReturn(DatabaseConnectorConstants.SINGLE_RESULT_OUTPUT);
         assertThat(filter.validateResultSetOutput(element)).isFalse();
     }
 
     @Test
-    public void should_accept_expression_with_valid_name() {
+    void should_accept_expression_with_valid_name() {
         Expression element = mock(Expression.class);
         when(element.getType()).thenReturn(ExpressionConstants.CONNECTOR_OUTPUT_TYPE);
         when(element.getName()).thenReturn(DatabaseConnectorConstants.RESULTSET_OUTPUT);
@@ -50,7 +50,7 @@ public class DefaultDatabaseOutputAvailableExpressionTypeFilterTest {
     }
 
     @Test
-    public void should_refuse_expression_with_invalid_name() {
+    void should_refuse_expression_with_invalid_name() {
         Expression element = mock(Expression.class);
         when(element.getType()).thenReturn(ExpressionConstants.CONNECTOR_OUTPUT_TYPE);
         when(element.getName()).thenReturn(DatabaseConnectorConstants.ONE_ROW);

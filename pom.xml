@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <name>Bonita Studio</name>
     <properties>
-        <tychoVersion>4.0.5</tychoVersion>
+        <tycho.version>4.0.8</tycho.version>
         <java.version>17</java.version>
         <os-jvm-flags></os-jvm-flags>
         <branding.version>2024.3-SNAPSHOT</branding.version>
@@ -18,17 +18,24 @@
         <ui.designer.version>1.19.0</ui.designer.version>
         <business.data.repository.version>1.0.0</business.data.repository.version>
         <platform.version>${project.parent.version}</platform.version>
-        <tomcat.version>9.0.86</tomcat.version>
+        <tomcat.version>9.0.90</tomcat.version>
+        <maven3-model-jdom-support.version>1.6</maven3-model-jdom-support.version>
         <tycho.localArtifacts>ignore</tycho.localArtifacts>
+        <!-- Maven plugins -->
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <image-overlay-plugin.version>1.1.3</image-overlay-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <groovy-maven-plugin.groovy.version>3.0.19</groovy-maven-plugin.groovy.version>
+        <maven-clean-plugin.version>3.4.0</maven-clean-plugin.version>
         <!-- Must be synched with org.bonitasoft.studio.common.repository.core.maven.model.DefaultPluginVersions.MAVEN_DEPENDENCY_PLUGIN_VERSION -->
         <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
-        <maven3-model-jdom-support.version>1.6</maven3-model-jdom-support.version>
-        <jacocoVersion>0.8.11</jacocoVersion>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+        <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
+        <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     </properties>
     <modules>
         <module>platform</module>
@@ -41,7 +48,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>${maven-resources-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.bonitasoft.maven</groupId>
@@ -51,27 +58,27 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.12.1</version>
+                    <version>${maven-compiler-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.3.2</version>
+                    <version>${maven-clean-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>tycho-versions-plugin</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.tycho.extras</groupId>
                     <artifactId>tycho-eclipserun-plugin</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>tycho-packaging-plugin</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                     <configuration>
                         <strictBinIncludes>false</strictBinIncludes>
                         <strictVersions>false</strictVersions>
@@ -93,12 +100,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>${maven-antrun-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>${exec-maven-plugin.version}</version>
                     <configuration>
                        <inheritIo>true</inheritIo>
                        <useMavenLogger>true</useMavenLogger>
@@ -107,7 +114,7 @@
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>tycho-surefire-plugin</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                     <configuration>
                         <useUIHarness>false</useUIHarness>
                         <showEclipseLog>true</showEclipseLog>
@@ -117,12 +124,12 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.5.0</version>
+                    <version>${build-helper-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>tycho-compiler-plugin</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                     <configuration>
                         <compilerArgument>-warn:+discouraged,forbidden</compilerArgument>
                         <useProjectSettings>false</useProjectSettings>
@@ -131,7 +138,7 @@
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>target-platform-configuration</artifactId>
-                    <version>${tychoVersion}</version>
+                    <version>${tycho.version}</version>
                     <configuration>
                         <executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full-17</executionEnvironment>
                         <environments>
@@ -189,7 +196,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>${jacocoVersion}</version>
+                    <version>${jacoco-maven-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -222,7 +229,7 @@
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-maven-plugin</artifactId>
-                <version>${tychoVersion}</version>
+                <version>${tycho.version}</version>
                 <extensions>true</extensions>
             </plugin>
             <plugin>
