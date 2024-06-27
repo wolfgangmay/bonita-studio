@@ -36,14 +36,17 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.internal.IMavenConstants;
 import org.eclipse.m2e.core.internal.IMavenToolbox;
 import org.eclipse.m2e.core.internal.preferences.MavenPreferenceConstants;
 import org.eclipse.m2e.core.project.IProjectConfigurationManager;
 import org.eclipse.m2e.core.project.LocalProjectScanner;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
-import org.eclipse.m2e.core.ui.internal.M2EUIPluginActivator;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
 
@@ -115,8 +118,9 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
         } catch (InterruptedException e) {
             throw new CoreException(Status.error("Failed to scan local projects", e));
         }
-        var store = M2EUIPluginActivator.getDefault().getPreferenceStore();
-        store.setValue(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, false);
+        var store = DefaultScope.INSTANCE.getNode(IMavenConstants.PLUGIN_ID);
+        var autoUpdate = store.getBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, true);
+        setAutoUpdateConfiguration(store, false);
         try {
             for (var mavenProject : flatten(localProjectScanner.getProjects()).stream()
                     .sorted((p1, p2) -> bdmProjects().test(p1) ? -1 : 1).toList()) {
@@ -128,7 +132,7 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
                 }
             }
         } finally {
-            store.setValue(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, true);
+            setAutoUpdateConfiguration(store, autoUpdate);
         }
     }
 
@@ -148,6 +152,15 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
         } catch (IOException e) {
             BonitaStudioLog.error(e);
             return null;
+        }
+    }
+    
+    private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
+        store.putBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, enanbled);
+        try {
+            store.sync();
+        } catch (BackingStoreException e) {
+            BonitaStudioLog.error(e);
         }
     }
 

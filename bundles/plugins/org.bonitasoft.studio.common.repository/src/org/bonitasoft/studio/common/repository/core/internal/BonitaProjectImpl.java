@@ -42,13 +42,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 
 import com.google.common.base.Objects;
 
@@ -178,7 +179,7 @@ public class BonitaProjectImpl implements BonitaProject {
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
         // schedule the 3 jobs immediately with the same rule to ensure sequencing
-        BuildScheduler.scheduleJobWithBuildRule(new Job("Refresh resources") {
+        var refreshJob = new Job("Refresh resources") {
 
             @Override
             protected IStatus run(IProgressMonitor monitor) {
@@ -193,23 +194,31 @@ public class BonitaProjectImpl implements BonitaProject {
                 }
                 return Status.OK_STATUS;
             }
+        };
+        var updateJob = BonitaProject.updateMavenProjectsJob(getRelatedProjects(), updateConfiguration);
+        refreshJob.addJobChangeListener(new JobChangeAdapter() {
+            @Override
+            public void done(IJobChangeEvent event) {
+                BuildScheduler.scheduleJobWithBuildRule(updateJob);
+            }
         });
-        var job = new UpdateMavenProjectJob(getRelatedProjects(), false, false,
-                updateConfiguration,
-                true, true);
-        job.setPriority(Job.INTERACTIVE);
-        BuildScheduler.scheduleJobWithBuildRule(job);
-        BuildScheduler.scheduleJobWithBuildRule(
-                new Job("Analyze project dependencies") {
+        var analyzeJob = new Job("Analyze project dependencies") {
 
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        currentRepository()
-                                .map(IRepository::getProjectDependenciesStore)
-                                .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
-                        return Status.OK_STATUS;
-                    }
-                });
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                currentRepository()
+                        .map(IRepository::getProjectDependenciesStore)
+                        .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
+                return Status.OK_STATUS;
+            }
+        };
+        updateJob.addJobChangeListener(new JobChangeAdapter() {
+            @Override
+            public void done(IJobChangeEvent event) {
+                BuildScheduler.scheduleJobWithBuildRule(analyzeJob);
+            }
+        });
+        BuildScheduler.scheduleJobWithBuildRule(refreshJob);
     }
 
     @Override
