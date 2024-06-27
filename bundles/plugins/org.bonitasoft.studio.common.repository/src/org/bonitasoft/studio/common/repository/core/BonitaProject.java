@@ -17,24 +17,33 @@ package org.bonitasoft.studio.common.repository.core;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.BonitaProjectNature;
+import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.core.internal.BonitaProjectImpl;
 import org.bonitasoft.studio.common.repository.core.maven.BonitaProjectBuilder;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.core.team.GitProject;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
+import org.eclipse.m2e.core.internal.project.ProjectConfigurationManager;
+import org.eclipse.m2e.core.project.MavenUpdateRequest;
 
 public interface BonitaProject extends GitProject, IAdaptable {
 
@@ -165,6 +174,41 @@ public interface BonitaProject extends GitProject, IAdaptable {
 
     static BonitaProject create(String projectId) {
         return new BonitaProjectImpl(projectId);
+    }
+    
+    static WorkspaceJob updateMavenProjectsJob(Collection<IProject> projects, boolean updateConfiguration) {
+       return new WorkspaceJob("Update maven projects") {
+
+            @Override
+            public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+                ProjectConfigurationManager configurationManager = (ProjectConfigurationManager) MavenPlugin
+                        .getProjectConfigurationManager();
+
+                MavenUpdateRequest request = new MavenUpdateRequest(projects.toArray(IProject[]::new), false, false);
+                Map<String, IStatus> updateStatus = configurationManager.updateProjectConfiguration(request,
+                        updateConfiguration,
+                        true, true, monitor);
+                Map<String, Throwable> errorMap = new LinkedHashMap<>();
+                ArrayList<IStatus> errors = new ArrayList<>();
+
+                for (Map.Entry<String, IStatus> entry : updateStatus.entrySet()) {
+                    if (!entry.getValue().isOK()) {
+                        errors.add(entry.getValue());
+                        errorMap.put(entry.getKey(), new CoreException(entry.getValue()));
+                    }
+                }
+                IStatus status = Status.OK_STATUS;
+                if (errors.size() == 1) {
+                    status = errors.get(0);
+                } else {
+                    status = new MultiStatus(CommonRepositoryPlugin.PLUGIN_ID, -1,
+                            errors.toArray(new IStatus[errors.size()]),
+                            "Error occured when updating maven projects", null);
+                }
+
+                return status;
+            }
+        };
     }
 
 

@@ -38,11 +38,16 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.internal.IMavenConstants;
+import org.eclipse.m2e.core.internal.preferences.MavenPreferenceConstants;
 import org.eclipse.m2e.core.project.IProjectConfigurationManager;
 import org.eclipse.m2e.core.project.LocalProjectScanner;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
 
@@ -106,6 +111,10 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
             throw new CoreException(Status.error("Failed to scan local projects", e));
         }
 
+        var store = DefaultScope.INSTANCE.getNode(IMavenConstants.PLUGIN_ID);
+        var autoUpdate = store.getBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, true);
+        setAutoUpdateConfiguration(store, false);
+        try {
         var projectImportConfiguration = new BonitaProjectImportConfiguration(projectId);
         projectConfigurationManager.importProjects(
                 flatten(localProjectScanner.getProjects()).stream()
@@ -116,8 +125,20 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
                 flatten(localProjectScanner.getProjects()).stream()
                         .filter(Predicate.not(bdmProjects())).collect(Collectors.toList()),
                 projectImportConfiguration, monitor);
+        }finally {
+            setAutoUpdateConfiguration(store, autoUpdate);
+        }
+
     }
 
+    private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
+        store.putBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, enanbled);
+        try {
+            store.sync();
+        } catch (BackingStoreException e) {
+            BonitaStudioLog.error(e);
+        }
+    }
 
     protected void removeUidProvidedWidgets() throws CoreException {
         var widgetsFolder = projectRoot.toPath().resolve("app").resolve("web_widgets");

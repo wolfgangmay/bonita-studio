@@ -77,6 +77,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.EclipseContextFactory;
@@ -90,6 +92,10 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.internal.IMavenConstants;
+import org.eclipse.m2e.core.internal.MavenPluginActivator;
+import org.eclipse.m2e.core.internal.preferences.MavenPreferenceConstants;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -105,6 +111,7 @@ import org.eclipse.ui.internal.ide.application.IDEApplication;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
+import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * This class controls all aspects of the application's execution
@@ -186,7 +193,7 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
      * @param display display to dispose (non-null)
      */
     protected void disposeDisplay(Display display) {
-        if(Objects.equals(Platform.getOS(), Platform.OS_MACOSX)){
+        if (Objects.equals(Platform.getOS(), Platform.OS_MACOSX)) {
             // Avoid exception due to device already disposed...
             return;
         }
@@ -644,48 +651,62 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
         // The application model must be reset because it may contain invalid fragments or descriptors
         ClearPersistedStateIndication.letIndication();
         // Remove the tomcat folder. It will be reconstructed automatically.
+        File tomcatDir = new File(url.getFile(), "tomcat"); //$NON-NLS-1$
+        if (tomcatDir.exists()) {
+            FileUtil.deleteDir(tomcatDir);
+        }
+
+        var automaticallyUpdateConfiguration = MavenPlugin.getMavenConfiguration().isAutomaticallyUpdateConfiguration();
+        IEclipsePreferences store = DefaultScope.INSTANCE.getNode(IMavenConstants.PLUGIN_ID);
+        setAutoUpdateConfiguration(store, false);
+
         try {
-            File tomcatDir = new File(Path.of(url.toURI()).toFile(), "tomcat"); //$NON-NLS-1$
-            if (tomcatDir.exists()) {
-                FileUtil.deleteDir(tomcatDir);
+            // delete project "server_configuration"
+            var serverConfProject = ResourcesPlugin.getWorkspace().getRoot()
+                    .getProject(BOSWebServerManager.SERVER_CONFIGURATION_PROJECT);
+            Optional.ofNullable(serverConfProject).filter(IProject::exists).ifPresent(IConsumer.safe(
+                    p -> p.delete(true, new NullProgressMonitor())));
+            // Remove server prefs from WST
+            ScopedPreferenceStore wstStore = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+                    "org.eclipse.wst.server.core"); //$NON-NLS-1$
+            wstStore.setValue("runtimes", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            // Remove the cached data repository binary & UID binary
+            Bundle uiDesignerBundle = Platform.getBundle(UIDesignerPlugin.PLUGIN_ID);
+            File uidCacheFolder = Platform.getStateLocation(uiDesignerBundle).toFile();
+            if (uidCacheFolder.exists()) {
+                FileUtil.deleteDir(uidCacheFolder);
             }
-        } catch (URISyntaxException e) {
+            // Remove internal maven repository
+            var internalRepository = new File(MavenRepositories.internalRepository().getBasedir());
+            if (internalRepository.exists()) {
+                FileUtil.deleteDir(internalRepository);
+            }
+
+            // Remove org.eclipse.jdt.launching prefs, which may contain old invalid JRE path
+            Bundle jdtLaunchingBundle = Platform.getBundle(LaunchingPlugin.ID_PLUGIN);
+            File jdtLaunchingCacheFolder = Platform.getStateLocation(jdtLaunchingBundle).toFile();
+            if (jdtLaunchingCacheFolder.exists()) {
+                FileUtil.deleteDir(jdtLaunchingCacheFolder);
+                jdtLaunchingCacheFolder.mkdirs();
+            }
+            ScopedPreferenceStore launchingStore = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+                    LaunchingPlugin.ID_PLUGIN);
+            launchingStore.setValue(JavaRuntime.PREF_VM_XML, launchingStore.getDefaultString(JavaRuntime.PREF_VM_XML));
+
+            // Projects should migrate too...
+            doProjectsMigration(shell);
+        } finally {
+            setAutoUpdateConfiguration(store, automaticallyUpdateConfiguration);
+        }
+    }
+
+    private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
+        store.putBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, enanbled);
+        try {
+            store.sync();
+        } catch (BackingStoreException e) {
             BonitaStudioLog.error(e);
         }
-        // delete project "server_configuration"
-        var serverConfProject = ResourcesPlugin.getWorkspace().getRoot()
-                .getProject(BOSWebServerManager.SERVER_CONFIGURATION_PROJECT);
-        Optional.ofNullable(serverConfProject).filter(IProject::exists).ifPresent(IConsumer.safe(
-                p -> p.delete(true, new NullProgressMonitor())));
-        // Remove server prefs from WST
-        ScopedPreferenceStore wstStore = new ScopedPreferenceStore(InstanceScope.INSTANCE,
-                "org.eclipse.wst.server.core"); //$NON-NLS-1$
-        wstStore.setValue("runtimes", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        // Remove the cached data repository binary & UID binary
-        Bundle uiDesignerBundle = Platform.getBundle(UIDesignerPlugin.PLUGIN_ID);
-        File uidCacheFolder = Platform.getStateLocation(uiDesignerBundle).toFile();
-        if (uidCacheFolder.exists()) {
-            FileUtil.deleteDir(uidCacheFolder);
-        }
-        // Remove internal maven repository
-        var internalRepository = new File(MavenRepositories.internalRepository().getBasedir());
-        if (internalRepository.exists()) {
-            FileUtil.deleteDir(internalRepository);
-        }
-
-        // Remove org.eclipse.jdt.launching prefs, which may contain old invalid JRE path
-        Bundle jdtLaunchingBundle = Platform.getBundle(LaunchingPlugin.ID_PLUGIN);
-        File jdtLaunchingCacheFolder = Platform.getStateLocation(jdtLaunchingBundle).toFile();
-        if (jdtLaunchingCacheFolder.exists()) {
-            FileUtil.deleteDir(jdtLaunchingCacheFolder);
-            jdtLaunchingCacheFolder.mkdirs();
-        }
-        ScopedPreferenceStore launchingStore = new ScopedPreferenceStore(InstanceScope.INSTANCE,
-                LaunchingPlugin.ID_PLUGIN);
-        launchingStore.setValue(JavaRuntime.PREF_VM_XML, launchingStore.getDefaultString(JavaRuntime.PREF_VM_XML));
-
-        // Projects should migrate too...
-        doProjectsMigration(shell);
     }
 
     /**
@@ -779,6 +800,11 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
         var importOp = new ImportBonitaProjectOperation(projectRoot);
         IConsumer.safeConsume(subMonitor.split(55), importOp::run);
         // post-migration steps (including project refresh)
+        var h2database = projectRoot.toPath().resolve("app").resolve("h2_database").toFile(); //$NON-NLS-1$
+        if (h2database.exists()) {
+            FileUtil.deleteDir(h2database);
+        }
+
         var report = importOp.getReport();
         var bonitaProject = importOp.getBonitaProject();
 
@@ -816,6 +842,10 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
     protected boolean isBonitaProject(IProject project) {
         Path descPath = project.getFile(IProjectDescription.DESCRIPTION_FILE_NAME).getRawLocation().toFile()
                 .toPath();
+        if (!Objects.equals(project.getLocation().toFile().toPath().getParent(),
+                ResourcesPlugin.getWorkspace().getRoot().getRawLocation().toFile().toPath())) {
+            return false;
+        }
         try {
             IProjectDescription projectDesc = BonitaProjectMigrator.readDescriptor(descPath);
             // Bonita projects have the version as comment...

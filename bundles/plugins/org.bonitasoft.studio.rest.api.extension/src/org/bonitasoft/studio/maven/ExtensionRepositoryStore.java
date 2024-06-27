@@ -27,6 +27,7 @@ import org.apache.maven.model.Model;
 import org.bonitasoft.plugin.analyze.report.model.CustomPage;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
+import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.ImportArchiveData;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
@@ -55,7 +56,6 @@ import org.bonitasoft.studio.theme.DependencyThemeFileStore;
 import org.bonitasoft.studio.theme.ThemeFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
@@ -67,7 +67,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
-import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 
 public class ExtensionRepositoryStore
         extends AbstractFolderRepositoryStore<ExtensionProjectFileStore> {
@@ -262,12 +261,8 @@ public class ExtensionRepositoryStore
         for (ExtensionProjectFileStore fStore : filesToMigrate) {
             migrate(fStore, monitor);
         }
-        new UpdateMavenProjectJob(getBonitaProject().getExtensionsProjects().toArray(IProject[]::new),
-                false,
-                false,
-                true,
-                false,
-                true).schedule();
+
+        BuildScheduler.scheduleJobWithBuildRule(BonitaProject.updateMavenProjectsJob(getBonitaProject().getExtensionsProjects(), true));
         return MigrationReport.emptyReport();
     }
 

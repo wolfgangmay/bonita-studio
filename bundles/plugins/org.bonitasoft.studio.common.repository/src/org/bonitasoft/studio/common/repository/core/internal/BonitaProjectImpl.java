@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.Messages;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
@@ -49,7 +50,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 
 public class BonitaProjectImpl implements BonitaProject {
 
@@ -173,42 +173,47 @@ public class BonitaProjectImpl implements BonitaProject {
     @Override
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
-        new Job("Refresh resources") {
-
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
-                        if (accessor != null) {
-                            var repository = accessor.getCurrentRepository().orElse(null);
-                            if (repository != null) {
-                                for (var store : repository.getAllStores()) {
-                                    store.refresh();
-                                }
-                            }
-                        }
-                        return Status.OK_STATUS;
-                    }
-                }.schedule();
-        var job = new UpdateMavenProjectJob(getRelatedProjects().toArray(IProject[]::new), false, false,
-                updateConfiguration,
-                true, true);
-        job.addJobChangeListener(new JobChangeAdapter() {
+        // schedule the 3 jobs immediately with the same rule to ensure sequencing
+        var refreshJob = new Job("Refresh resources") {
 
             @Override
-            public void done(IJobChangeEvent event) {
-                new Job("Analyze project dependencies") {
-
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        currentRepository()
-                                .map(IRepository::getProjectDependenciesStore)
-                                .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
-                        return Status.OK_STATUS;
+            protected IStatus run(IProgressMonitor monitor) {
+                var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
+                if (accessor != null) {
+                    var repository = accessor.getCurrentRepository().orElse(null);
+                    if (repository != null) {
+                        for (var store : repository.getAllStores()) {
+                            store.refresh();
+                        }
                     }
-                }.schedule();
+                }
+                return Status.OK_STATUS;
+            }
+        };
+        var updateJob = BonitaProject.updateMavenProjectsJob(getRelatedProjects(), updateConfiguration);
+        refreshJob.addJobChangeListener(new JobChangeAdapter() {
+            @Override
+            public void done(IJobChangeEvent event) {
+                BuildScheduler.scheduleJobWithBuildRule(updateJob);
             }
         });
-        job.schedule();
+        var analyzeJob = new Job("Analyze project dependencies") {
+
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                currentRepository()
+                        .map(IRepository::getProjectDependenciesStore)
+                        .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
+                return Status.OK_STATUS;
+            }
+        };
+        updateJob.addJobChangeListener(new JobChangeAdapter() {
+            @Override
+            public void done(IJobChangeEvent event) {
+                BuildScheduler.scheduleJobWithBuildRule(analyzeJob);
+            }
+        });
+        BuildScheduler.scheduleJobWithBuildRule(refreshJob);
     }
 
     @Override
