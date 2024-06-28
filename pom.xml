@@ -313,10 +313,7 @@
             </modules>
         </profile>
         <profile>
-            <id>all-in-one</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <id>community-package</id>
             <modules>
                 <module>all-in-one</module>
             </modules>
