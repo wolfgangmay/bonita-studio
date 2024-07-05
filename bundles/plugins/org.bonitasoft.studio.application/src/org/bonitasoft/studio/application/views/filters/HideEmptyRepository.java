@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
+import org.bonitasoft.studio.common.repository.core.IProjectContainer;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.designer.core.repository.WebFragmentRepositoryStore;
@@ -55,6 +56,9 @@ public class HideEmptyRepository extends ViewerFilter {
                         if (store instanceof WebFragmentRepositoryStore) {
                             return Stream.of(members)
                                     .anyMatch(r -> !r.getName().startsWith("."));
+                        }
+                        if (store instanceof IProjectContainer) {
+                            return !((IProjectContainer) store).getChildrenProjects().isEmpty();
                         }
                         var bonitaProject = repositoryManager.getCurrentProject().orElse(null);
                         if (bonitaProject != null && bonitaProject.getAppProject().getFolder(BonitaProject.EXTENSIONS_MODULE).equals(element)) {

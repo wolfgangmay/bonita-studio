@@ -14,14 +14,19 @@
  */
 package org.bonitasoft.studio.maven;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.maven.model.Model;
 import org.bonitasoft.plugin.analyze.report.model.CustomPage;
@@ -30,6 +35,7 @@ import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.ImportArchiveData;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
+import org.bonitasoft.studio.common.repository.core.IProjectContainer;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.maven.model.GAV;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
@@ -57,6 +63,7 @@ import org.bonitasoft.studio.theme.DependencyThemeFileStore;
 import org.bonitasoft.studio.theme.ThemeFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
@@ -66,11 +73,13 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
 
 public class ExtensionRepositoryStore
-        extends AbstractFolderRepositoryStore<ExtensionProjectFileStore> {
+        extends AbstractFolderRepositoryStore<ExtensionProjectFileStore>
+        implements IProjectContainer {
 
     public static final String API_EXTENSION_CONTENT_TYPE = "apiExtension";
     public static final String THEME_CONTENT_TYPE = "theme";
@@ -168,14 +177,68 @@ public class ExtensionRepositoryStore
 
     @Override
     public void refresh() {
-        final IFolder folder = getResource();
-        if (folder != null && !folder.isSynchronized(IResource.DEPTH_ONE)) {
+        refreshResources();
+
+        BonitaProject bonitaProject = getBonitaProject();
+        var parentProject = bonitaProject.getExtensionsParentProject();
+        // Remove all existing project before clean re import
+        if (parentProject.exists() && !parentProject.isOpen()) {
             try {
-                folder.refreshLocal(IResource.DEPTH_ONE, AbstractRepository.NULL_PROGRESS_MONITOR);
+                parentProject.delete(!parentProject.getFile("pom.xml").exists(), false, new NullProgressMonitor());
             } catch (CoreException e) {
                 BonitaStudioLog.error(e);
             }
         }
+
+        Stream.of(ResourcesPlugin.getWorkspace().getRoot().getProjects())
+                .filter(Predicate.not(IProject::isOpen))
+                .filter(project -> project.getRawLocation() != null)
+                .filter(project -> Objects.equals(project.getRawLocation().toFile().getParentFile(),
+                        bonitaProject.getParentProject().getLocation().toFile().toPath()
+                                .resolve(BonitaProject.EXTENSIONS_MODULE).toFile()))
+                .forEach(project -> {
+                    try {
+                        project.delete(true, false, new NullProgressMonitor());
+                    } catch (CoreException e) {
+                        BonitaStudioLog.error(e);
+                    }
+                });
+
+        final IFolder folder = getResource();
+        File parentFolder = folder.getLocation().toFile();
+        var projectFolders = parentFolder.listFiles(file -> file.isDirectory() && new File(file, "pom.xml").exists());
+        if (projectFolders != null) {
+            var existingProjects = getBonitaProject().getExtensionsProjects().stream()
+                    .map(IProject::getName)
+                    .collect(Collectors.toList());
+            if (Stream.of(projectFolders)
+                    .map(parent -> new File(parent, "pom.xml"))
+                    .map(pomFile -> {
+                        try {
+                            return MavenProjectHelper.readModel(pomFile).getArtifactId();
+                        } catch (CoreException e) {
+                            BonitaStudioLog.error(e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .anyMatch(artifactId -> !existingProjects.contains(artifactId))) {
+                try {
+                    parentProject.delete(false, false, new NullProgressMonitor());
+                } catch (CoreException e) {
+                    BonitaStudioLog.error(e);
+                }
+                var importBdmModules = new ImportMavenModuleOperation(parentFolder);
+                try {
+                    importBdmModules.run(new NullProgressMonitor());
+                    var connectProviderOperation = bonitaProject.newConnectProviderOperation();
+                    connectProviderOperation.run(new NullProgressMonitor());
+                } catch (CoreException | InvocationTargetException | InterruptedException e) {
+                    BonitaStudioLog.error(e);
+                }
+            }
+        }
+
         createExtensionFolderLinkInAppProject(getBonitaProject());
     }
 
@@ -193,7 +256,8 @@ public class ExtensionRepositoryStore
 
     @Override
     public List<ExtensionProjectFileStore> getChildren() {
-        refresh();
+        // Refresh children resources
+        refreshResources();
 
         final List<ExtensionProjectFileStore> result = new ArrayList<>();
         final IFolder folder = getResource();
@@ -222,6 +286,17 @@ public class ExtensionRepositoryStore
         }
 
         return result;
+    }
+
+    private void refreshResources() {
+        final IFolder folder = getResource();
+        if (folder != null && !folder.isSynchronized(IResource.DEPTH_ONE)) {
+            try {
+                folder.refreshLocal(IResource.DEPTH_ONE, AbstractRepository.NULL_PROGRESS_MONITOR);
+            } catch (CoreException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
     }
 
     private boolean hasSourceProject(CustomPage ext) {
@@ -264,7 +339,8 @@ public class ExtensionRepositoryStore
             migrate(fStore, monitor);
         }
 
-        BuildScheduler.scheduleJobWithBuildRule(BonitaProject.updateMavenProjectsJob(getBonitaProject().getExtensionsProjects(), true));
+        BuildScheduler.scheduleJobWithBuildRule(
+                BonitaProject.updateMavenProjectsJob(getBonitaProject().getExtensionsProjects(), true));
         return MigrationReport.emptyReport();
     }
 
@@ -313,10 +389,10 @@ public class ExtensionRepositoryStore
                     hasBeenMigrated = true;
                 }
             }
-	        String parentArtifactId = String.format("%s-extensions", metadata.getProjectId());
-			if(!Objects.equals(model.getParent().getArtifactId(), parentArtifactId)){
-				model.getParent().setArtifactId(parentArtifactId);
-				MavenProjectHelper.update(pomFile.getLocation().toFile(), model);
+            String parentArtifactId = String.format("%s-extensions", metadata.getProjectId());
+            if (!Objects.equals(model.getParent().getArtifactId(), parentArtifactId)) {
+                model.getParent().setArtifactId(parentArtifactId);
+                MavenProjectHelper.update(pomFile.getLocation().toFile(), model);
             }
             if (hasBeenMigrated) {
                 var file = ((IFolder) pomFile.getParent())
@@ -417,6 +493,15 @@ public class ExtensionRepositoryStore
         return getChildren().stream()
                 .filter(fStore -> gav.equals(fStore.getGAV()))
                 .findFirst();
+    }
+
+    @Override
+    public Collection<IProject> getChildrenProjects() {
+        var bonitaProject = getBonitaProject();
+        if (bonitaProject != null) {
+            return bonitaProject.getExtensionsProjects();
+        }
+        return List.of();
     }
 
 }
