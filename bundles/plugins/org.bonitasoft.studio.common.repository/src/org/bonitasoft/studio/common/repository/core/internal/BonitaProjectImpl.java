@@ -17,6 +17,7 @@ package org.bonitasoft.studio.common.repository.core.internal;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,7 +102,10 @@ public class BonitaProjectImpl implements BonitaProject {
     @Override
     public void open(IProgressMonitor monitor) throws CoreException {
         for (var project : getRelatedProjects()) {
-            project.open(monitor);
+            if(project.getLocation() != null
+                    && Files.exists(project.getLocation().toFile().toPath().resolve(".project"))) {
+                project.open(monitor);
+            }
         }
         currentRepository().orElseThrow().open(monitor);
     }
@@ -190,13 +194,6 @@ public class BonitaProjectImpl implements BonitaProject {
                 return Status.OK_STATUS;
             }
         };
-        var updateJob = BonitaProject.updateMavenProjectsJob(getRelatedProjects(), updateConfiguration);
-        refreshJob.addJobChangeListener(new JobChangeAdapter() {
-            @Override
-            public void done(IJobChangeEvent event) {
-                BuildScheduler.scheduleJobWithBuildRule(updateJob);
-            }
-        });
         var analyzeJob = new Job("Analyze project dependencies") {
 
             @Override
@@ -207,10 +204,17 @@ public class BonitaProjectImpl implements BonitaProject {
                 return Status.OK_STATUS;
             }
         };
-        updateJob.addJobChangeListener(new JobChangeAdapter() {
+        refreshJob.addJobChangeListener(new JobChangeAdapter() {
             @Override
             public void done(IJobChangeEvent event) {
-                BuildScheduler.scheduleJobWithBuildRule(analyzeJob);
+                var updateJob = BonitaProject.updateMavenProjectsJob(getRelatedProjects(), updateConfiguration);
+                updateJob.addJobChangeListener(new JobChangeAdapter() {
+                    @Override
+                    public void done(IJobChangeEvent event) {
+                        BuildScheduler.scheduleJobWithBuildRule(analyzeJob);
+                    }
+                });
+                BuildScheduler.scheduleJobWithBuildRule(updateJob);
             }
         });
         BuildScheduler.scheduleJobWithBuildRule(refreshJob);
