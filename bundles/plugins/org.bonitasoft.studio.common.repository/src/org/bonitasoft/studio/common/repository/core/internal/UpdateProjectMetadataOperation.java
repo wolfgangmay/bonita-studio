@@ -232,7 +232,7 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
 
         // Reimport bdm modules
         var bdmModule = newParentProject.getFolder(BonitaProject.BDM_MODULE);
-        if (bdmModule.exists()) {
+        if (bdmModule.getFile("pom.xml").exists()) {
             var projectInfoToImport = new ArrayList<MavenProjectInfo>();
             projectInfoToImport.add(projectInfo(bdmModule));
             projectInfoToImport.add(projectInfo(bdmModule.getFolder(BDM_MODEL_MODULE)));
@@ -256,7 +256,7 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
         
         // Re-import extensions parent modules
         var extensionsParentModule = newParentProject.getFolder(BonitaProject.EXTENSIONS_MODULE);
-        if (extensionsParentModule.exists()) {
+        if (extensionsParentModule.getFile("pom.xml").exists()) {
             var projectInfoToImport = new ArrayList<MavenProjectInfo>();
             projectInfoToImport.add(projectInfo(extensionsParentModule));
             projectImportConfiguration = new ProjectImportConfiguration();
