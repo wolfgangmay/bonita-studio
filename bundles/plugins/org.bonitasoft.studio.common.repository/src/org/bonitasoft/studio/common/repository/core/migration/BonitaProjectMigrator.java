@@ -37,6 +37,7 @@ import org.bonitasoft.studio.common.repository.core.migration.step.MultiModuleMi
 import org.bonitasoft.studio.common.repository.core.migration.step.ProvidedGroovyScriptRemovedStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.RemoveFlattenPluginExecutionStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.RemoveLegacyFolderStep;
+import org.bonitasoft.studio.common.repository.core.migration.step.ReportingAppUpdateMigrationStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.SplitGroovyAllIntoModulesStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.UpdateProjectDescriptionMigrationStep;
 import org.eclipse.core.resources.IProject;
@@ -65,7 +66,8 @@ public class BonitaProjectMigrator {
             new ApplicationModuleConfigurationStep(),
             new BdmAssemblyConfigurationStep(),
             new RemoveFlattenPluginExecutionStep(),
-            new Java17UpdateStep());
+            new Java17UpdateStep(),
+            new ReportingAppUpdateMigrationStep());
 
     private Path project;
 
