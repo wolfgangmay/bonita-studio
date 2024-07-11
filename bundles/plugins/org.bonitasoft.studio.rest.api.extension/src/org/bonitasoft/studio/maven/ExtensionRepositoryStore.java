@@ -231,8 +231,10 @@ public class ExtensionRepositoryStore
                 var importBdmModules = new ImportMavenModuleOperation(parentFolder);
                 try {
                     importBdmModules.run(new NullProgressMonitor());
-                    var connectProviderOperation = bonitaProject.newConnectProviderOperation();
-                    connectProviderOperation.run(new NullProgressMonitor());
+                    if(bonitaProject.getGitDir().exists()) {
+                        var connectProviderOperation = bonitaProject.newConnectProviderOperation();
+                        connectProviderOperation.run(new NullProgressMonitor());
+                    }
                 } catch (CoreException | InvocationTargetException | InterruptedException e) {
                     BonitaStudioLog.error(e);
                 }
