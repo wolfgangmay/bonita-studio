@@ -17,8 +17,7 @@ package org.bonitasoft.studio.tests.document;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.api.Assertions;
-import org.bonitasoft.engine.bpm.document.DocumentValue;
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
@@ -241,7 +240,7 @@ public class TestDocument {
 
         final BotExpressionEditorDialog editRightOperand = botOperationComposite.editRightOperand();
         Assertions.assertThat(editRightOperand.selectScriptTab().getReturnType())
-                .isEqualTo(DocumentValue.class.getName());
+                .isEqualTo(ExpressionConstants.DOCUMENT_VALUE_RETURN_TYPE);
 
         editRightOperand.cancel();
 

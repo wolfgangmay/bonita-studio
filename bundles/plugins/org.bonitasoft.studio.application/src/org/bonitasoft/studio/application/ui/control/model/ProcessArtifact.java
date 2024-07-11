@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
-import org.bonitasoft.studio.model.process.Pool;
 
 public class ProcessArtifact implements VersionedArtifact {
 

@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -43,14 +45,16 @@ import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.IBonitaProjectListener;
 import org.bonitasoft.studio.common.repository.ImportArchiveData;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
+import org.bonitasoft.studio.common.repository.core.IProjectContainer;
 import org.bonitasoft.studio.common.repository.core.maven.plugin.CreateBdmModulePlugin;
-import org.bonitasoft.studio.common.repository.core.maven.plugin.ImportBdmModuleOperation;
+import org.bonitasoft.studio.common.repository.core.maven.plugin.ImportMavenModuleOperation;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.bonitasoft.studio.common.repository.model.IRepository;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.common.repository.store.AbstractRepositoryStore;
 import org.bonitasoft.studio.common.repository.store.FileStoreCollector;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -65,18 +69,16 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.edapt.migration.MigrationException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
-/**
- * @author Romain Bioteau
- */
 public class BusinessObjectModelRepositoryStore<F extends AbstractBDMFileStore<?>>
         extends AbstractRepositoryStore<AbstractBDMFileStore<?>>
-        implements IBonitaProjectListener {
+        implements IBonitaProjectListener, IProjectContainer {
 
     private static final String STORE_NAME = "bdm";
 
@@ -209,15 +211,67 @@ public class BusinessObjectModelRepositoryStore<F extends AbstractBDMFileStore<?
         return fileStore;
     }
 
+    @Override
+    public void refresh() {
+        super.refresh();
+        // Verify all modules projects are imported or cleaned
+        var bdmParentFolder = getResource();
+        BonitaProject bonitaProject = getBonitaProject();
+        var parentProject = bonitaProject.getBdmParentProject();
+        var modelProject = bonitaProject.getBdmModelProject();
+        var daoProject = bonitaProject.getBdmDaoClientProject();
+        // Remove all existing project before clean re import
+        if (parentProject.exists() && !parentProject.isOpen()) {
+            try {
+                parentProject.delete(false, false, new NullProgressMonitor());
+            } catch (CoreException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
+        if (modelProject.exists() && !modelProject.isOpen()) {
+            try {
+                modelProject.delete(false, false, new NullProgressMonitor());
+            } catch (CoreException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
+        if (daoProject.exists() && !daoProject.isOpen()) {
+            try {
+                daoProject.delete(false, false, new NullProgressMonitor());
+            } catch (CoreException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
+        if (bdmParentFolder.getFile("pom.xml").exists() && !parentProject.exists()) {
+            var importBdmModules = new ImportMavenModuleOperation(bdmParentFolder.getLocation().toFile());
+            try {
+                importBdmModules.run(new NullProgressMonitor());
+                var connectProviderOperation = bonitaProject.newConnectProviderOperation();
+                connectProviderOperation.run(new NullProgressMonitor());
+                bonitaProject.getBdmParentProject().refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+                bonitaProject.getBdmModelProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD,
+                        new NullProgressMonitor());
+            } catch (CoreException | InvocationTargetException | InterruptedException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
+
+        // Check if bdm resource link is consistent
+        createBdmFolderLinkInAppProject(getBonitaProject());
+    }
+
     public IFolder createBdmModule(BonitaProject project, IProgressMonitor monitor) throws CoreException {
         var parentProject = project.getParentProject();
         var parentProjectPath = parentProject.getLocation().toFile().toPath();
         var plugin = new CreateBdmModulePlugin(parentProjectPath, project.getId());
         plugin.execute(new NullProgressMonitor());
-        var importBdmModules = new ImportBdmModuleOperation(parentProjectPath.resolve(STORE_NAME).toFile());
+        var importBdmModules = new ImportMavenModuleOperation(parentProjectPath.resolve(STORE_NAME).toFile());
         importBdmModules.run(monitor);
         project.getBdmParentProject().refreshLocal(IResource.DEPTH_INFINITE, monitor);
         project.getBdmModelProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+        new UpdateMavenProjectJob(new IProject[] { project.getAppProject() }, false, false, false, false, true)
+                .run(new NullProgressMonitor());
+        project.getAppProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
         return createBdmFolderLinkInAppProject(project);
     }
 
@@ -393,6 +447,23 @@ public class BusinessObjectModelRepositoryStore<F extends AbstractBDMFileStore<?
             }
         }
         return super.validate(filename, inputStream);
+    }
+
+    @Override
+    public Collection<IProject> getChildrenProjects() {
+        var bonitaProject = getBonitaProject();
+        var childrenProjects = new ArrayList<IProject>();
+        if (bonitaProject != null) {
+            var bdmModelProject = bonitaProject.getBdmModelProject();
+            if (bdmModelProject.exists() && bdmModelProject.isOpen()) {
+                childrenProjects.add(bdmModelProject);
+            }
+            var bdmDaoClientProject = bonitaProject.getBdmDaoClientProject();
+            if (bdmDaoClientProject.exists() && bdmDaoClientProject.isOpen()) {
+                childrenProjects.add(bdmDaoClientProject);
+            }
+        }
+        return childrenProjects;
     }
 
 }

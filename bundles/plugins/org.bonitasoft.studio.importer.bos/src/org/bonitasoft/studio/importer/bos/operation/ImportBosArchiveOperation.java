@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.extension.BonitaStudioExtensionRegistryManager;
@@ -49,6 +50,7 @@ import org.bonitasoft.studio.common.repository.core.maven.ProjectDependenciesLoo
 import org.bonitasoft.studio.common.repository.core.maven.migration.ProjectDependenciesMigrationOperation;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.ConflictVersion;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.operation.DependenciesUpdateOperationFactory;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent.EventType;
@@ -202,6 +204,20 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                 dependenciesLookup.stream()
                         .forEach(dl -> dl.setSelected(true));
             }
+            
+            if(importedMavenModel != null) {
+                importedMavenModel.getDependencies().stream()
+                    .filter(dep -> Objects.equals("application", dep.getClassifier()))
+                    .forEach(dependencies::add);
+                importedMavenModel.getDependencies().stream()
+                    .filter(dep -> Objects.equals("${project.groupId}", dep.getGroupId()) && Objects.equals("${project.version}", dep.getVersion()))
+                    .forEach(dependencies::add);
+                importedMavenModel.getDependencies().stream()
+                    .filter(dep -> (dep.getVersion() == null || Objects.equals(Artifact.SCOPE_PROVIDED, dep.getScope())) 
+                            && !AppProjectConfiguration.isInternalDependency(dep)
+                            && !AppProjectConfiguration.isBdmDependency(dep))
+                    .forEach(dependencies::add);
+            }
 
             var dependenciesLookupToInstall = dependenciesLookup.stream()
                     .filter(DependencyLookup::isSelected)
@@ -219,13 +235,13 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                                     dl.dependencyFileName()));
                 }
             }
+  
+            doImport(importArchiveModel, statusBuilder, monitor);
 
             if (!dependencies.isEmpty()) {
                 doUpdateProjectDependencies(monitor, statusBuilder);
             }
             
-            doImport(importArchiveModel, statusBuilder, monitor);
-
             monitor.subTask("");
 
             dependenciesLookup.stream()
@@ -399,15 +415,16 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                 (int) importArchiveModel.getStores().stream().flatMap(AbstractFolderModel::importableUnits).count());
         importArchiveModel.getStores().stream()
         .sorted(storeImportOrderComparator())
-        .forEachOrdered(s -> 
-            s.importableUnits()
-            // Ensure .artifact-descriptor.properties is imported before bom.xml
-            .sorted(Comparator.comparing(ImportableUnit::getName))
-            .forEachOrdered(unit -> {
-                monitor.subTask(NLS.bind(Messages.importing, unit.getName()));
-                importUnit(unit, importArchiveModel.getBosArchive(), statusBuilder, monitor);
-                monitor.worked(1);
-            }));
+        .forEachOrdered(s -> {
+                s.importableUnits()
+                // Ensure .artifact-descriptor.properties is imported before bom.xml
+                .sorted(Comparator.comparing(ImportableUnit::getName))
+                .forEachOrdered(unit -> {
+                    monitor.subTask(NLS.bind(Messages.importing, unit.getName()));
+                    importUnit(unit, importArchiveModel.getBosArchive(), statusBuilder, monitor);
+                    monitor.worked(1);
+                });
+            });
         migrateUID(monitor);
     }
 

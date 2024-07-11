@@ -16,22 +16,20 @@ package org.bonitasoft.studio.exporter.handler;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import java.util.Optional;
 
+import org.bonitasoft.bonita2bpmn.extension.BonitaModelExporterImpl;
+import org.bonitasoft.bonita2bpmn.transfo.BonitaToBPMNExporter;
+import org.bonitasoft.bonita2bpmn.transfo.ConnectorTransformationXSLProvider;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.util.IModelSearch;
+import org.bonitasoft.bpm.model.util.ModelSearch;
 import org.bonitasoft.studio.common.ProductVersion;
-import org.bonitasoft.studio.common.model.IModelSearch;
-import org.bonitasoft.studio.common.model.ModelSearch;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.connectors.repository.ConnectorDefRepositoryStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
 import org.bonitasoft.studio.exporter.Messages;
-import org.bonitasoft.studio.exporter.bpmn.transfo.BonitaToBPMNExporter;
-import org.bonitasoft.studio.exporter.bpmn.transfo.OSGIConnectorTransformationXSLProvider;
-import org.bonitasoft.studio.exporter.extension.BonitaModelExporterImpl;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.MainProcess;
 import org.bonitasoft.studio.model.process.diagram.part.ProcessDiagramEditor;
 import org.bonitasoft.studio.ui.dialog.ExceptionDialogHandler;
 import org.bonitasoft.studio.ui.dialog.MultiStatusDialog;
@@ -80,15 +78,12 @@ public class ExportAsBPMNHandler {
                                         .getRepositoryStore(DiagramRepositoryStore.class);
                                 ConnectorDefRepositoryStore connectorDefRepoStore = repositoryAccessor
                                         .getRepositoryStore(ConnectorDefRepositoryStore.class);
-                                List<AbstractProcess> allProcesses = diagramRepoStore.getAllProcesses();
-                                IModelSearch modelSearch = new ModelSearch(
-                                        () -> allProcesses,
-                                        connectorDefRepoStore::getDefinitions);
+                                IModelSearch modelSearch = new ModelSearch(diagramRepoStore::getAllProcesses);
                                 transformer.export(
                                         new BonitaModelExporterImpl(diagram.eResource(), modelSearch),
-                                        modelSearch,
+                                        modelSearch, connectorDefRepoStore::getDefinitions,
                                         destFile,
-                                        new OSGIConnectorTransformationXSLProvider(),
+                                        ConnectorTransformationXSLProvider.DEFAULT,
                                         ProductVersion.CURRENT_VERSION);
                             });
                             MultiStatus status = transformer.getStatus();
@@ -116,7 +111,8 @@ public class ExportAsBPMNHandler {
 
     @CanExecute
     public boolean isDiagramEditorActive(IWorkbenchPage activePage) {
-        return RepositoryManager.getInstance().hasActiveRepository() && activePage != null && activePage.getActiveEditor() instanceof ProcessDiagramEditor;
+        return RepositoryManager.getInstance().hasActiveRepository() && activePage != null
+                && activePage.getActiveEditor() instanceof ProcessDiagramEditor;
     }
-    
+
 }

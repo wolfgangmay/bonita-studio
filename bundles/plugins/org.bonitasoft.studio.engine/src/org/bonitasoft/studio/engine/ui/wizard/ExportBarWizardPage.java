@@ -35,10 +35,10 @@ import org.bonitasoft.studio.configuration.ConfigurationPlugin;
 import org.bonitasoft.studio.configuration.preferences.ConfigurationPreferenceConstants;
 import org.bonitasoft.studio.engine.i18n.Messages;
 import org.bonitasoft.studio.engine.operation.ExportBarOperation;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.MainProcess;
-import org.bonitasoft.studio.model.process.Pool;
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.studio.validation.common.operation.ProcessValidationOperation;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
@@ -466,8 +466,8 @@ public class ExportBarWizardPage extends WizardPage implements ICheckStateListen
             operation.setConfigurationId(getConfigurationId());
         }
         for (AbstractProcess process : getSelectedProcess()) {
-            if (!(process instanceof MainProcess)) {
-                operation.addProcessToDeploy(process);
+            if (process instanceof Pool) {
+                operation.addProcessToDeploy((Pool) process);
             }
         }
         getContainer().run(true, false, new IRunnableWithProgress() {
@@ -485,7 +485,10 @@ public class ExportBarWizardPage extends WizardPage implements ICheckStateListen
      */
     protected boolean validateBeforeExport(final Set<AbstractProcess> selectedList) {
         ProcessValidationOperation validationOperation = new ProcessValidationOperation();
-        selectedList.stream().forEach(validationOperation::addProcess);
+        selectedList.stream()
+	        .filter(Pool.class::isInstance)
+	        .map(Pool.class::cast)
+	        .forEach(validationOperation::addProcess);
         try {
             getContainer().run(true, false, validationOperation);
         } catch (InvocationTargetException | InterruptedException e) {
@@ -510,7 +513,7 @@ public class ExportBarWizardPage extends WizardPage implements ICheckStateListen
                 String generalMessage = status.getSeverity() == IStatus.ERROR
                         ? Messages.errorValidationInDiagramToExport
                         : Messages.warningValidationInDiagramToExport;
-                String errorMessage = String.format("%s\n%s%s", generalMessage, report,
+                String errorMessage = String.format("%s%n%s%s", generalMessage, report,
                         Messages.errorValidationContinueAnywayMessage);
                 return new ValidationDialog(Display.getDefault().getActiveShell(),
                         Messages.validationFailedTitle, errorMessage,
@@ -565,7 +568,7 @@ public class ExportBarWizardPage extends WizardPage implements ICheckStateListen
         if (element instanceof MainProcess) {
             viewer.setGrayChecked(element, false);
             viewer.setChecked(element, event.getChecked());
-            for (final AbstractProcess proc : ModelHelper.getAllProcesses((Element) element)) {
+            for (final Pool proc : ModelHelper.getAllProcesses((Element) element)) {
                 viewer.setChecked(proc, event.getChecked());
                 if (event.getChecked()) {
                     selectedProcess.add(proc);

@@ -41,8 +41,8 @@ import org.bonitasoft.studio.common.CommandExecutor;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.GAV;
-import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
 import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.pics.PicsConstants;
@@ -120,7 +120,8 @@ public class ExtensionComposite extends Composite {
         var currentRepository = repositoryAccessor.getCurrentRepository().orElseThrow();
         bonitaArtifactDependencyConverter = new BonitaArtifactDependencyConverter(
                 currentRepository.getProjectDependenciesStore(),
-                currentRepository.getLocalDependencyStore());
+                currentRepository.getLocalDependencyStore(),
+                currentRepository.getProjectId());
 
         var eclipseContext = EclipseContextFactory.create();
         errorHandler = ContextInjectionFactory.make(ExceptionDialogHandler.class, eclipseContext);
@@ -160,6 +161,9 @@ public class ExtensionComposite extends Composite {
                 .addDropdownItem(Messages.addRestApiExtension, null,
                         e -> commandExecutor.executeCommand(ProjectOverviewEditorPart.IMPORT_EXTENSION_COMMAND,
                                 Map.of(ImportExtensionHandler.EXTENSION_TYPE_PARAMETER, ArtifactType.REST_API.name())))
+                .addDropdownItem(Messages.addProjectExtension, null,
+                        e -> commandExecutor.executeCommand(ProjectOverviewEditorPart.IMPORT_PROJECT_EXTENSION_COMMAND,
+                                Map.of()))
                 .addDropdownItem(Messages.addOther, null,
                         e -> commandExecutor.executeCommand(ProjectOverviewEditorPart.IMPORT_EXTENSION_COMMAND,
                                 Map.of(ImportExtensionHandler.EXTENSION_TYPE_PARAMETER, ArtifactType.OTHER.name())))
@@ -270,7 +274,7 @@ public class ExtensionComposite extends Composite {
                             result.setHasExtensionIssues(true);
                         }
                         bonitaDependencies.add(new BonitaDependencyTuple(dep, bonitaDependency.get()));
-                    } else if (!ProjectDefaultConfiguration.isInternalDependency(dep)
+                    } else if (!AppProjectConfiguration.isInternalDependency(dep)
                             && currentBdmModelDependency.map(GAV::new).filter(new GAV(dep)::equals).isEmpty()) {
                         BonitaArtifactDependency bonitaDep = bonitaArtifactDependencyConverter
                                 .toBonitaArtifactDependency(dep);

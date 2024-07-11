@@ -26,8 +26,8 @@ import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
 import org.bonitasoft.studio.connector.model.i18n.Messages;
-import org.bonitasoft.studio.model.connectorconfiguration.ConnectorConfiguration;
-import org.bonitasoft.studio.model.connectorconfiguration.ConnectorParameter;
+import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfiguration;
+import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorParameter;
 import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.PojoProperties;
 import org.eclipse.core.databinding.observable.value.IValueChangeListener;
@@ -106,7 +106,7 @@ public class SelectConnectorConfigurationWizardPage extends WizardPage {
         configurationViewers
                 .setContentProvider(new ConfigurationsContentProvider(configuration.getDefinitionId(), configuration.getVersion(), configurationStore));
         configurationViewers.getControl().setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
-        configurationViewers.setLabelProvider(new ConnectorConfiguraitonLabelProvider(defStore));
+        configurationViewers.setLabelProvider(new ConnectorConfigurationLabelProvider(defStore));
         configurationViewers.addDoubleClickListener(new IDoubleClickListener() {
 
             @Override

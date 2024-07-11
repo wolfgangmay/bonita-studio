@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
 
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.FileUtil;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.migration.BonitaProjectMigrator;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
 import org.eclipse.core.resources.IProject;
@@ -36,11 +38,16 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.internal.IMavenConstants;
+import org.eclipse.m2e.core.internal.preferences.MavenPreferenceConstants;
 import org.eclipse.m2e.core.project.IProjectConfigurationManager;
 import org.eclipse.m2e.core.project.LocalProjectScanner;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
 
@@ -61,6 +68,14 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
             throw new CoreException(Status.error(String.format("No project found at %s", projectRoot)));
         }
         report = new BonitaProjectMigrator(projectRoot.toPath()).run(monitor);
+        var generatedSourcesFolder = projectRoot.toPath().resolve("app").resolve(AppProjectConfiguration.GENERATED_GROOVY_SOURCES_FODLER);
+        if(!Files.exists(generatedSourcesFolder)) {
+        	try {
+				Files.createDirectories(generatedSourcesFolder);
+			} catch (IOException e) {
+				BonitaStudioLog.error(e);
+			}
+        }
         var appPomFile = projectRoot.toPath().resolve("app").resolve("pom.xml").toFile();
         var mavenModel = MavenProjectHelper.readModel(appPomFile);
         projectId = mavenModel.getArtifactId();
@@ -96,6 +111,10 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
             throw new CoreException(Status.error("Failed to scan local projects", e));
         }
 
+        var store = DefaultScope.INSTANCE.getNode(IMavenConstants.PLUGIN_ID);
+        var autoUpdate = store.getBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, true);
+        setAutoUpdateConfiguration(store, false);
+        try {
         var projectImportConfiguration = new BonitaProjectImportConfiguration(projectId);
         projectConfigurationManager.importProjects(
                 flatten(localProjectScanner.getProjects()).stream()
@@ -106,8 +125,20 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
                 flatten(localProjectScanner.getProjects()).stream()
                         .filter(Predicate.not(bdmProjects())).collect(Collectors.toList()),
                 projectImportConfiguration, monitor);
+        }finally {
+            setAutoUpdateConfiguration(store, autoUpdate);
+        }
+
     }
 
+    private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
+        store.putBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, enanbled);
+        try {
+            store.sync();
+        } catch (BackingStoreException e) {
+            BonitaStudioLog.error(e);
+        }
+    }
 
     protected void removeUidProvidedWidgets() throws CoreException {
         var widgetsFolder = projectRoot.toPath().resolve("app").resolve("web_widgets");

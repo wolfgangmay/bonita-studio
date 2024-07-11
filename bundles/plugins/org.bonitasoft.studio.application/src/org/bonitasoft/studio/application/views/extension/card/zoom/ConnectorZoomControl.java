@@ -27,6 +27,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.maven.model.Dependency;
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.process.ConnectableElement;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.MainProcess;
 import org.bonitasoft.plugin.analyze.report.model.Implementation;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.application.ui.control.BonitaMarketplacePage;
@@ -45,10 +49,6 @@ import org.bonitasoft.studio.common.ui.views.BonitaPropertiesBrowserPage;
 import org.bonitasoft.studio.connectors.repository.ConnectorDefRepositoryStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.ConnectableElement;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.MainProcess;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.pics.PicsConstants;
 import org.bonitasoft.studio.preferences.BonitaThemeConstants;
@@ -327,7 +327,7 @@ public class ConnectorZoomControl extends AbstractZoomControl {
         };
     }
 
-
+    
     protected List<Implementation> getImplementations(ExtendedConnectorDefinition def) {
         return projectDependenciesStore.getConnectorImplementations().stream()
                 .filter(impl -> Objects.equals(impl.getDefinitionId(), def.getId()))

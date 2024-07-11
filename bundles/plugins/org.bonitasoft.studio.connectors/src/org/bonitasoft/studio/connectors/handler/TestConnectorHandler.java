@@ -14,9 +14,10 @@
  */
 package org.bonitasoft.studio.connectors.handler;
 
-import org.bonitasoft.studio.connector.model.implementation.ConnectorImplementation;
+import org.bonitasoft.bpm.connector.model.implementation.ConnectorImplementation;
+import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfiguration;
+import org.bonitasoft.engine.expression.InvalidExpressionException;
 import org.bonitasoft.studio.connectors.operation.TestConnectorOperation;
-import org.bonitasoft.studio.model.connectorconfiguration.ConnectorConfiguration;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -38,7 +39,11 @@ public class TestConnectorHandler extends AbstractHandler {
 
         final TestConnectorOperation operation = new TestConnectorOperation();
         operation.setImplementation(implementation);
-        operation.setConnectorConfiguration(configuration);
+        try {
+			operation.setConnectorConfiguration(configuration);
+		} catch (InvalidExpressionException e) {
+			throw new ExecutionException("Failed to configure connector.", e);
+		}
 
         return operation;
     }
