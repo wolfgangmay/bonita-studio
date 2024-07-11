@@ -25,7 +25,7 @@ class BonitaProjectBuilderTest {
     void should_report_warning_when_runtime_version_doesnt_match() throws Exception {
         var validator = new BonitaProjectBuilder.BonitaRuntimeVersionValidator();
         
-        assertThat(validator.validate(ProductVersion.minorVersion() + ".5")).isWarning();
+        assertThat(validator.validate(ProductVersion.minorVersion() + ".9999")).isWarning();
     }
     
     @Test
