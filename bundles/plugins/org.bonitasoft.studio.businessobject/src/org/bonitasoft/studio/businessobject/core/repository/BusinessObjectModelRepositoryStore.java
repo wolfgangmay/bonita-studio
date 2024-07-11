@@ -246,8 +246,10 @@ public class BusinessObjectModelRepositoryStore<F extends AbstractBDMFileStore<?
             var importBdmModules = new ImportMavenModuleOperation(bdmParentFolder.getLocation().toFile());
             try {
                 importBdmModules.run(new NullProgressMonitor());
-                var connectProviderOperation = bonitaProject.newConnectProviderOperation();
-                connectProviderOperation.run(new NullProgressMonitor());
+                if(bonitaProject.getGitDir().exists()) {
+                    var connectProviderOperation = bonitaProject.newConnectProviderOperation();
+                    connectProviderOperation.run(new NullProgressMonitor());
+                }
                 bonitaProject.getBdmParentProject().refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
                 bonitaProject.getBdmModelProject().build(IncrementalProjectBuilder.INCREMENTAL_BUILD,
                         new NullProgressMonitor());
