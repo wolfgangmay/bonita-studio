@@ -22,7 +22,7 @@ jobs:
         distribution: 'temurin'
 
     - name: Build with Maven
-      run: mvnw.cmd clean package -Pdefault -Pall-in-one
+      run: .\mvnw.cmd clean package -Pdefault -Pall-in-one
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
