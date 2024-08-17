@@ -1,0 +1,41 @@
+name: Build and Package Application
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Fetch all history for fetching tags
+
+    - name: Fetch Tags
+      run: git fetch --tags
+
+    - name: Checkout Tag
+      run: git checkout tags/10.1.0 # Replace {desired_tag} with the actual tag name or make it dynamic
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build with Maven
+      run: mvnw.cmd clean package -Pdefault -Pall-in-one
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: packaged-app
+        path: |
+          target/*.jar
+          target/*.war
+          # Add more paths if needed
