@@ -24,6 +24,7 @@ import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
@@ -32,6 +33,7 @@ import org.bonitasoft.engine.platform.LoginException;
 import org.bonitasoft.engine.search.SearchOptions;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.session.APISession;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
@@ -50,9 +52,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Romain Bioteau
- */
 public class TestNonInterruptingBoundaryTimerEvent {
 
     @Rule
@@ -68,7 +67,16 @@ public class TestNonInterruptingBoundaryTimerEvent {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws SearchException {
+        var processApi = BOSEngineManager.getInstance().getProcessAPI(session);
+        processApi.searchProcessDeploymentInfos(new SearchOptionsBuilder(0, Integer.MAX_VALUE).done())
+        .getResult().stream().forEach( info -> {
+            try {
+                processApi.deleteArchivedProcessInstances(info.getProcessId(), 0, Integer.MAX_VALUE);
+            } catch (DeletionException e) {
+                BonitaStudioLog.warning("Failed to delete archived process instances after test: "+ e.getMessage(), TestNonInterruptingBoundaryTimerEvent.class);
+            }
+        });
         BOSEngineManager.getInstance().logoutDefaultTenant(session);
     }
 
