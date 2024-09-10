@@ -94,7 +94,6 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
-import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.internal.preferences.MavenPreferenceConstants;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
@@ -175,8 +174,6 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
                 return workspaceLocationCheck;
             }
 
-            executePreStartupContributions();
-
             //set our custom operation factory
             OperationHistoryFactory.setOperationHistory(new BonitaOperationHistory());
             return createAndRunWorkbench(display);
@@ -204,7 +201,8 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
         });
     }
 
-    private void executePreStartupContributions() {
+    private void executePreStartupContributions()
+            throws NumberFormatException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Stream.of(BonitaStudioExtensionRegistryManager.getInstance()
                 .getConfigurationElements("org.bonitasoft.studio.application.prestartup")) //$NON-NLS-1$
                 .sorted(this::sortContribution)

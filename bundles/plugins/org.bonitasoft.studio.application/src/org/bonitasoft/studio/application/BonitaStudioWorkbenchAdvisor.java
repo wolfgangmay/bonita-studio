@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.bonitasoft.studio.application.contribution.IPreShutdownContribution;
 import org.bonitasoft.studio.application.contribution.RecoverWorkspaceContribution;
 import org.bonitasoft.studio.application.dialog.ExitDialog;
+import org.bonitasoft.studio.application.dialog.UserAgreementDialog;
 import org.bonitasoft.studio.application.handler.OpenReleaseNoteHandler;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.common.DateUtil;
