@@ -16,7 +16,6 @@ package org.bonitasoft.studio.application.dialog;
 
 import java.awt.Desktop;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 
 import org.bonitasoft.studio.application.i18n.Messages;
@@ -25,7 +24,6 @@ import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.preferences.BonitaPreferenceConstants;
 import org.bonitasoft.studio.preferences.BonitaStudioPreferencesPlugin;
-import org.bonitasoft.studio.preferences.browser.OpenBrowserOperation;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -37,18 +35,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-public class UserAgreementDialog extends MessageDialogWithToggle {
+public class DataCollectionDialog extends MessageDialogWithToggle {
 
-    public static UserAgreementDialog open(Shell parent) {
-        return open(QUESTION, parent, Messages.userAgreementTitle, Messages.userAgreementMsg, Messages.rememberDecision,
+    public static DataCollectionDialog open(Shell parent) {
+        return open(QUESTION, parent, Messages.dataCollectionTitle, Messages.dataCollectionMsg, Messages.rememberDecision,
                 true, BonitaStudioPreferencesPlugin.getDefault().getPreferenceStore(),
                 BonitaPreferenceConstants.REMEMBER_AGREEMENT_KEY, SWT.NONE);
     }
 
-    public static UserAgreementDialog open(int kind, Shell parent, String title,
+    public static DataCollectionDialog open(int kind, Shell parent, String title,
             String message, String toggleMessage, boolean toggleState,
             IPreferenceStore store, String key, int style) {
-        UserAgreementDialog dialog = new UserAgreementDialog(parent,
+        DataCollectionDialog dialog = new DataCollectionDialog(parent,
                 title, null, // accept the default window icon
                 message, kind, 0,
                 toggleMessage, toggleState);
@@ -65,7 +63,7 @@ public class UserAgreementDialog extends MessageDialogWithToggle {
         return dialog;
     }
 
-    protected UserAgreementDialog(Shell parentShell, String dialogTitle, Image image, String message,
+    protected DataCollectionDialog(Shell parentShell, String dialogTitle, Image image, String message,
             int dialogImageType, int defaultIndex, String toggleMessage, boolean toggleState) {
         super(parentShell, dialogTitle, image, message, dialogImageType, dialogButtons(), defaultIndex, toggleMessage,
                 toggleState);
