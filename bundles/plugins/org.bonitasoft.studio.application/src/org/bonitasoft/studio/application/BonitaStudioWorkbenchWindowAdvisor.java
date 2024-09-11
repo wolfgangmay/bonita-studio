@@ -14,7 +14,7 @@
  */
 package org.bonitasoft.studio.application;
 
-import org.bonitasoft.studio.application.dialog.UserAgreementDialog;
+import org.bonitasoft.studio.application.dialog.DataCollectionDialog;
 import org.bonitasoft.studio.application.views.CustomObjectActionContributorManager;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
@@ -105,7 +105,7 @@ public class BonitaStudioWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
     private void promptUserAgreementDialog() {
         window.getShell().getDisplay().asyncExec(() -> 
-            UserAgreementDialog.open(window.getShell()));
+            DataCollectionDialog.open(window.getShell()));
     }
 
     void closeEmptyEditors() {
