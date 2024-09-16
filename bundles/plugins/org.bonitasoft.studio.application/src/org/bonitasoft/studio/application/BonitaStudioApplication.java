@@ -174,6 +174,8 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
                 return workspaceLocationCheck;
             }
 
+            executePreStartupContributions();
+
             //set our custom operation factory
             OperationHistoryFactory.setOperationHistory(new BonitaOperationHistory());
             return createAndRunWorkbench(display);
@@ -201,8 +203,7 @@ public class BonitaStudioApplication extends IDEApplication implements IApplicat
         });
     }
 
-    private void executePreStartupContributions()
-            throws NumberFormatException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    private void executePreStartupContributions() {
         Stream.of(BonitaStudioExtensionRegistryManager.getInstance()
                 .getConfigurationElements("org.bonitasoft.studio.application.prestartup")) //$NON-NLS-1$
                 .sorted(this::sortContribution)
