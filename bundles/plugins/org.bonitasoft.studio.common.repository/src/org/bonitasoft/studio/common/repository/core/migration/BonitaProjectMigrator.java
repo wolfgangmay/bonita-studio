@@ -27,6 +27,7 @@ import org.bonitasoft.studio.common.repository.core.migration.step.BdmAssemblyCo
 import org.bonitasoft.studio.common.repository.core.migration.step.BdmModelArtifactMigrationStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.BonitaProjectParentVersionStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.CleanParentStep;
+import org.bonitasoft.studio.common.repository.core.migration.step.CommunityToEnterpriseMigrationStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.CreatePomMigrationStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.DeleteProjectSettingsMigrationStep;
 import org.bonitasoft.studio.common.repository.core.migration.step.ExtensionsModuleMigrationStep;
@@ -64,6 +65,11 @@ public class BonitaProjectMigrator {
             new ApplicationModuleConfigurationStep(),
             new BdmAssemblyConfigurationStep(),
             new RemoveFlattenPluginExecutionStep());
+    
+
+    private static final List<MigrationStep> POST_STEPS = List.of(
+            new CommunityToEnterpriseMigrationStep()
+       );
 
     private Path project;
 
@@ -81,6 +87,11 @@ public class BonitaProjectMigrator {
         for (var step : STEPS) {
             if (Strings.hasText(sourceVersion) && step.appliesTo(sourceVersion)) {
                 step.run(project, monitor).merge(report);
+            }
+        }
+        for(var postMigrationStep : POST_STEPS) {
+            if (Strings.hasText(sourceVersion) && postMigrationStep.appliesTo(sourceVersion)) {
+                postMigrationStep.run(project, monitor).merge(report);
             }
         }
         return report;
