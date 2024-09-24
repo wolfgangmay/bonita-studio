@@ -270,8 +270,8 @@
       <catalogContribution
             id="bdm-xsd">
             <public
-                  publicId=""
-                  uri="schema/bdm.xsd">
+                  publicId="http://documentation.bonitasoft.com/bdm-xml-schema/1.0"
+                  uri="platform:/plugin/wrapped.org.bonitasoft.engine.bonita-business-object-model/bom.xsd">
          </public>
       </catalogContribution>
    </extension>

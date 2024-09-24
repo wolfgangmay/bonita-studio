@@ -17,19 +17,25 @@ import java.util.List;
 import org.bonitasoft.bpm.model.process.MainProcess;
 import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.bpm.model.process.SearchIndex;
+import org.bonitasoft.engine.exception.DeletionException;
+import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
+import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.swtbot.framework.SWTBotTestUtil;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.eclipse.gef.finder.widgets.SWTBotGefEditor;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +55,21 @@ public class SearchIndexesTest {
     public void cleanRepo() throws Exception {
         DiagramRepositoryStore repositoryStore = RepositoryManager.getInstance().getRepositoryStore(DiagramRepositoryStore.class);
         repositoryStore.getChildren().stream().forEach(DiagramFileStore::delete);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        var session = BOSEngineManager.getInstance().loginDefaultTenant(new NullProgressMonitor());
+        var processApi = BOSEngineManager.getInstance().getProcessAPI(session);
+        processApi.searchProcessDeploymentInfos(new SearchOptionsBuilder(0, Integer.MAX_VALUE).done())
+        .getResult().stream().forEach( info -> {
+            try {
+                processApi.deleteArchivedProcessInstances(info.getProcessId(), 0, Integer.MAX_VALUE);
+            } catch (DeletionException e) {
+                BonitaStudioLog.warning("Failed to delete archived process instances after test: "+ e.getMessage(), SearchIndexesTest.class);
+            }
+        });
+        BOSEngineManager.getInstance().logoutDefaultTenant(session);
     }
 
     @Test

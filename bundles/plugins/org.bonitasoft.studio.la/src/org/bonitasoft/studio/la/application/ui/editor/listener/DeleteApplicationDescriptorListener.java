@@ -21,7 +21,7 @@ import javax.xml.bind.JAXBException;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.ServerAPIException;
@@ -45,11 +45,12 @@ import org.xml.sax.SAXException;
 
 public class DeleteApplicationDescriptorListener implements Listener {
 
-    private final ApplicationNode application;
+    private final AbstractApplicationNode application;
     private final ApplicationFormPage applicationFormPage;
     private final ApplicationNodeContainerConverter applicationNodeContainerConverter;
 
-    public DeleteApplicationDescriptorListener(ApplicationNode application, ApplicationFormPage applicationFormPage) {
+    public DeleteApplicationDescriptorListener(AbstractApplicationNode application,
+            ApplicationFormPage applicationFormPage) {
         this.application = application;
         this.applicationFormPage = applicationFormPage;
         this.applicationNodeContainerConverter = RepositoryManager.getInstance()
@@ -68,7 +69,8 @@ public class DeleteApplicationDescriptorListener implements Listener {
             try {
                 final ApplicationAPI applicationAPI = BOSEngineManager.getInstance()
                         .getApplicationAPI(session);
-                progressService.run(true, false, new DeleteApplicationRunnable(applicationAPI, application).ignoreErrors());
+                progressService.run(true, false,
+                        new DeleteApplicationRunnable(applicationAPI, application).ignoreErrors());
             } catch (InvocationTargetException | InterruptedException | BonitaHomeNotSetException | ServerAPIException
                     | UnknownAPITypeException e) {
                 new ExceptionDialogHandler().openErrorDialog(Display.getCurrent().getActiveShell(),
@@ -79,7 +81,7 @@ public class DeleteApplicationDescriptorListener implements Listener {
             }
             applicationFormPage.saveExpendedApplications();
             ApplicationNodeContainer workingCopy = applicationFormPage.getWorkingCopy();
-            workingCopy.getApplications().remove(application);
+            workingCopy.getAllApplications().remove(application);
             applicationFormPage.removeApplicationFromForm(application);
             try {
                 applicationFormPage.getDocument()

@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
+import org.eclipse.swtbot.swt.finder.exceptions.WidgetNotFoundException;
 import org.eclipse.swtbot.swt.finder.finders.UIThreadRunnable;
 import org.eclipse.swtbot.swt.finder.results.BoolResult;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotShell;
@@ -119,8 +120,14 @@ public class SWTGefBotRule implements TestRule {
     }
 
     private void closeAllShells(SWTWorkbenchBot bot, Exception e) {
-        System.out.println(
-                String.format("Trying to close shell '%s' after test failure %s", bot.activeShell().getText(), e));
+        try {
+            SWTBotShell activeShell = bot.activeShell();
+            System.out.println(
+                    String.format("Trying to close shell '%s' after test failure %s", activeShell.getText(), e));
+        } catch (WidgetNotFoundException notFound) {
+            System.out.println(
+                    String.format("Trying to close shells after test failure %s", e));
+        }
         //Force shell close
         final SWTBotShell[] shells = bot.shells();
         for (final SWTBotShell shell : shells) {

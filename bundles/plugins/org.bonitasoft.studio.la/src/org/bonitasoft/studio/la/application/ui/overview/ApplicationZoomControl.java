@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 
 import org.bonitasoft.studio.application.views.extension.card.zoom.ZoomListener;
 import org.bonitasoft.studio.application.views.overview.AbstractOverviewZoomControl;
+import org.bonitasoft.studio.common.extension.OverviewContribution;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
-import org.bonitasoft.studio.common.extension.OverviewContribution;
 import org.bonitasoft.studio.la.application.repository.ApplicationFileStore;
 import org.bonitasoft.studio.la.application.repository.ApplicationRepositoryStore;
 import org.bonitasoft.studio.la.i18n.Messages;
@@ -59,7 +59,7 @@ public class ApplicationZoomControl extends AbstractOverviewZoomControl<Applicat
     @Override
     protected List<Element> retrieveFileStoreContent(ApplicationFileStore fileStore) {
         try {
-            return fileStore.getContent().getApplications().stream()
+            return fileStore.getContent().getAllApplications().stream()
                     .map(app -> new Element(app.getDisplayName(), app.getDescription()))
                     .collect(Collectors.toList());
         } catch (ReadFileStoreException e) {

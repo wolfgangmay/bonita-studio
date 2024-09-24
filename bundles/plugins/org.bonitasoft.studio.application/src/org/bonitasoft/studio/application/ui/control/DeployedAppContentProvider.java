@@ -30,8 +30,8 @@ import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.api.ProfileAPI;
 import org.bonitasoft.engine.api.UserAPI;
 import org.bonitasoft.engine.api.result.StatusCode;
-import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.identity.UserNotFoundException;
 import org.bonitasoft.engine.profile.Profile;
@@ -113,11 +113,11 @@ public class DeployedAppContentProvider {
     private ApplicationItem createApplicationItem(String appToken, ApplicationAPI appAPI, ProfileAPI profileAPI,
             UserAPI userAPI) {
         try {
-            List<Application> apps = appAPI.searchApplications(new SearchOptionsBuilder(0, 1)
+            List<IApplication> apps = appAPI.searchIApplications(new SearchOptionsBuilder(0, 1)
                     .filter(ApplicationSearchDescriptor.TOKEN, appToken)
                     .done()).getResult();
             if (!apps.isEmpty()) {
-                Application application = apps.get(0);
+                IApplication application = apps.get(0);
                 if (application.getProfileId() != null && getDefaultUserProfiles(profileAPI, userAPI).stream()
                         .map(Profile::getId)
                         .anyMatch(application.getProfileId()::equals)) {

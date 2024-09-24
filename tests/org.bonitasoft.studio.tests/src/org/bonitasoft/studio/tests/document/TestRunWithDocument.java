@@ -18,15 +18,20 @@ import static org.junit.Assert.assertNotNull;
 
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.bpm.process.ProcessInstance;
+import org.bonitasoft.engine.exception.DeletionException;
+import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.session.APISession;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.command.RunProcessCommand;
 import org.bonitasoft.studio.swtbot.framework.application.BotApplicationWorkbenchWindow;
 import org.bonitasoft.studio.swtbot.framework.rule.SWTGefBotRule;
+import org.bonitasoft.studio.tests.deploy.TestDeployCommand;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +43,21 @@ public class TestRunWithDocument {
 
     @Rule
     public SWTGefBotRule rule = new SWTGefBotRule(bot);
+    
+    @After
+    public void tearDown() throws Exception {
+        var session = BOSEngineManager.getInstance().loginDefaultTenant(new NullProgressMonitor());
+        var processApi = BOSEngineManager.getInstance().getProcessAPI(session);
+        processApi.searchProcessDeploymentInfos(new SearchOptionsBuilder(0, Integer.MAX_VALUE).done())
+        .getResult().stream().forEach( info -> {
+            try {
+                processApi.deleteArchivedProcessInstances(info.getProcessId(), 0, Integer.MAX_VALUE);
+            } catch (DeletionException e) {
+                BonitaStudioLog.warning("Failed to delete archived process instances after test: "+ e.getMessage(), TestRunWithDocument.class);
+            }
+        });
+        BOSEngineManager.getInstance().logoutDefaultTenant(session);
+    }
 
     @Test
     public void testRunWithDocument() throws Exception {

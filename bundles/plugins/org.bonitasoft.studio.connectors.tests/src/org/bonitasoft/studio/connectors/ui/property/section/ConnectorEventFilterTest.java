@@ -18,19 +18,20 @@ package org.bonitasoft.studio.connectors.ui.property.section;
 
 import static org.bonitasoft.bpm.model.process.builders.ConnectorBuilder.aConnector;
 import static org.bonitasoft.bpm.model.process.builders.TaskBuilder.aTask;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
 import org.eclipse.jface.viewers.Viewer;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ConnectorEventFilterTest {
+@ExtendWith(MockitoExtension.class)
+class ConnectorEventFilterTest {
 
 	@Mock
 	private Viewer viewer;
@@ -43,7 +44,7 @@ public class ConnectorEventFilterTest {
 	}
 
 	@Test
-	public void should_return_true_when_connectorEvent_isOnFinish() {
+	void should_return_true_when_connectorEvent_isOnFinish() {
 		final ConnectorEventFilter onFinishFilter = createConnectorEventFilter();
 
 		assertTrue(onFinishFilter.select(viewer, null,
@@ -51,7 +52,7 @@ public class ConnectorEventFilterTest {
 	}
 
 	@Test
-	public void select_should_return_false_when_connectorEvent_isOnEnter() {
+	void select_should_return_false_when_connectorEvent_isOnEnter() {
 		final ConnectorEventFilter onFinishFilter = createConnectorEventFilter();
 
 		assertFalse(onFinishFilter.select(viewer, null,
@@ -59,21 +60,21 @@ public class ConnectorEventFilterTest {
 	}
 
 	@Test
-	public void select_shoud_return_false_when_notAConnector() {
+	void select_shoud_return_false_when_notAConnector() {
 		final ConnectorEventFilter onFinishFilter = createConnectorEventFilter();
 
 		assertFalse(onFinishFilter.select(viewer, null, aTask().build()));
 	}
 
 	@Test
-	public void should_create_connectorEventFilter_when_ConnectorEvent_isOnEnter() {
+	void should_create_connectorEventFilter_when_ConnectorEvent_isOnEnter() {
 		assertNotNull(new ConnectorEventFilter(
 				ConnectorEvent.ON_ENTER.toString()));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void should_failed_when_event_isNot_ON_ENTER_Or_ON_FINISH() {
-		new ConnectorEventFilter("a");
+	@Test
+	void should_failed_when_event_isNot_ON_ENTER_Or_ON_FINISH() {
+	   assertThrows(IllegalArgumentException.class, () -> new ConnectorEventFilter("a"));
 	}
 
 }

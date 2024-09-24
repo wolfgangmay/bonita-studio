@@ -14,7 +14,10 @@
  */
 package org.bonitasoft.studio.la.application.repository;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -22,7 +25,16 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.ModelVersion;
@@ -35,11 +47,18 @@ import org.bonitasoft.studio.common.repository.store.AbstractRepositoryStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.edapt.migration.MigrationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 public class ApplicationRepositoryStore extends AbstractRepositoryStore<ApplicationFileStore> {
 
     private static final String XML_EXTENSION = "xml";
+
+    private static final String APPLICATION_DESCRIPTOR_NAMESPACE = ModelVersion.CURRENT_APPLICATION_DESCRIPTOR_NAMESPACE;
+    private static final List<String> LEGACY_APPLICATION_DESCRIPTOR_NAMESPACES = List.of(
+            ModelVersion.APPLICATION_DESCRIPTOR_NAMESPACE_PREFIX + "1.0");
 
     private final ApplicationNodeContainerConverter applicationNodeContainerConverter = new ApplicationNodeContainerConverter();
 
@@ -70,11 +89,11 @@ public class ApplicationRepositoryStore extends AbstractRepositoryStore<Applicat
         return Set.of(XML_EXTENSION);
     }
 
-    public Stream<ApplicationNode> findByProfile(String profile) {
+    public Stream<AbstractApplicationNode> findByProfile(String profile) {
         return getChildren().stream()
                 .map(toApplicationNodeContainer())
                 .filter(Objects::nonNull)
-                .flatMap(container -> container.getApplications().stream())
+                .flatMap(container -> container.getAllApplications().stream())
                 .filter(appNode -> Objects.equals(appNode.getProfile(), profile));
     }
 
@@ -87,10 +106,10 @@ public class ApplicationRepositoryStore extends AbstractRepositoryStore<Applicat
             }
         };
     }
-    
+
     @Override
     public ApplicationFileStore getChild(String fileName, boolean force) {
-        if(fileName != null && fileName.endsWith(".xml")) {
+        if (fileName != null && fileName.endsWith(".xml")) {
             return super.getChild(fileName, force);
         }
         return null;
@@ -105,7 +124,7 @@ public class ApplicationRepositoryStore extends AbstractRepositoryStore<Applicat
     private Predicate<? super ApplicationFileStore> withToken(String token) {
         return fStore -> {
             try {
-                return fStore.getContent().getApplications().stream()
+                return fStore.getContent().getAllApplications().stream()
                         .anyMatch(node -> Objects.equals(node.getToken(), token));
             } catch (final ReadFileStoreException e) {
                 return false;
@@ -117,22 +136,70 @@ public class ApplicationRepositoryStore extends AbstractRepositoryStore<Applicat
     protected ApplicationFileStore doImportInputStream(String fileName, InputStream inputStream) {
         var fileStore = super.doImportInputStream(fileName, inputStream);
         if (fileStore != null) {
-            var report = MigrationReport.emptyReport();
+            var report = fileStore.getMigrationReport();
             doMigrateFileStore(fileStore, report);
-            fileStore.setMigrationReport(report);
         }
         return fileStore;
     }
 
     private void doMigrateFileStore(ApplicationFileStore fileStore, MigrationReport report) {
         try {
+            migrateNamespace(fileStore, report);
             var applicationNodeContainer = fileStore.getContent();
+            // only legacy applications can update theme and layout
             applicationNodeContainer.getApplications().forEach(app -> updateBonitaTheme(app, report));
             applicationNodeContainer.getApplications().forEach(app -> updateBonitaLayout(app, report));
             fileStore.save(applicationNodeContainer);
         } catch (ReadFileStoreException e) {
             BonitaStudioLog.error(e);
         }
+    }
+
+    /**
+     * Migrate the namespace if needed.
+     * 
+     * @param fileStore the file store holding the application descriptor
+     * @param report the migration report
+     * @throws ReadFileStoreException exception while migrating the file
+     */
+    private synchronized void migrateNamespace(ApplicationFileStore fileStore, MigrationReport report)
+            throws ReadFileStoreException {
+        var resource = fileStore.getResource();
+        final Document doc;
+        try (var stream = resource.getContents()) {
+            // force migration to new application model version
+            var builder = DocumentBuilderFactory.newDefaultInstance().newDocumentBuilder();
+            doc = builder.parse(stream);
+        } catch (IOException | CoreException | SAXException | ParserConfigurationException e) {
+            throw new ReadFileStoreException(e.getMessage(), e);
+        }
+        var root = doc.getDocumentElement();
+        String currentNamespace = root.getAttribute("xmlns");
+        if (APPLICATION_DESCRIPTOR_NAMESPACE.equals(currentNamespace)) {
+            // that's already the correct namespace, no migration needed
+        } else if (LEGACY_APPLICATION_DESCRIPTOR_NAMESPACES.contains(currentNamespace)) {
+            // the migration is retro-compatible for now, we just need to update the namespace
+            root.setAttribute("xmlns", APPLICATION_DESCRIPTOR_NAMESPACE);
+            DOMSource source = new DOMSource(doc);
+            try (var out = Files.newOutputStream(resource.getLocation().toFile().toPath())) {
+                Transformer transformer = TransformerFactory.newDefaultInstance().newTransformer();
+                StreamResult result = new StreamResult(out);
+                transformer.transform(source, result);
+                resource.refreshLocal(0, new NullProgressMonitor());
+            } catch (final IOException | CoreException | TransformerException e) {
+                throw new ReadFileStoreException(e.getMessage(), e);
+            }
+            // update the migration report
+            report.updated(
+                    String.format("%s application descriptor has been migrated to the latest schema version.",
+                            resource.getName()));
+        } else {
+            // incorrect namespace.
+            var msg = String.format(org.bonitasoft.studio.common.Messages.incompatibleModelVersion,
+                    fileStore.getName());
+            throw new ReadFileStoreException(msg);
+        }
+
     }
 
     @Override
@@ -169,8 +236,9 @@ public class ApplicationRepositoryStore extends AbstractRepositoryStore<Applicat
                     ModelVersion.CURRENT_APPLICATION_DESCRIPTOR_NAMESPACE,
                     String.format(org.bonitasoft.studio.common.Messages.incompatibleModelVersion, filename),
                     String.format(org.bonitasoft.studio.common.Messages.migrationWillBreakRetroCompatibility,
-                            filename)))
-                                    .validate(inputStream);
+                            filename),
+                    LEGACY_APPLICATION_DESCRIPTOR_NAMESPACES))
+                            .validate(inputStream);
         }
         return super.validate(filename, inputStream);
     }

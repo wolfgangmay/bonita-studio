@@ -16,6 +16,7 @@ package org.bonitasoft.studio.swtbot.framework.application.editor.project;
 
 import org.bonitasoft.studio.common.ui.jface.SWTBotConstants;
 import org.bonitasoft.studio.swtbot.framework.application.editor.BotProjectOverviewEditor;
+import org.bonitasoft.studio.swtbot.framework.application.editor.project.BotExtensionCard.WidgetEnabled;
 import org.eclipse.swtbot.eclipse.gef.finder.SWTGefBot;
 
 public class BotMaximizedExtensionCard {
@@ -25,12 +26,13 @@ public class BotMaximizedExtensionCard {
     public BotMaximizedExtensionCard(SWTGefBot bot) {
         this.bot = bot;
     }
-    
+
     public BotProjectOverviewEditor minimize() {
+        bot.waitUntil(new WidgetEnabled(SWTBotConstants.SWTBOT_ID_MINIMIZE_CARD_BUTTON), 1500);
         bot.toolbarButtonWithId(SWTBotConstants.SWTBOT_ID_MINIMIZE_CARD_BUTTON).click();
         return new BotProjectOverviewEditor(bot);
     }
-    
+
     public BotFindUsageWizard findUsage(String definitionId, String definitionVersion) {
         bot.toolbarButtonWithId(SWTBotConstants.findUsageButtonId(definitionId, definitionVersion)).click();
         return new BotFindUsageWizard(bot);

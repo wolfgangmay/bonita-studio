@@ -23,18 +23,14 @@ import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.connector.model.definition.migration.ConnectorConfigurationMigratorFactory;
 import org.bonitasoft.studio.connector.model.definition.migration.ConnectorConfigurationToConnectorDefinitionConverter;
 import org.bonitasoft.studio.connectors.ui.wizard.ConnectorWizard;
-import org.bonitasoft.studio.swt.rules.RealmWithDisplay;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ConnectorInSectionTest {
+@ExtendWith(MockitoExtension.class)
+class ConnectorInSectionTest {
 
-    @Rule
-    public RealmWithDisplay realmWithDisplay = new RealmWithDisplay();
     @Mock
     private ConnectorConfigurationMigratorFactory connectorConfigurationFactory;
     @Mock
@@ -43,7 +39,7 @@ public class ConnectorInSectionTest {
     private RepositoryAccessor repositoryAccessor;
 
     @Test
-    public void should_setConnectorEvent_when_creating_aConnetorWizard() {
+    void should_setConnectorEvent_when_creating_aConnetorWizard() {
         final ConnectorInSection section = new ConnectorInSection(connectorConfigurationFactory,
                 configurationToDefinitionConverter, repositoryAccessor);
 
@@ -53,7 +49,7 @@ public class ConnectorInSectionTest {
     }
 
     @Test
-    public void should_return_OnEnter_ConnectorEventFilter() {
+    void should_return_OnEnter_ConnectorEventFilter() {
         final ConnectorInSection section = new ConnectorInSection(connectorConfigurationFactory,
                 configurationToDefinitionConverter, repositoryAccessor);
 

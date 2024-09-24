@@ -243,6 +243,7 @@ public class ApplicationFileStore extends AbstractFileStore<ApplicationNodeConta
         MultiStatus status = new MultiStatus(LivingApplicationPlugin.PLUGIN_ID, 0, "", null);
         ApplicationHomepageValidator validator = new ApplicationHomepageValidator();
         try {
+            // home page exists only for legacy applications
             getContent().getApplications().stream()
                     .map(validator::validate)
                     .forEach(status::add);

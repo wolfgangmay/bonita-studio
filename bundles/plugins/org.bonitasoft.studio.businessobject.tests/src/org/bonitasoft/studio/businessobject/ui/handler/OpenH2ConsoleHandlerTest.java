@@ -115,7 +115,7 @@ public class OpenH2ConsoleHandlerTest {
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(workingCopy).setAttribute(eq(IExternalToolConstants.ATTR_TOOL_ARGUMENTS), captor.capture());
         assertThat(captor.getValue()).contains("-jar \"h2.jar\" -browser -webPort",
-                "-tcp -user sa -url \"jdbc:h2:file:/test/h2_db/business_data.db;MVCC=TRUE;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;\" -driver org.h2.Driver");
+                "-tcp -user sa -url \"jdbc:h2:file:/test/h2_db/business_data.db;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;\" -driver org.h2.Driver");
         verify(workingCopy).launch("run", AbstractRepository.NULL_PROGRESS_MONITOR);
     }
 

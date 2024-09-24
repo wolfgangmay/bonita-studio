@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import jakarta.inject.Inject;
-
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -31,6 +29,8 @@ import org.bonitasoft.studio.la.application.repository.ApplicationRepositoryStor
 import org.bonitasoft.studio.ui.dialog.ExceptionDialogHandler;
 import org.eclipse.e4.core.di.annotations.Creatable;
 import org.eclipse.swt.widgets.Display;
+
+import jakarta.inject.Inject;
 
 @Creatable
 public class ApplicationCollector {
@@ -45,12 +45,14 @@ public class ApplicationCollector {
     }
 
     public Map<ApplicationFileStore, List<String>> findApplications(String themeId) {
-        ApplicationRepositoryStore repositoryStore = repositoryAccessor.getRepositoryStore(ApplicationRepositoryStore.class);
+        ApplicationRepositoryStore repositoryStore = repositoryAccessor
+                .getRepositoryStore(ApplicationRepositoryStore.class);
         var apps = new HashMap<ApplicationFileStore, List<String>>();
         for (ApplicationFileStore fileStore : repositoryStore.getChildren()) {
             try {
                 Display.getDefault().syncExec(fileStore::saveOpenedEditor);
                 ApplicationNodeContainer appNodeContainer = fileStore.getContent();
+                // only legacy applications have a theme
                 appNodeContainer.getApplications().stream()
                         .filter(app -> Objects.equals(app.getTheme(), themeId))
                         .map(ApplicationNode::getToken)
