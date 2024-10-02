@@ -23,6 +23,7 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.bonitasoft.studio.application.i18n.Messages;
+import org.bonitasoft.studio.application.statistics.StatisticsManager;
 import org.bonitasoft.studio.application.ui.control.BonitaMarketplacePage;
 import org.bonitasoft.studio.application.ui.control.model.dependency.BonitaArtifactDependency;
 import org.bonitasoft.studio.common.CommandExecutor;
@@ -36,8 +37,8 @@ public class AddDatabaseDriverHandler extends OpenMarketplaceHandler {
 
     @Inject
     public AddDatabaseDriverHandler(MavenProjectHelper mavenProjectHelper, RepositoryAccessor repositoryAccessor,
-            CommandExecutor commandExecutor) {
-        super(mavenProjectHelper, repositoryAccessor, commandExecutor);
+            CommandExecutor commandExecutor, StatisticsManager statisticsManager) {
+        super(mavenProjectHelper, repositoryAccessor, commandExecutor, statisticsManager);
     }
 
     private static final Map<String, String> DEPENDENCY_TO_CONNECTOR_DEF = new HashMap<>();

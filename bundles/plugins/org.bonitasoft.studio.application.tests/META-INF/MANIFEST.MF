@@ -4,7 +4,7 @@ Bundle-Name: Application Plugin Tests Fragment
 Bundle-SymbolicName: org.bonitasoft.studio.application.tests
 Bundle-Version: 10.2.0.qualifier
 Bundle-Vendor: Bonitasoft S.A.
-Fragment-Host: org.bonitasoft.studio.application;bundle-version="7.16.0"
+Fragment-Host: org.bonitasoft.studio.application;bundle-version="10.2.0"
 Automatic-Module-Name: org.bonitasoft.studio.application.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: assertj-core,
@@ -15,3 +15,4 @@ Require-Bundle: assertj-core,
  net.bytebuddy.byte-buddy,
  org.bonitasoft.studio,
  junit-jupiter-api
+ 
