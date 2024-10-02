@@ -29,7 +29,7 @@ slowQueryLogger.'@level' = 'WARN'
 
 println success()
 
-println "Set REST API authorization API log level to DEBUG"
+print "Set REST API authorization API log level to DEBUG"
 configurationNode.'Loggers'.appendNode{
     Logger(level:'DEBUG', name:'org.bonitasoft.engine.authorization.PermissionServiceImpl')
 }
