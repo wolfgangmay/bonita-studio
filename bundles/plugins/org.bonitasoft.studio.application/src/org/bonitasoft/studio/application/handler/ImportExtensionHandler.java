@@ -20,13 +20,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.bonitasoft.studio.application.event.ExtensionEvent;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.application.operation.extension.UpdateExtensionOperationDecorator;
+import org.bonitasoft.studio.application.statistics.StatisticsManager;
 import org.bonitasoft.studio.application.ui.control.ExtensionTypeHandler;
 import org.bonitasoft.studio.application.ui.control.ImportExtensionPage;
 import org.bonitasoft.studio.application.ui.control.ImportExtensionPage.ImportMode;
@@ -58,6 +57,9 @@ import org.eclipse.m2e.core.repository.IRepository;
 import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 import org.eclipse.swt.widgets.Shell;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
 public class ImportExtensionHandler {
 
     public static final String EXTENSION_TYPE_PARAMETER = "extensionType";
@@ -66,18 +68,21 @@ public class ImportExtensionHandler {
     protected MavenRepositoryRegistry mavenRepositoryRegistry;
     protected ExceptionDialogHandler errorDialogHandler;
     protected CommandExecutor commandExecutor;
+    private StatisticsManager statisticsManager;
 
     @Inject
     public ImportExtensionHandler(RepositoryAccessor repositoryAccessor,
             MavenRepositoryRegistry mavenRepositoryRegistry,
             MavenProjectHelper mavenProjectHelper,
             ExceptionDialogHandler errorDialogHandler,
-            CommandExecutor commandExecutor) {
+            CommandExecutor commandExecutor,
+            StatisticsManager statisticsManager) {
         this.mavenProjectHelper = mavenProjectHelper;
         this.repositoryAccessor = repositoryAccessor;
         this.mavenRepositoryRegistry = mavenRepositoryRegistry;
         this.errorDialogHandler = errorDialogHandler;
         this.commandExecutor = commandExecutor;
+        this.statisticsManager = statisticsManager;
     }
 
     @CanExecute
@@ -127,7 +132,8 @@ public class ImportExtensionHandler {
                         importExtensionPage,
                         currentRepository,
                         mavenModel,
-                        extensionTypeHandler))
+                        extensionTypeHandler,
+                        statisticsManager))
                 .open(activeShell, org.bonitasoft.studio.ui.i18n.Messages.importLabel);
     }
 
@@ -160,12 +166,14 @@ public class ImportExtensionHandler {
             ImportExtensionPage importExtensionPage,
             org.bonitasoft.studio.common.repository.model.IRepository currentRepository,
             Model mavenModel,
-            ExtensionTypeHandler extensionTypeHandler) {
+            ExtensionTypeHandler extensionTypeHandler,
+            StatisticsManager statisticsManager) {
+        Dependency dependency = importExtensionPage.getDependency();
         var dependencytoUpdate = mavenProjectHelper.findDependencyInAnyVersion(mavenModel,
-                importExtensionPage.getDependency());
+                dependency);
 
         List<DependencyUpdate> dependenciesUpdate = dependencytoUpdate
-                .map(dep -> new DependencyUpdate(dep, importExtensionPage.getDependency().getVersion()))
+                .map(dep -> new DependencyUpdate(dep, dependency.getVersion()))
                 .map(List::of)
                 .orElseGet(List::of);
 
@@ -174,6 +182,10 @@ public class ImportExtensionHandler {
         Optional<Boolean> result = doExtensionUpdate(container, importExtensionPage, currentRepository, mavenModel,
                 extensionTypeHandler, updateExtensionDecorator);
         if (result.isPresent()) {
+            statisticsManager.extensionInstalled(new ExtensionEvent.ExtensionInstalledEvent(dependency.getGroupId(),
+                    dependency.getArtifactId(),
+                    dependency.getVersion(),
+                    extensionTypeHandler.getType()));
             if (updateExtensionDecorator.shouldValidateProject()) {
                 updateExtensionDecorator.validateDependenciesConstraints();
             }
@@ -209,7 +221,7 @@ public class ImportExtensionHandler {
             container.run(true, false,
                     monitor -> new UpdateMavenProjectJob(List.of(currentRepository.getProject()), false, false,
                             false, false, true)
-                            .run(monitor));
+                                    .run(monitor));
         } catch (InvocationTargetException | InterruptedException e) {
             BonitaStudioLog.error(e);
         }

@@ -84,7 +84,7 @@
                     </includes>
                     
                     <argLine>${jvm.modules.arg} ${javaOPTS} ${jacocoAgentArgs} ${additionalArgs}</argLine>
-                    <appArgLine>-pluginCustomization ${prefSettingsCustomizationFile} -nl en -clean</appArgLine>
+                    <appArgLine>-lifeCycleURI bundleclass://org.bonitasoft.studio.tests/org.bonitasoft.studio.tests.TestLifeCycleManager -pluginCustomization ${prefSettingsCustomizationFile} -nl en -clean</appArgLine>
                     <osgiDataDirectory>${target.test.dir}</osgiDataDirectory>
                 </configuration>
             </plugin>

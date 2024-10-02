@@ -59,7 +59,7 @@
                     </includes>
                     <showEclipseLog>true</showEclipseLog>
                     <argLine>${jvm.modules.arg} -Xmx1g ${jacocoAgentArgs} -DLAZYLOAD_ENGINE -Dbonita.studio.skipReleaseNote -Ddisable.notifications -Dbonita.noregister=1 -Declipse.log.level=${tests.log.level}</argLine>
-                    <appArgLine>-pluginCustomization ${prefSettingsCustomizationFile} -nl en -clean</appArgLine>
+                    <appArgLine>-lifeCycleURI bundleclass://org.bonitasoft.studio.tests/org.bonitasoft.studio.tests.TestLifeCycleManager -pluginCustomization ${prefSettingsCustomizationFile} -nl en -clean</appArgLine>
                     <osgiDataDirectory>${target.test.dir}</osgiDataDirectory>
                 </configuration>
             </plugin>
