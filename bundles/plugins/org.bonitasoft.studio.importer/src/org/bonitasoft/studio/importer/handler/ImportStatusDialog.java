@@ -88,7 +88,10 @@ public class ImportStatusDialog extends MessageDialog {
             return super.createCustomArea(parent);
         }
         final TableViewer problemsViewer = new TableViewer(parent, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-        problemsViewer.getControl().setLayoutData(GridDataFactory.fillDefaults().grab(true, true).indent(0, 10).create());
+        problemsViewer.getControl().setLayoutData(GridDataFactory.fillDefaults()
+                .grab(true, true)
+                .hint(SWT.DEFAULT, 600)
+                .indent(0, 10).create());
         problemsViewer.setContentProvider(ArrayContentProvider.getInstance());
         problemsViewer.setComparator(new ViewerComparator() {
             @Override
