@@ -17,6 +17,7 @@ package org.bonitasoft.studio.rest.api.extension.core.validation;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -29,16 +30,14 @@ import org.apache.maven.execution.DefaultMavenExecutionResult;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.rest.api.extension.core.repository.RestAPIExtensionFileStore;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.text.Document;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
 public class RestAPIExtensionPomValidatorTest {
 
     @Test
@@ -47,13 +46,17 @@ public class RestAPIExtensionPomValidatorTest {
         doReturn(null).when(finder).currentBDMGroupId();
         doReturn(false).when(finder).isUsingJava11();
         doReturn(new Document()).when(finder).toDocument(any());
-        var validator = spy(new RestAPIExtensionPomValidator(finder));
+        RestAPIExtensionPomValidator validator = spy(new RestAPIExtensionPomValidator(finder));
+       
         var restApiFileStore = mock(RestAPIExtensionFileStore.class);
         var mavenResult = new DefaultMavenExecutionResult();
+        var dependency = dependency("g", "a", "1.0.0");
         mavenResult.setDependencyResolutionResult(
                 expectedResolutionResult(Collections.<Dependency> emptyList(),
-                        newArrayList(dependency("g", "a", "1.0.0"))));
+                        newArrayList(dependency)));
         mavenResult.setProject(new MavenProject());
+        
+        doReturn(false).when(validator).isBDMModelDependency(dependency);
         doReturn(mavenResult).when(validator).build(restApiFileStore);
 
         final List<IStatus> result = validator.validate(restApiFileStore);
@@ -76,7 +79,7 @@ public class RestAPIExtensionPomValidatorTest {
         doReturn(null).when(finder).currentBDMGroupId();
         doReturn(false).when(finder).isUsingJava11();
         doReturn(new Document()).when(finder).toDocument(any());
-
+        doReturn(false).when(validator).isBDMModelDependency(any());
         final List<IStatus> result = validator.validate(restApiFileStore);
 
         assertThat(result).extracting("severity").contains(IStatus.INFO);
