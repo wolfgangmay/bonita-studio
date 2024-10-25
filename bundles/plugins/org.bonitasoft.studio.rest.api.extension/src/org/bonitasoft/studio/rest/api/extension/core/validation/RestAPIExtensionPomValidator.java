@@ -30,7 +30,8 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.bonitasoft.studio.common.ProductVersion;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.common.repository.AbstractRepository;
+import org.bonitasoft.studio.common.repository.RepositoryManager;
+import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.maven.i18n.Messages;
 import org.bonitasoft.studio.rest.api.extension.RestAPIExtensionActivator;
 import org.bonitasoft.studio.rest.api.extension.core.repository.RestAPIExtensionFileStore;
@@ -40,13 +41,13 @@ import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.ICallable;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenExecutionContext;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
-import org.eclipse.ui.internal.ide.undo.ProjectDescription;
 
 public class RestAPIExtensionPomValidator {
 
@@ -54,7 +55,7 @@ public class RestAPIExtensionPomValidator {
     public static final String BONITA_WEB_EXTENSIONS_SP_ARTIFACT_ID = "bonita-web-extensions-sp";
 
     private RestAPIDependencyVersionToUpdateFinder dependencyVersionToUpdateFinder;
-    
+
     public RestAPIExtensionPomValidator(RestAPIDependencyVersionToUpdateFinder dependencyVersionToUpdateFinder) {
         this.dependencyVersionToUpdateFinder = dependencyVersionToUpdateFinder;
     }
@@ -62,15 +63,16 @@ public class RestAPIExtensionPomValidator {
     public List<IStatus> validate(final RestAPIExtensionFileStore restApiFileStore) throws CoreException {
         List<IStatus> result = newArrayList();
         MavenExecutionResult mavenResult = build(restApiFileStore);
-        if(mavenResult == null) {
-            return List.of(Status.error(String.format("Failed to build %s extension.", restApiFileStore.getName())));
+        if(mavenResult != null) {
+            DependencyResolutionResult dependencyResolutionResult = mavenResult.getDependencyResolutionResult();
+            validateUnresolvedDependencies(restApiFileStore, result, dependencyResolutionResult);
+            validateDependenciesToUpdate(result, mavenResult.getProject());
+            validateResolvedDependencies(result, dependencyResolutionResult);
+        }else {
+            result.add(Status.error("Cannot find REST API Extension project "+ restApiFileStore.getName() + ". Verify that the artifactId matches the project folder name."));
         }
-        DependencyResolutionResult dependencyResolutionResult = mavenResult.getDependencyResolutionResult();
-        validateUnresolvedDependencies(restApiFileStore, result, dependencyResolutionResult);
-        validateDependenciesToUpdate(result, mavenResult.getProject());
-        validateResolvedDependencies(result, dependencyResolutionResult);
-
         return result;
+
     }
 
     private void validateDependenciesToUpdate(List<IStatus> statuses,
@@ -131,15 +133,17 @@ public class RestAPIExtensionPomValidator {
     }
 
     private void validateUnresolvedDependencies(RestAPIExtensionFileStore restApiFileStore, List<IStatus> result,
-            DependencyResolutionResult dependencyResolutionResult) {
+            DependencyResolutionResult dependencyResolutionResult) throws CoreException {
         for (Dependency dependency : dependencyResolutionResult.getUnresolvedDependencies()) {
-            result.add(ValidationStatus.error(
-                    String.format(Messages.missingDependency, restApiFileStore.getName(), dependency)));
-            if (isBonitaWebExtensionsDependency(dependency)) {
-                String message = String.format(Messages.todoUpdateVersion, dependency.getArtifact().getArtifactId(),
-                        ProductVersion.CURRENT_VERSION);
-                IStatus status = createStatus(IStatus.INFO, REST_API_BONITA_DEPENDENCY_STATUS_CODE, message);
-                result.add(status);
+            if(!isBDMModelDependency(dependency)) {
+                result.add(ValidationStatus.error(
+                        String.format(Messages.missingDependency, restApiFileStore.getName(), dependency)));
+                if (isBonitaWebExtensionsDependency(dependency)) {
+                    String message = String.format(Messages.todoUpdateVersion, dependency.getArtifact().getArtifactId(),
+                            ProductVersion.CURRENT_VERSION);
+                    IStatus status = createStatus(IStatus.INFO, REST_API_BONITA_DEPENDENCY_STATUS_CODE, message);
+                    result.add(status);
+                }
             }
         }
     }
@@ -156,7 +160,7 @@ public class RestAPIExtensionPomValidator {
         if(projectFacade == null) {
             return null;
         }
-        MavenProject project = projectFacade.getMavenProject(AbstractRepository.NULL_PROGRESS_MONITOR);
+        MavenProject project = projectFacade.getMavenProject(new NullProgressMonitor());
         IMavenExecutionContext createExecutionContext = maven.createExecutionContext();
         return createExecutionContext.execute(new ICallable<MavenExecutionResult>() {
 
@@ -169,13 +173,25 @@ public class RestAPIExtensionPomValidator {
                 newProjectBuildingRequest.setProcessPlugins(true);
                 return maven.readMavenProject(info.getPomFile(), newProjectBuildingRequest);
             }
-        }, AbstractRepository.NULL_PROGRESS_MONITOR);
+        }, new NullProgressMonitor());
     }
 
-    private boolean isBonitaWebExtensionsDependency(Dependency dependency) {
+    boolean isBonitaWebExtensionsDependency(Dependency dependency) {
         Artifact artifact = dependency.getArtifact();
         return artifactMatch(artifact, COM_BONITASOFT_WEB_GROUP_ID, BONITA_WEB_EXTENSIONS_SP_ARTIFACT_ID);
     }
+    
+    protected boolean isBDMModelDependency(Dependency dependency) throws CoreException {
+        Artifact artifact = dependency.getArtifact();
+        var bonitaProject = getBonitaProject();
+        var metadata = bonitaProject.getProjectMetadata(new NullProgressMonitor());
+        return artifactMatch(artifact, metadata.getGroupId(), metadata.getArtifactId() + "-bdm-model");
+    }
+    
+    BonitaProject getBonitaProject() {
+        return RepositoryManager.getInstance().getCurrentProject().orElseThrow();
+    }
+
 
     private boolean artifactMatch(Artifact artifact, String groupId, String artifactId) {
         return Objects.equals(artifact.getArtifactId(), artifactId) && Objects.equals(artifact.getGroupId(), groupId);
