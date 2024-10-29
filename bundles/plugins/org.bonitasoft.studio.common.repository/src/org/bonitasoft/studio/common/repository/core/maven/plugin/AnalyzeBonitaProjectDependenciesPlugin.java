@@ -58,7 +58,7 @@ public class AnalyzeBonitaProjectDependenciesPlugin {
             request.setGoals(
                     List.of("org.bonitasoft.maven:bonita-project-maven-plugin:analyze"));
             request.setPom(mavenProject.getPomFile());
-            MavenExecutionResult executionResult = MavenPlugin.getMavenProjectRegistry().execute(mavenProject, new ICallable<MavenExecutionResult>() {
+            MavenExecutionResult executionResult = ctx.execute(new ICallable<MavenExecutionResult>() {
 
                 @Override
                 public MavenExecutionResult call(IMavenExecutionContext context, IProgressMonitor monitor)

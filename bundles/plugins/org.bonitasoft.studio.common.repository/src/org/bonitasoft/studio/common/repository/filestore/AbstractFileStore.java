@@ -140,11 +140,11 @@ public abstract class AbstractFileStore<T>
 
     @Override
     public IResource getResource() {
-    	if(getParentStore().getResource() != null) {
-    		 return getParentStore().getResource().getFile(getName());
-    	}
-    	return null;
-       
+        if (getParentStore().getResource() != null) {
+            return getParentStore().getResource().getFile(getName());
+        }
+        return null;
+
     }
 
     @Override
@@ -342,9 +342,18 @@ public abstract class AbstractFileStore<T>
             } catch (final CoreException e) {
                 BonitaStudioLog.error(e);
             }
-            fireFileStoreEvent(new FileStoreChangeEvent(EventType.POST_SAVE, this));
-            setName(newName);
+            postMoveRename(newName);
         }
+    }
+
+    /**
+     * Rename the store after content has been moved.
+     * 
+     * @param newName the new name
+     */
+    protected void postMoveRename(final String newName) {
+        fireFileStoreEvent(new FileStoreChangeEvent(EventType.POST_SAVE, this));
+        setName(newName);
     }
 
     protected void doDelete() {
