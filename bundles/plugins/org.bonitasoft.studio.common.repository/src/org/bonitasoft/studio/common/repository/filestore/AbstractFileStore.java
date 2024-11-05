@@ -48,12 +48,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourceAttributes;
-import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edapt.migration.MigrationException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -143,7 +140,8 @@ public abstract class AbstractFileStore<T>
 
     @Override
     public IResource getResource() {
-        return getParentStore().getResource().getFile(getName());
+        var resource = Optional.ofNullable(getParentStore().getResource());
+        return resource.map(r -> r.getFile(getName())).orElse(null);
     }
 
     @Override
@@ -341,9 +339,18 @@ public abstract class AbstractFileStore<T>
             } catch (final CoreException e) {
                 BonitaStudioLog.error(e);
             }
-            fireFileStoreEvent(new FileStoreChangeEvent(EventType.POST_SAVE, this));
-            setName(newName);
+            postMoveRename(newName);
         }
+    }
+
+    /**
+     * Rename the store after content has been moved.
+     * 
+     * @param newName the new name
+     */
+    protected void postMoveRename(final String newName) {
+        fireFileStoreEvent(new FileStoreChangeEvent(EventType.POST_SAVE, this));
+        setName(newName);
     }
 
     protected void doDelete() {

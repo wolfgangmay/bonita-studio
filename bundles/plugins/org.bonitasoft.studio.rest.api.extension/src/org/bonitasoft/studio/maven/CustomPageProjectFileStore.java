@@ -100,7 +100,7 @@ public abstract class CustomPageProjectFileStore<T extends CustomPageMavenProjec
             return null;
         }
     }
-    
+
     public String getContentType() {
         try {
             final CustomPageMavenProjectDescriptor content = getContent();
@@ -381,5 +381,24 @@ public abstract class CustomPageProjectFileStore<T extends CustomPageMavenProjec
     }
 
     protected abstract String getBuildFolder();
+
+    /**
+     * Fix the store's name and location to align with the artifact id
+     * 
+     * @param actualProject the project holding the content, which name's reflects the artifact id
+     * @param monitor progress monitor
+     * @throws CoreException Eclipse workspace exception
+     */
+    public void fixStoreName(IProject actualProject, IProgressMonitor monitor) throws CoreException {
+        String correctName = actualProject.getName();
+        if (!correctName.equals(getName())) {
+            // we need to relocate the project to a location matching the artifact id
+            var description = actualProject.getDescription();
+            var targetUri = description.getLocationURI().resolve(correctName);
+            description.setLocationURI(targetUri);
+            actualProject.move(description, IResource.FORCE | IResource.SHALLOW, monitor);
+            postMoveRename(correctName);
+        }
+    }
 
 }
