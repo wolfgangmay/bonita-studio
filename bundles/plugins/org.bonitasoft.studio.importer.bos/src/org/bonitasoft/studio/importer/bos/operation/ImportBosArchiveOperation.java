@@ -54,6 +54,7 @@ import org.bonitasoft.studio.common.repository.core.maven.migration.model.Confli
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup;
 import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.operation.DependenciesUpdateOperationFactory;
+import org.bonitasoft.studio.common.repository.core.migration.step.ReportingAppUpdateMigrationStep;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent.EventType;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
@@ -429,6 +430,8 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
 
     private void updateProjectModel(Dependency dep, Model mavenModel, MavenProjectHelper mavenProjectHelper,
             ImportBosArchiveStatusBuilder statusBuilder) {
+        // If dependency is the reporting app in a non compatible version, update it.
+        updateReportingApplicationVersion(dep);
         // Only keep a unique version of the dependency
         mavenProjectHelper.findDependencyInAnyVersion(mavenModel, dep)
                 .ifPresentOrElse(d -> {
@@ -443,6 +446,14 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                             statusBuilder.addStatus(ValidationStatus.info(String.format(Messages.dependencyAddedStatus,
                                     dep.getGroupId(), dep.getArtifactId())));
                         });
+    }
+
+    private void updateReportingApplicationVersion(Dependency dep) {
+        if(Objects.equals(dep.getGroupId(), ReportingAppUpdateMigrationStep.GROUP_ID) 
+                && Objects.equals(dep.getArtifactId(), ReportingAppUpdateMigrationStep.ARTIFACT_ID) 
+                && Objects.equals(dep.getVersion(), ReportingAppUpdateMigrationStep.VERSION)){
+            dep.setVersion(ReportingAppUpdateMigrationStep.COMPATIBLE_VERSION);
+        }
     }
 
     protected ImportBosArchiveStatusBuilder createStatusBuilder() {

@@ -149,6 +149,7 @@ public class Messages extends NLS {
     public static String overviewApplicationDescription;
     public static String applicationZoomHint;
     public static String applicationDescriptorCardTitle;
+    public static String applicationLinkNoSupport;
 
     static {
         NLS.initializeMessages("messages", Messages.class);

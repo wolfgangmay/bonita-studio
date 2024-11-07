@@ -49,8 +49,8 @@
       <catalogContribution
             id="la-xsd">
          <public
-               publicId="http://documentation.bonitasoft.com/application-xml-schema/1.0"
-               uri="schema/application.xsd">
+               publicId="http://documentation.bonitasoft.com/application-xml-schema/1.1"
+               uri="platform:/plugin/wrapped.org.bonitasoft.engine.bonita-application-model/application.xsd">
          </public>
       </catalogContribution>
    </extension>

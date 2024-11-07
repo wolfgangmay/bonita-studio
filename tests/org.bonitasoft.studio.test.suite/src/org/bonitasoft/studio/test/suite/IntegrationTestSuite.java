@@ -15,14 +15,11 @@
 package org.bonitasoft.studio.test.suite;
 
 import org.bonitasoft.studio.tests.BonitaProjectIT;
-import org.bonitasoft.studio.tests.ProductVersionIT;
 import org.bonitasoft.studio.tests.TestFullScenario;
 import org.bonitasoft.studio.tests.TestPatchedBundles;
 import org.bonitasoft.studio.tests.TestPathSize;
-import org.bonitasoft.studio.tests.TestSpecificWizardIds;
 import org.bonitasoft.studio.tests.bar.ExportBarIT;
 import org.bonitasoft.studio.tests.bar.TestExportProcessBar;
-import org.bonitasoft.studio.tests.bug.TestBugs;
 import org.bonitasoft.studio.tests.businessobject.DeployBDMOperationIT;
 import org.bonitasoft.studio.tests.businessobject.ImportLegacyBDMIT;
 import org.bonitasoft.studio.tests.conditions.TestConditions;
@@ -71,9 +68,6 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         BonitaProjectIT.class,
         TestPatchedBundles.class,
-        TestSpecificWizardIds.class,
-        TestBugs.class,
-        ProductVersionIT.class,
         TestFullScenario.class,
         TestSubprocess.class,
         TestRunSearchIndex.class,

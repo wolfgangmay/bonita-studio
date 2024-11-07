@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="platform" sequenceNumber="1706176764">
+<target name="platform" sequenceNumber="1719224759">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.justj.openjdk.hotspot.jre.full.feature.group" version="17.0.10.v20240120-1143"/>
@@ -112,134 +112,116 @@
       <repository id="Orbit2024-03" location="https://download.eclipse.org/tools/orbit/simrel/maven-osgi/2024-03/"/>
     </location>
     <location includeDependencyDepth="none" includeDependencyScopes="compile,runtime,system" includeSource="true" missingManifest="generate" type="Maven" label="BonitaArtifactsModels">
-    <feature id="org.bonitasoft.artifacts.model.studio.feature.feature.group" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" provider-name="Bonitasoft S.A" version="1.0.0">
-    	<description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-    	<copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-    	<license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-    </feature>
-    <dependencies>
-    	<dependency>
-    		<groupId>com.sun.activation</groupId>
-    		<artifactId>jakarta.activation</artifactId>
-    		<version>1.2.2</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.sun.xml.bind</groupId>
-    		<artifactId>jaxb-osgi</artifactId>
-    		<version>2.3.8</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>jakarta.xml.bind</groupId>
-    		<artifactId>jakarta.xml.bind-api</artifactId>
-    		<version>2.3.3</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.bonitasoft.engine</groupId>
-    		<artifactId>bonita-application-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.bonitasoft.engine</groupId>
-    		<artifactId>bonita-bdm-access-control-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.bonitasoft.engine</groupId>
-    		<artifactId>bonita-business-object-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.bonitasoft.engine</groupId>
-    		<artifactId>bonita-organization-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.bonitasoft.engine</groupId>
-    		<artifactId>bonita-profile-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.glassfish.hk2</groupId>
-    		<artifactId>osgi-resource-locator</artifactId>
-    		<version>2.4.0</version>
-    		<type>jar</type>
-    	</dependency>
-    </dependencies>
-    <repositories>
-    	<repository>
-    		<id>maven-central</id>
-    		<url>https://repo1.maven.org/maven2</url>
-    	</repository>
-    </repositories>
+      <feature id="org.bonitasoft.artifacts.model.studio.feature.feature.group" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" provider-name="Bonitasoft S.A" version="1.1.1">
+      </feature>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun.activation</groupId>
+          <artifactId>jakarta.activation</artifactId>
+          <version>1.2.2</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-osgi</artifactId>
+          <version>2.3.8</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>jakarta.xml.bind</groupId>
+          <artifactId>jakarta.xml.bind-api</artifactId>
+          <version>2.3.3</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.bonitasoft.engine</groupId>
+          <artifactId>bonita-application-model</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.bonitasoft.engine</groupId>
+          <artifactId>bonita-bdm-access-control-model</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.bonitasoft.engine</groupId>
+          <artifactId>bonita-business-object-model</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.bonitasoft.engine</groupId>
+          <artifactId>bonita-organization-model</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.bonitasoft.engine</groupId>
+          <artifactId>bonita-profile-model</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.glassfish.hk2</groupId>
+          <artifactId>osgi-resource-locator</artifactId>
+          <version>2.4.0</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
+      <repositories>
+        <repository>
+          <id>maven-central</id>
+          <url>https://repo1.maven.org/maven2</url>
+        </repository>
+      </repositories>
     </location>
     <location includeDependencyDepth="none" includeDependencyScopes="compile,runtime,system" includeSource="true" missingManifest="generate" type="Maven" label="BonitaProjectReportModel">
-    <feature id="org.bonitasoft.project.report.model.feature" label="Bonita Project Report Model Feature" provider-name="Bonitasoft S.A" version="1.0.0">
-    	<description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-    	<copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-    	<license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-    </feature>
-    <dependencies>
-    	<dependency>
-    		<groupId>org.bonitasoft.maven</groupId>
-    		<artifactId>bonita-project-report-model</artifactId>
-    		<version>1.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    </dependencies>
-    <repositories>
-    	<repository>
-    		<id>maven-central</id>
-    		<url>https://repo1.maven.org/maven2</url>
-    	</repository>
-    </repositories>
+      <feature id="org.bonitasoft.project.report.model.feature" label="Bonita Project Report Model Feature" provider-name="Bonitasoft S.A" version="1.0.0">
+      </feature>
+      <dependencies>
+        <dependency>
+          <groupId>org.bonitasoft.maven</groupId>
+          <artifactId>bonita-project-report-model</artifactId>
+          <version>1.0.0</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
+      <repositories>
+        <repository>
+          <id>maven-central</id>
+          <url>https://repo1.maven.org/maven2</url>
+        </repository>
+      </repositories>
     </location>
     <location includeDependencyDepth="infinite" includeDependencyScopes="compile,runtime,system" includeSource="false" missingManifest="generate" type="Maven" label="MavenDependenciesWithInfiniteDepth">
-    <dependencies>
-    	<dependency>
-    		<groupId>jakarta.xml.soap</groupId>
-    		<artifactId>jakarta.xml.soap-api</artifactId>
-    		<version>1.4.2</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.assertj</groupId>
-    		<artifactId>assertj-core</artifactId>
-    		<version>3.24.2</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.awaitility</groupId>
-    		<artifactId>awaitility</artifactId>
-    		<version>4.2.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.mockito</groupId>
-    		<artifactId>mockito-junit-jupiter</artifactId>
-    		<version>5.8.0</version>
-    		<type>jar</type>
-    	</dependency>
-    </dependencies>
+      <dependencies>
+        <dependency>
+          <groupId>jakarta.xml.soap</groupId>
+          <artifactId>jakarta.xml.soap-api</artifactId>
+          <version>1.4.2</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.assertj</groupId>
+          <artifactId>assertj-core</artifactId>
+          <version>3.24.2</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.awaitility</groupId>
+          <artifactId>awaitility</artifactId>
+          <version>4.2.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-junit-jupiter</artifactId>
+          <version>5.8.0</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
     </location>
   </locations>
   <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>

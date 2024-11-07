@@ -25,7 +25,7 @@ public class BotDeployDialog extends BotDialog {
     public BotDeployDialog(final SWTGefBot bot) {
         super(bot, Messages.selectArtifactToDeployTitle);
     }
-    
+
     public BotDeployDialog selectEnvironment(String environment) {
         bot.comboBoxWithLabelInGroup(Messages.environment, Messages.deployOptions).setSelection(environment);
         return this;
@@ -34,7 +34,6 @@ public class BotDeployDialog extends BotDialog {
     public String getSelectedEnvironment() {
         return bot.comboBoxWithLabelInGroup(Messages.environment, Messages.deployOptions).getText();
     }
-
 
     public BotDeployDialog searchArtifacts(final String searchText) {
         bot.text(0).setText(searchText);
@@ -48,7 +47,8 @@ public class BotDeployDialog extends BotDialog {
     }
 
     public boolean isDefaultUserEnabled() {
-        return bot.textWithLabelInGroup(org.bonitasoft.studio.identity.i18n.Messages.defaultUser, Messages.deployOptions)
+        return bot
+                .textWithLabelInGroup(org.bonitasoft.studio.identity.i18n.Messages.defaultUser, Messages.deployOptions)
                 .isEnabled();
     }
 
@@ -83,6 +83,7 @@ public class BotDeployDialog extends BotDialog {
     }
 
     public BotDialog deploy() {
+        bot.waitUntil(Conditions.widgetIsEnabled(bot.button(Messages.deploy)), 1500);
         bot.button(Messages.deploy).click();
         bot.waitUntil(Conditions.shellIsActive(Messages.deployStatus), 120000);
         return new BotDialog(bot, Messages.deployStatus);
@@ -121,7 +122,7 @@ public class BotDeployDialog extends BotDialog {
         bot.checkBoxInGroup(Messages.validateProcess, Messages.deployOptions).deselect();
         return this;
     }
-    
+
     public BotDeployDialog enableProcessValidation() {
         bot.checkBoxInGroup(Messages.validateProcess, Messages.deployOptions).select();
         return this;

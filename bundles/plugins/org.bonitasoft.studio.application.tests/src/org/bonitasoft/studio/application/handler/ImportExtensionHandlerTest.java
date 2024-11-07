@@ -22,6 +22,7 @@ class ImportExtensionHandlerTest {
             mock(MavenRepositoryRegistry.class),
             new MavenProjectHelper(),
             null,
+            null,
             null);
 
     @BeforeEach

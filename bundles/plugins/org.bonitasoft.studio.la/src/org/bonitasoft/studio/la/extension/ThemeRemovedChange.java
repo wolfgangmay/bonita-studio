@@ -42,6 +42,7 @@ public class ThemeRemovedChange implements ChangePreview, ApplicationChange {
             if (tokens != null) {
                 try {
                     var appNodeContainer = fileStore.getContent();
+                    // only legacy applications have a theme
                     appNodeContainer.getApplications().stream()
                             .filter(app -> entry.getValue().contains(app.getToken()))
                             .forEach(app -> app.setTheme(null));

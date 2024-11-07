@@ -33,10 +33,12 @@ import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfoCriterion;
 import org.bonitasoft.engine.bpm.process.ProcessInstanceSearchDescriptor;
+import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.search.Order;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.session.APISession;
+import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
@@ -49,22 +51,36 @@ import org.bonitasoft.studio.model.process.diagram.part.ProcessDiagramEditor;
 import org.bonitasoft.studio.tests.util.Await;
 import org.bonitasoft.studio.tests.util.InitialProjectRule;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.gmf.runtime.emf.core.GMFEditingDomainFactory;
 import org.eclipse.ui.PlatformUI;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Aurelien Pupier
- */
 public class TestDeployCommand {
 
     @Rule
     public InitialProjectRule projectRule = InitialProjectRule.INSTANCE;
+    
+    @After
+    public void tearDown() throws Exception {
+        var session = BOSEngineManager.getInstance().loginDefaultTenant(new NullProgressMonitor());
+        var processApi = BOSEngineManager.getInstance().getProcessAPI(session);
+        processApi.searchProcessDeploymentInfos(new SearchOptionsBuilder(0, Integer.MAX_VALUE).done())
+        .getResult().stream().forEach( info -> {
+            try {
+                processApi.deleteArchivedProcessInstances(info.getProcessId(), 0, Integer.MAX_VALUE);
+            } catch (DeletionException e) {
+                BonitaStudioLog.warning("Failed to delete archived process instances after test: "+ e.getMessage(), TestDeployCommand.class);
+            }
+        });
+        BOSEngineManager.getInstance().logoutDefaultTenant(session);
+    }
     
     /**
      * Used to check bug 1965

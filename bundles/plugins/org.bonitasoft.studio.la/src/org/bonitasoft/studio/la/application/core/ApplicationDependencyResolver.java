@@ -22,8 +22,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.annotation.PostConstruct;
-
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.business.application.xml.ApplicationPageNode;
@@ -36,6 +34,8 @@ import org.bonitasoft.studio.designer.core.repository.WebPageRepositoryStore;
 import org.bonitasoft.studio.la.application.repository.ApplicationFileStore;
 import org.bonitasoft.studio.maven.ExtensionRepositoryStore;
 import org.eclipse.e4.core.contexts.IEclipseContext;
+
+import jakarta.annotation.PostConstruct;
 
 public class ApplicationDependencyResolver implements DependencyResolver<ApplicationFileStore> {
 
@@ -57,7 +57,7 @@ public class ApplicationDependencyResolver implements DependencyResolver<Applica
             //Application Pages
             result.addAll(findPageDependencies(webStore, applicationNodeContainer));
 
-            //Layout
+            //Layout (only for legacy applications)
             applicationNodeContainer
                     .getApplications()
                     .stream()
@@ -67,7 +67,7 @@ public class ApplicationDependencyResolver implements DependencyResolver<Applica
                     .filter(Objects::nonNull)
                     .forEach(result::add);
 
-            //Theme
+            //Theme (only for legacy applications)
             applicationNodeContainer
                     .getApplications()
                     .stream()
@@ -84,6 +84,7 @@ public class ApplicationDependencyResolver implements DependencyResolver<Applica
 
     protected List<IRepositoryFileStore<?>> findPageDependencies(WebPageRepositoryStore webStore,
             ApplicationNodeContainer applicationNodeContainer) {
+        //Application Pages (only for legacy applications)
         List<IRepositoryFileStore<?>> pageDependencies = applicationNodeContainer
                 .getApplications()
                 .stream()
