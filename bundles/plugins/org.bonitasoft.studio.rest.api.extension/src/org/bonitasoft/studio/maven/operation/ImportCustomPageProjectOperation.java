@@ -53,10 +53,19 @@ public class ImportCustomPageProjectOperation extends AbstractMavenProjectUpdate
         try {
             results = projectConfigurationManager.importProjects(
                     Collections.singletonList(fileStore.getMavenProjectInfo()), projectImportConfiguration, monitor);
-            validatePomFile(fileStore.getProject(), monitor);
-            BonitaStudioLog.debug(String.format("%s project has been imported in workspace.", name),
+            if (results.isEmpty()) {
+                BonitaStudioLog.error(String.format("%s project could not be imported in workspace.", name),
+                        RestAPIExtensionActivator.PLUGIN_ID);
+                return null;
+            }
+            var importedProject = results.get(0).getProject();
+            validatePomFile(importedProject, monitor);
+            BonitaStudioLog.debug(
+                    String.format("%s project has been imported in workspace.", importedProject.getName()),
                     RestAPIExtensionActivator.PLUGIN_ID);
-            return results.get(0).getProject();
+            // project's name is based on artifact id, which may differ from the fileStore name
+            fileStore.fixStoreName(importedProject, monitor);
+            return importedProject;
         } catch (final CoreException e) {
             status = new Status(IStatus.ERROR, RestAPIExtensionActivator.PLUGIN_ID, IStatus.OK,
                     e.getMessage(), e);
