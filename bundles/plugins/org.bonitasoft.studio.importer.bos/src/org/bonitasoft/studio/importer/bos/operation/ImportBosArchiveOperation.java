@@ -40,6 +40,7 @@ import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.repository.core.IProjectContainer;
 import org.bonitasoft.studio.common.repository.core.InputStreamSupplier;
 import org.bonitasoft.studio.common.repository.core.ProjectDependenciesStore;
 import org.bonitasoft.studio.common.repository.core.maven.DefinitionUsageOperation;
@@ -56,6 +57,7 @@ import org.bonitasoft.studio.common.repository.core.migration.dependencies.opera
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent.EventType;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.store.LocalDependenciesStore;
 import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
@@ -172,6 +174,11 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
         ImportBosArchiveStatusBuilder statusBuilder = createStatusBuilder();
         var repositoryStore = doRun(monitor, statusBuilder);
         // wait for all scheduled build jobs to end
+        BuildScheduler.joinOnBuildRule();
+        // make sure extension projects are imported before validating...
+        var containerStores = getImportedFileStores().stream().map(IRepositoryFileStore::getParentStore)
+                .filter(IProjectContainer.class::isInstance).distinct();
+        containerStores.forEach(IRepositoryStore::repositoryUpdated);
         BuildScheduler.joinOnBuildRule();
         // schedule validation to be executed after projects have been imported...
         BuildScheduler.callWithBuildRule(() -> {
