@@ -17,12 +17,15 @@ package org.bonitasoft.studio.common.repository.core.internal;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.Messages;
+import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
 import org.bonitasoft.studio.common.repository.core.internal.team.GitProjectImpl;
@@ -48,7 +51,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 
 public class BonitaProjectImpl implements BonitaProject {
 
@@ -100,7 +102,10 @@ public class BonitaProjectImpl implements BonitaProject {
     @Override
     public void open(IProgressMonitor monitor) throws CoreException {
         for (var project : getRelatedProjects()) {
-            project.open(monitor);
+            if(project.getLocation() != null
+                    && Files.exists(project.getLocation().toFile().toPath().resolve(".project"))) {
+                project.open(monitor);
+            }
         }
         currentRepository().orElseThrow().open(monitor);
     }
@@ -155,31 +160,64 @@ public class BonitaProjectImpl implements BonitaProject {
     }
 
     @Override
-    public void refresh(IProgressMonitor monitor) throws CoreException {
-        refresh(false, monitor);
+    public IProject getExtensionsParentProject() {
+        return BonitaProject.getExtensionsParentProject(getId());
     }
 
     @Override
+    public List<IProject> getExtensionsProjects() {
+        return BonitaProject.getExtensionsProjects(getId());
+    }
+
+    @Override
+    public void refresh(IProgressMonitor monitor) throws CoreException {
+        refresh(false, monitor);
+    }
+    
+    @Override
     public void refresh(boolean updateConfiguration, IProgressMonitor monitor) throws CoreException {
         monitor.beginTask(Messages.refresh, IProgressMonitor.UNKNOWN);
-        var job = new UpdateMavenProjectJob(getRelatedProjects().toArray(IProject[]::new), false, false, updateConfiguration,
-                true, true);
-        job.addJobChangeListener(new JobChangeAdapter() {
+        // schedule the 3 jobs immediately with the same rule to ensure sequencing
+        var refreshJob = new Job("Refresh resources") {
+
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                var accessor = BonitaProjectImpl.this.getAdapter(RepositoryAccessor.class);
+                if (accessor != null) {
+                    var repository = accessor.getCurrentRepository().orElse(null);
+                    if (repository != null) {
+                        for (var store : repository.getAllStores()) {
+                            store.refresh();
+                        }
+                    }
+                }
+                return Status.OK_STATUS;
+            }
+        };
+        var analyzeJob = new Job("Analyze project dependencies") {
+
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                currentRepository()
+                        .map(IRepository::getProjectDependenciesStore)
+                        .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
+                return Status.OK_STATUS;
+            }
+        };
+        refreshJob.addJobChangeListener(new JobChangeAdapter() {
             @Override
             public void done(IJobChangeEvent event) {
-                new Job("Analyze project dependencies") {
-
+                var updateJob = BonitaProject.updateMavenProjectsJob(getRelatedProjects(), updateConfiguration);
+                updateJob.addJobChangeListener(new JobChangeAdapter() {
                     @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        currentRepository()
-                                .map(IRepository::getProjectDependenciesStore)
-                                .ifPresent(depStore -> depStore.analyze(new NullProgressMonitor()));
-                        return Status.OK_STATUS;
+                    public void done(IJobChangeEvent event) {
+                        BuildScheduler.scheduleJobWithBuildRule(analyzeJob);
                     }
-                }.schedule();
+                });
+                BuildScheduler.scheduleJobWithBuildRule(updateJob);
             }
         });
-        job.schedule();
+        BuildScheduler.scheduleJobWithBuildRule(refreshJob);
     }
 
     @Override
@@ -215,6 +253,8 @@ public class BonitaProjectImpl implements BonitaProject {
             return (T) appProject;
         } else if (GitProject.class.equals(adapter)) {
             return (T) new GitProjectImpl(getParentProject());
+        } else if (RepositoryAccessor.class.equals(adapter)) {
+            return (T) RepositoryManager.getInstance().getAccessor();
         } else if (IJavaProject.class.equals(adapter)) {
             if (appProject.exists() && appProject.isAccessible()) {
                 return (T) JavaCore.create(appProject);
@@ -242,10 +282,18 @@ public class BonitaProjectImpl implements BonitaProject {
         }
         gitProject.commitAll(commitMessage, monitor);
     }
+    
+    @Override
+    public void addModule(IProject parentProject, String module, IProgressMonitor monitor) throws CoreException {
+        var parentModel = MavenProjectHelper.getMavenModel(parentProject);
+        if(parentModel != null && parentModel.getModules().stream().noneMatch(module::equals)) {
+            parentModel.getModules().add(module);
+            MavenProjectHelper.saveModel(parentProject, parentModel, new NullProgressMonitor());
+        }
+    }
 
     @Override
-    public void removeModule(String module, IProgressMonitor monitor) throws CoreException {
-        var parentProject = getParentProject();
+    public void removeModule(IProject parentProject, String module, IProgressMonitor monitor) throws CoreException {
         var parentModel = MavenProjectHelper.getMavenModel(parentProject);
         parentModel.getModules().removeIf(module::equals);
         MavenProjectHelper.saveModel(parentProject, parentModel, new NullProgressMonitor());
@@ -254,7 +302,7 @@ public class BonitaProjectImpl implements BonitaProject {
             moduleFolder.delete(true, new NullProgressMonitor());
         }
     }
-
+    
     @Override
     public IScopeContext getScopeContext() {
         return new ProjectScope(getAppProject());
@@ -283,4 +331,5 @@ public class BonitaProjectImpl implements BonitaProject {
         }
         return null;
     }
+
 }

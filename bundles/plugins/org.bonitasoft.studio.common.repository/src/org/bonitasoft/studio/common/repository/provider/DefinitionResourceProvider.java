@@ -45,9 +45,9 @@ import org.bonitasoft.studio.common.repository.core.maven.MavenProjectDependenci
 import org.bonitasoft.studio.common.repository.model.IDefinitionRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
-import org.bonitasoft.studio.connector.model.definition.Category;
-import org.bonitasoft.studio.connector.model.definition.ConnectorDefinition;
-import org.bonitasoft.studio.connector.model.definition.ConnectorDefinitionFactory;
+import org.bonitasoft.bpm.connector.model.definition.Category;
+import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinition;
+import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinitionFactory;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.pics.PicsConstants;
 import org.eclipse.core.resources.IFile;
@@ -86,7 +86,6 @@ public class DefinitionResourceProvider implements EventHandler {
     public static final String connectorDefinitionDescription = "connectorDefinitionDescription";
     public static final String fieldDescription = "description";
     public static final String fieldExample = "example";
-    private static final String CLASSPATH_DIR = "dependencies";
     public static final String OUTPUTS_DESC = "outputsDescription";
     public static final String OUTPUT_DESC = "output.description";
 

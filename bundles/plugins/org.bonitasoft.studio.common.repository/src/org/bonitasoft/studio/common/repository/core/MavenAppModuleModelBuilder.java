@@ -17,10 +17,9 @@ package org.bonitasoft.studio.common.repository.core;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
-import org.bonitasoft.studio.common.ProductVersion;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.MavenDependency;
 import org.bonitasoft.studio.common.repository.core.maven.model.MavenPlugin;
-import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
 
 public class MavenAppModuleModelBuilder implements MavenModelBuilder {
 
@@ -30,6 +29,7 @@ public class MavenAppModuleModelBuilder implements MavenModelBuilder {
     private String displayName;
     private String description;
     private String bonitaVersion;
+    private boolean includeAdminApp;
 
     public String getArtifactId() {
         return artifactId;
@@ -78,6 +78,11 @@ public class MavenAppModuleModelBuilder implements MavenModelBuilder {
     public void setBonitaVersion(String bonitaVersion) {
         this.bonitaVersion = bonitaVersion;
     }
+    
+    @Override
+    public void setIncludeAdminApp(boolean includeAdminApp) {
+       this.includeAdminApp = includeAdminApp;
+    }
 
     @Override
     public Model toMavenModel() {
@@ -93,20 +98,20 @@ public class MavenAppModuleModelBuilder implements MavenModelBuilder {
         parent.setVersion(version);
         model.setParent(parent);
 
-        var bonitaRuntimeVersion = bonitaVersion == null ? ProductVersion.BONITA_RUNTIME_VERSION : bonitaVersion;
-        ProjectDefaultConfiguration defaultConfiguration = new ProjectDefaultConfiguration(bonitaRuntimeVersion);
+        var appProjectConfiguration = new AppProjectConfiguration(includeAdminApp);
 
-        defaultConfiguration.getDependencies().stream()
-                .map(MavenDependency::toProvidedDependency)
+        appProjectConfiguration.getDependencies().stream()
+                .map(MavenDependency::toDependency)
                 .forEach(model::addDependency);
 
         Build build = new Build();
-        defaultConfiguration.getPlugins().stream()
+        appProjectConfiguration.getPlugins().stream()
                 .filter(plugin -> plugin.hasExecutions() || plugin.hasConfiguration())
                 .map(MavenPlugin::toPlugin)
                 .forEach(build::addPlugin);
 
         model.setBuild(build);
+        appProjectConfiguration.getProfiles().forEach(model::addProfile);
         return model;
     }
 

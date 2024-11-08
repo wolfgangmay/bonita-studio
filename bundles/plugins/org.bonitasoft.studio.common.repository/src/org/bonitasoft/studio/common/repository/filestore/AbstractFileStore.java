@@ -81,7 +81,7 @@ public abstract class AbstractFileStore<T>
     private CommandExecutor commandExecutor = new CommandExecutor();
     private MigrationReport report = MigrationReport.emptyReport();
 
-    public AbstractFileStore(final String fileName,
+    protected AbstractFileStore(final String fileName,
             final IRepositoryStore<? extends IRepositoryFileStore<T>> parentStore) {
         name = fileName;
         store = parentStore;

@@ -55,6 +55,11 @@ public class ProjectDependenciesLookupOperation implements IRunnableWithProgress
         List<DependencyGetOperation> operations = mavenProject.getDependencies()
                 .stream()
                 .filter(dep -> !Objects.equals(dep.getScope(), Artifact.SCOPE_PROVIDED))
+                .filter(dep -> !Objects.equals("application", dep.getClassifier()))
+                .filter(dep -> dep.getVersion() != null)
+                // Filter project extensions
+                .filter(dep -> !Objects.equals(dep.getGroupId(), "${project.groupId}") 
+                        && !Objects.equals(dep.getVersion(), "${project.version}"))
                 .map(dep -> {
                     var op = new DependencyGetOperation(new GAV(dep));
                     repositories.stream()

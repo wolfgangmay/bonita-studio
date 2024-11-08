@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.IBonitaVariableContext;
 import org.bonitasoft.studio.common.databinding.validator.EmptyInputValidator;
 import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
@@ -52,13 +52,13 @@ import org.bonitasoft.studio.expression.editor.provider.IExpressionNatureProvide
 import org.bonitasoft.studio.expression.editor.provider.IExpressionProvider;
 import org.bonitasoft.studio.expression.editor.provider.IExpressionValidator;
 import org.bonitasoft.studio.expression.editor.widget.ContentAssistText;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.expression.ExpressionFactory;
-import org.bonitasoft.studio.model.expression.ExpressionPackage;
-import org.bonitasoft.studio.model.expression.provider.ExpressionItemProvider;
-import org.bonitasoft.studio.model.expression.provider.ExpressionItemProviderAdapterFactory;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.SearchIndex;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.expression.ExpressionFactory;
+import org.bonitasoft.bpm.model.expression.ExpressionPackage;
+import org.bonitasoft.bpm.model.expression.provider.ExpressionItemProvider;
+import org.bonitasoft.bpm.model.expression.provider.ExpressionItemProviderAdapterFactory;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.SearchIndex;
 import org.bonitasoft.studio.refactoring.core.AbstractRefactorOperation;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
@@ -129,7 +129,7 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetWidgetFactory;
 /**
  * @author Romain Bioteau
  */
-public class ExpressionViewer extends ContentViewer implements ExpressionConstants, SWTBotConstants,
+public class ExpressionViewer extends ContentViewer implements SWTBotConstants,
         IContentProposalListener, IBonitaContentProposalListener2, IBonitaVariableContext,
         IExpressionValidationListener,
         IValueChangeListener {
@@ -836,11 +836,11 @@ public class ExpressionViewer extends ContentViewer implements ExpressionConstan
         final Expression selectedExpression = getSelectedExpression();
         Assert.isNotNull(selectedExpression);
         String expressionType = selectedExpression.getType();
-        if (input.equals(selectedExpression.getName()) && CONSTANT_TYPE.equals(expressionType)) {
+        if (input.equals(selectedExpression.getName()) && ExpressionConstants.CONSTANT_TYPE.equals(expressionType)) {
             return expressionType;
         }
         if (expressionType == null) {
-            return CONSTANT_TYPE;
+            return ExpressionConstants.CONSTANT_TYPE;
         }
         if (ExpressionConstants.SCRIPT_TYPE.equals(expressionType)) {
             return ExpressionConstants.SCRIPT_TYPE;
@@ -866,7 +866,7 @@ public class ExpressionViewer extends ContentViewer implements ExpressionConstan
                 .filter(expr -> Objects.equals(expr.getType(), expressionType))
                 .findFirst()
                 .map(Expression::getType)
-                .orElse(CONSTANT_TYPE);
+                .orElse(ExpressionConstants.CONSTANT_TYPE);
     }
 
     protected void internalRefresh() {

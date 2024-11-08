@@ -18,6 +18,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.bonitasoft.bpm.model.actormapping.ActorMapping;
+import org.bonitasoft.bpm.model.actormapping.Groups;
+import org.bonitasoft.bpm.model.actormapping.Membership;
+import org.bonitasoft.bpm.model.actormapping.MembershipType;
+import org.bonitasoft.bpm.model.actormapping.Roles;
+import org.bonitasoft.bpm.model.actormapping.Users;
+import org.bonitasoft.bpm.model.actormapping.util.ActorMappingAdapterFactory;
+import org.bonitasoft.bpm.model.configuration.Configuration;
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.ActiveOrganizationProvider;
@@ -36,15 +46,6 @@ import org.bonitasoft.studio.identity.organization.model.organization.Organizati
 import org.bonitasoft.studio.identity.organization.model.organization.Role;
 import org.bonitasoft.studio.identity.organization.model.organization.User;
 import org.bonitasoft.studio.identity.organization.repository.OrganizationRepositoryStore;
-import org.bonitasoft.studio.model.actormapping.ActorMapping;
-import org.bonitasoft.studio.model.actormapping.Groups;
-import org.bonitasoft.studio.model.actormapping.Membership;
-import org.bonitasoft.studio.model.actormapping.MembershipType;
-import org.bonitasoft.studio.model.actormapping.Roles;
-import org.bonitasoft.studio.model.actormapping.Users;
-import org.bonitasoft.studio.model.actormapping.util.ActorMappingAdapterFactory;
-import org.bonitasoft.studio.model.configuration.Configuration;
-import org.bonitasoft.studio.model.process.AbstractProcess;
 import org.bonitasoft.studio.pics.Pics;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
@@ -99,7 +100,8 @@ public class ActorMappingConfigurationWizardPage extends WizardPage
     public void createControl(final Composite parent) {
         deployedOrganization = Optional.ofNullable(RepositoryManager.getInstance()
                 .getRepositoryStore(OrganizationRepositoryStore.class)
-                .getChild(String.format("%s.organization", new ActiveOrganizationProvider().getActiveOrganization()),
+                .getChild(String.format("%s.%s", new ActiveOrganizationProvider().getActiveOrganization(), 
+                		OrganizationRepositoryStore.ORGANIZATION_EXT),
                         true))
                 .map(t -> {
                     try {
@@ -341,7 +343,7 @@ public class ActorMappingConfigurationWizardPage extends WizardPage
     }
 
     @Override
-    public void updatePage(final AbstractProcess process, final Configuration configuration) {
+    public void updatePage(Pool process, final Configuration configuration) {
         this.configuration = configuration;
         this.process = process;
         if (this.configuration != null && mappingTree != null && !mappingTree.getTree().isDisposed()

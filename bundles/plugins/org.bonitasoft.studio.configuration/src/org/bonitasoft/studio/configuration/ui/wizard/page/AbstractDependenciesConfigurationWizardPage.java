@@ -22,7 +22,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.bonitasoft.studio.common.FragmentTypes;
+import org.bonitasoft.bpm.model.configuration.Configuration;
+import org.bonitasoft.bpm.model.configuration.ConfigurationFactory;
+import org.bonitasoft.bpm.model.configuration.ConfigurationPackage;
+import org.bonitasoft.bpm.model.configuration.Fragment;
+import org.bonitasoft.bpm.model.configuration.FragmentContainer;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.util.FragmentTypes;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.ui.jface.TableColumnSorter;
@@ -33,12 +39,6 @@ import org.bonitasoft.studio.dependencies.repository.DependencyFileStore;
 import org.bonitasoft.studio.dependencies.repository.DependencyRepositoryStore;
 import org.bonitasoft.studio.dependencies.ui.MissingDependenciesDecorator;
 import org.bonitasoft.studio.dependencies.ui.dialog.SelectJarsDialog;
-import org.bonitasoft.studio.model.configuration.Configuration;
-import org.bonitasoft.studio.model.configuration.ConfigurationFactory;
-import org.bonitasoft.studio.model.configuration.ConfigurationPackage;
-import org.bonitasoft.studio.model.configuration.Fragment;
-import org.bonitasoft.studio.model.configuration.FragmentContainer;
-import org.bonitasoft.studio.model.process.AbstractProcess;
 import org.bonitasoft.studio.pics.Pics;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -373,11 +373,11 @@ public abstract class AbstractDependenciesConfigurationWizardPage extends Wizard
 
     /*
      * (non-Javadoc)
-     * @see org.bonitasoft.studio.configuration.extension.IProcessConfigurationWizardPage#updatePage(org.bonitasoft.studio.model.process.AbstractProcess,
-     * org.bonitasoft.studio.model.configuration.Configuration)
+     * @see org.bonitasoft.studio.configuration.extension.IProcessConfigurationWizardPage#updatePage(org.bonitasoft.bpm.model.process.AbstractProcess,
+     * org.bonitasoft.bpm.model.configuration.Configuration)
      */
     @Override
-    public void updatePage(final AbstractProcess process, final Configuration configuration) {
+    public void updatePage(final Pool process, final Configuration configuration) {
         if (process != null && configuration != null && treeViewer != null && !treeViewer.getTree().isDisposed()) {
             this.configuration = configuration;
             treeViewer.setContentProvider(new TreeDependenciesContentProvider());

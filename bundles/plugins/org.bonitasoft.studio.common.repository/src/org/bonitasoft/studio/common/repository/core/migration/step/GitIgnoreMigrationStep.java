@@ -80,12 +80,13 @@ public class GitIgnoreMigrationStep implements MigrationStep {
             } catch (IOException e) {
                 throw new CoreException(Status.error("Failed to update .gitignore file.", e));
             }
+            try (var input = Files.newInputStream(gitIgnore)) {
+                return readEntries(input, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
-        try (var input = Files.newInputStream(gitIgnore)) {
-            return readEntries(input, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return List.of();
     }
 
     private List<String> retrieveEntriesToAdd(List<String> existingEntries, URL gitignoreTemplateUrl)

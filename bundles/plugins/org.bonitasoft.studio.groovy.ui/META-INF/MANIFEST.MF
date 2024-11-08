@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Ui for Groovy Plugin
 Bundle-SymbolicName: org.bonitasoft.studio.groovy.ui;singleton:=true
-Bundle-Version: 8.0.7.qualifier
+Bundle-Version: 9.0.7.qualifier
 Bundle-Activator: org.bonitasoft.studio.groovy.ui.Activator
 Bundle-Vendor: BonitaSoft S.A.
 Bundle-Localization: plugin
@@ -22,7 +22,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.ui,
  org.eclipse.swt,
- org.bonitasoft.studio.model,
+ org.bonitasoft.bpm.model,
  org.eclipse.jface,
  org.bonitasoft.studio.groovy,
  org.bonitasoft.studio.common,
@@ -49,7 +49,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.databinding.edit,
  org.bonitasoft.studio.diagram.custom,
  org.eclipse.ui.forms,
- org.bonitasoft.studio.connectors.model,
+ org.bonitasoft.bpm.connector.model,
  org.bonitasoft.studio.engine,
  org.bonitasoft.studio.configuration,
  org.eclipse.ui.ide,
@@ -73,22 +73,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.codehaus.groovy.eclipse.quickfix,
  org.eclipse.gef,
  org.eclipse.core.databinding.property,
- org.bonitasoft.studio.dependencies
+ org.bonitasoft.studio.dependencies,
+ org.bonitasoft.engine.bonita-client
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
-Import-Package: org.bonitasoft.engine.api,
- org.bonitasoft.engine.bdm,
- org.bonitasoft.engine.bdm.dao,
- org.bonitasoft.engine.bdm.model,
- org.bonitasoft.engine.bdm.model.field,
- org.bonitasoft.engine.bpm,
- org.bonitasoft.engine.bpm.bar,
- org.bonitasoft.engine.bpm.flownode,
- org.bonitasoft.engine.bpm.process,
- org.bonitasoft.engine.connector,
- org.bonitasoft.engine.exception,
- org.bonitasoft.engine.expression,
- org.bonitasoft.engine.identity,
- org.bonitasoft.engine.session,
- org.bonitasoft.studio.dependencies.ui.dialog,
+Import-Package: org.bonitasoft.studio.dependencies.ui.dialog,
  org.eclipse.ui.part

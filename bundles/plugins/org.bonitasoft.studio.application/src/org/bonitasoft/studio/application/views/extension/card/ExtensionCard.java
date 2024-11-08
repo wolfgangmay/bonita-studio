@@ -74,18 +74,18 @@ public class ExtensionCard extends Composite {
         super(parent, SWT.BORDER);
         this.dep = dep;
         this.bonitaDep = bonitaDep;
-        localDependencyStore = RepositoryManager.getInstance().getCurrentRepository().orElseThrow().getLocalDependencyStore();
+        localDependencyStore = RepositoryManager.getInstance().getCurrentRepository().orElseThrow()
+                .getLocalDependencyStore();
 
         setLayout(GridLayoutFactory.fillDefaults().margins(10, 10).create());
         setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
-        var backgroundCssClassname = bonitaDep.getStatus().isOK() ?
-                BonitaThemeConstants.CARD_BACKGROUND 
-                : BonitaThemeConstants.CARD_BACKGROUND +"-error";
+        var backgroundCssClassname = bonitaDep.getStatus().isOK() ? BonitaThemeConstants.CARD_BACKGROUND
+                : BonitaThemeConstants.CARD_BACKGROUND + "-error";
         setData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME, backgroundCssClassname);
-        
+
         createContent(backgroundCssClassname);
-        
-        if(!bonitaDep.getStatus().isOK()) {
+
+        if (!bonitaDep.getStatus().isOK()) {
             addListener(SWT.Paint, e -> {
                 var gc = e.gc;
                 var borderColor = new Color(Display.getDefault(), 237, 137, 54);
@@ -93,12 +93,12 @@ public class ExtensionCard extends Composite {
                 gc.setLineStyle(SWT.LINE_SOLID);
                 gc.setLineWidth(ERROR_BORDER_WITDH);
                 var clientArea = getClientArea();
-                gc.drawRectangle(clientArea.x, clientArea.y, clientArea.width-1, clientArea.height-1);
+                gc.drawRectangle(clientArea.x, clientArea.y, clientArea.width - 1, clientArea.height - 1);
                 borderColor.dispose();
             });
         }
     }
-    
+
     public void addRemoveExtensionListener(RemoveExtensionListener removeListener) {
         removeListeners.add(removeListener);
     }
@@ -106,9 +106,10 @@ public class ExtensionCard extends Composite {
     public void addUpdateExtensionListener(UpdateExtensionListener updateListener) {
         updateListeners.add(updateListener);
     }
-    
+
     protected String getTextClassName() {
-        return bonitaDep.getStatus().isOK() ? BonitaThemeConstants.TITLE_TEXT_COLOR : BonitaThemeConstants.TITLE_TEXT_COLOR +"-error" ;
+        return bonitaDep.getStatus().isOK() ? BonitaThemeConstants.TITLE_TEXT_COLOR
+                : BonitaThemeConstants.TITLE_TEXT_COLOR + "-error";
     }
 
     private void createContent(String backgroundCssClassname) {
@@ -219,7 +220,7 @@ public class ExtensionCard extends Composite {
                     .onClick(e -> updateListeners.stream().forEach(l -> l.updateExtension(bonitaDep, dep)))
                     .createIn(toolbarComposite);
             columnUsed++;
-        } else if (!bonitaDep.isFromMarketplace()) {
+        } else if (!bonitaDep.isFromMarketplace() && !bonitaDep.isProjectExtension()) {
             new DynamicButtonWidget.Builder()
                     .withId(SWTBotConstants.updateExtensionFromCard(bonitaDep.getArtifactId()))
                     .withLabel(Messages.upgradeExtension)
@@ -245,7 +246,7 @@ public class ExtensionCard extends Composite {
                 .createIn(toolbarComposite);
     }
 
-    protected List<DynamicButtonWidget.Builder> getToolbarContributions() {
+	protected List<DynamicButtonWidget.Builder> getToolbarContributions() {
         return new ArrayList<>();
     }
 
@@ -319,13 +320,12 @@ public class ExtensionCard extends Composite {
         titleLabel.setText(bonitaDep.getName());
         titleLabel.setFont(JFaceResources.getFont(ProjectOverviewEditorPart.BOLD_8_FONT_ID));
         titleLabel.setData(BonitaThemeConstants.CSS_ID_PROPERTY_NAME, getTextClassName());
-        
+
         if (bonitaDep.getStatus().getSeverity() != IStatus.OK) {
             titleLabel.setImage(Pics.getImage(PicsConstants.problem));
             titleLabel.setToolTipText(String.format("%s problem(s) found, click for more details.",
                     bonitaDep.getStatus().getChildren().length));
-        } 
-        
+        }
 
         var gavComposite = new Composite(titleComposite, SWT.NONE);
         gavComposite.setLayout(

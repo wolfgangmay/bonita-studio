@@ -16,6 +16,9 @@
  */
 package org.bonitasoft.studio.common.repository.core.maven.model;
 
+import java.util.Objects;
+
+import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.ui.PlatformUtil;
 
 public class BonitaCommonDependency extends MavenDependency {
@@ -30,6 +33,29 @@ public class BonitaCommonDependency extends MavenDependency {
 
     private static String artifactId() {
         return PlatformUtil.isACommunityBonitaProduct() ? "bonita-common" : "bonita-common-sp";
+    }
+
+    public static boolean shouldUpgade(Model model) {
+        if(!PlatformUtil.isACommunityBonitaProduct()) {
+            return model.getDependencies()
+                    .stream()
+                    .noneMatch(d -> Objects.equals(d.getGroupId(), "com.bonitasoft.engine") 
+                            && Objects.equals(d.getArtifactId(), "bonita-common-sp"));
+        }
+        return false;
+    }
+    
+    public static void updgrade(Model model) {
+        if(!PlatformUtil.isACommunityBonitaProduct()) {
+             model.getDependencies()
+                    .stream()
+                    .filter(d -> Objects.equals(d.getGroupId(), "org.bonitasoft.engine") 
+                            && Objects.equals(d.getArtifactId(), "bonita-common"))
+                    .findAny().ifPresent ( d-> {
+                        d.setGroupId("com.bonitasoft.engine");
+                        d.setArtifactId("bonita-common-sp");
+                    });
+        }
     }
 
 }

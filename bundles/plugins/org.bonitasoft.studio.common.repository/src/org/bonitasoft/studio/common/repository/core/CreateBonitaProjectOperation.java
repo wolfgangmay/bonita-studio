@@ -31,6 +31,7 @@ import org.bonitasoft.studio.common.repository.AbstractRepository;
 import org.bonitasoft.studio.common.repository.BonitaProjectNature;
 import org.bonitasoft.studio.common.repository.core.maven.BonitaProjectBuilder;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -44,6 +45,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.ui.util.CoreUtility;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
 import org.eclipse.m2e.core.project.IMavenProjectImportResult;
@@ -53,7 +55,6 @@ import org.eclipse.m2e.core.ui.internal.UpdateMavenProjectJob;
 
 public class CreateBonitaProjectOperation implements IWorkspaceRunnable {
 
-    private static final String APP_MODULE = "app";
     private IProject project;
     private final IWorkspace workspace;
     private final ProjectMetadata metadata;
@@ -88,11 +89,13 @@ public class CreateBonitaProjectOperation implements IWorkspaceRunnable {
                 AbstractRepository.NULL_PROGRESS_MONITOR);
         createDefaultPomFile(project.getLocation().toFile().toPath(), metadata);
 
-        IFolder appModule = project.getFolder(APP_MODULE);
+        IFolder appModule = project.getFolder(BonitaProject.APP_MODULE);
         appModule.create(true, true, monitor);
         var pomFile = appModule.getFile(IMavenConstants.POM_FILE_NAME);
         var mavenProjectHelper = new MavenProjectHelper();
-        Model appModel = newProjectBuilder(metadata, new MavenAppModuleModelBuilder()).toMavenModel();
+        MavenAppModuleModelBuilder mavenProjectBuilder = new MavenAppModuleModelBuilder();
+        mavenProjectBuilder.setIncludeAdminApp(metadata.includeAdminApp());
+        Model appModel = newProjectBuilder(metadata, mavenProjectBuilder).toMavenModel();
         mavenProjectHelper.saveModel(pomFile, appModel, new NullProgressMonitor());
         IProject appProject = importAppModuleProject(pomFile, appModel.getArtifactId() + "-app", monitor);
         appProject.setDescription(new ProjectDescriptionBuilder()
@@ -101,6 +104,8 @@ public class CreateBonitaProjectOperation implements IWorkspaceRunnable {
                 .havingNatures(appProjectNatures())
                 .havingBuilders(appProjectBuilders())
                 .build(), monitor);
+        var generatedGroovySourcesFolder = appProject.getFolder(AppProjectConfiguration.GENERATED_GROOVY_SOURCES_FODLER);
+        CoreUtility.createFolder(generatedGroovySourcesFolder, true, true, monitor);
         new UpdateMavenProjectJob(new IProject[] { project }, false, false, false, true, true).run(monitor);
     }
 
@@ -112,8 +117,7 @@ public class CreateBonitaProjectOperation implements IWorkspaceRunnable {
         List<IMavenProjectImportResult> projects = MavenPlugin.getProjectConfigurationManager().importProjects(
                 List.of(projectInfo),
                 projectImportConfiguration, monitor);
-        IProject appProject = projects.get(0).getProject();
-        return appProject;
+        return projects.get(0).getProject();
     }
 
     private Collection<String> appProjectNatures() {
@@ -138,7 +142,7 @@ public class CreateBonitaProjectOperation implements IWorkspaceRunnable {
         mavenProjectBuilder.setArtifactId(artifactId);
         mavenProjectBuilder.setGroupId(metadata.getGroupId());
         String bonitaRuntimeVersion = metadata.getBonitaRuntimeVersion();
-        var minorVersionString = ProductVersion.toMinorVersionString(ProductVersion.minorVersion(bonitaRuntimeVersion));
+        var minorVersionString = bonitaRuntimeVersion == null ? null : ProductVersion.toMinorVersionString(ProductVersion.minorVersion(bonitaRuntimeVersion));
         if (!Objects.equals(minorVersionString, ProductVersion.minorVersion())) {
             bonitaRuntimeVersion = ProductVersion.BONITA_RUNTIME_VERSION;
         }

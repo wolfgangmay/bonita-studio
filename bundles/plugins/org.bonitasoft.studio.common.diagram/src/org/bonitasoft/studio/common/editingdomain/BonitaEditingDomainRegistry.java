@@ -20,14 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.bonitasoft.studio.connector.model.definition.ConnectorDefinitionPackage;
-import org.bonitasoft.studio.connector.model.implementation.ConnectorImplementationPackage;
-import org.bonitasoft.studio.model.connectorconfiguration.ConnectorConfigurationPackage;
-import org.bonitasoft.studio.model.expression.ExpressionPackage;
-import org.bonitasoft.studio.model.kpi.KpiPackage;
-import org.bonitasoft.studio.model.parameter.ParameterPackage;
-import org.bonitasoft.studio.model.process.ProcessPackage;
-import org.bonitasoft.studio.model.process.decision.DecisionPackage;
+import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinitionPackage;
+import org.bonitasoft.bpm.connector.model.implementation.ConnectorImplementationPackage;
+import org.bonitasoft.bpm.model.configuration.ConfigurationPackage;
+import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfigurationPackage;
+import org.bonitasoft.bpm.model.expression.ExpressionPackage;
+import org.bonitasoft.bpm.model.kpi.KpiPackage;
+import org.bonitasoft.bpm.model.parameter.ParameterPackage;
+import org.bonitasoft.bpm.model.process.ProcessPackage;
+import org.bonitasoft.bpm.model.process.decision.DecisionPackage;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.EditingDomainManager;
 import org.eclipse.gmf.runtime.notation.NotationPackage;
@@ -36,6 +37,7 @@ public final class BonitaEditingDomainRegistry implements TransactionalEditingDo
 
     static {
         List.of(ProcessPackage.eINSTANCE,
+        		ConfigurationPackage.eINSTANCE,
                 ConnectorDefinitionPackage.eINSTANCE,
                 ExpressionPackage.eINSTANCE,
                 ParameterPackage.eINSTANCE,
@@ -46,7 +48,7 @@ public final class BonitaEditingDomainRegistry implements TransactionalEditingDo
                 NotationPackage.eINSTANCE);
     }
 
-    public static final  BonitaEditingDomainRegistry INSTANCE = new BonitaEditingDomainRegistry();
+    public static final BonitaEditingDomainRegistry INSTANCE = new BonitaEditingDomainRegistry();
 
     private final Map<String, TransactionalEditingDomain> domains = new HashMap<>();
 
@@ -108,7 +110,7 @@ public final class BonitaEditingDomainRegistry implements TransactionalEditingDo
     }
 
     public synchronized void removeAll() {
-        final Set<String> registeredIds = new HashSet<String>(domains.keySet());
+        final Set<String> registeredIds = new HashSet<>(domains.keySet());
         for (final String registeredId : registeredIds) {
             EditingDomainManager.getInstance().assertDynamicallyRegistered(registeredId);
 

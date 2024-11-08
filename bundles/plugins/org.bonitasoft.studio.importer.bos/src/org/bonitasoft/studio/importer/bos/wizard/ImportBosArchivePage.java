@@ -31,6 +31,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.Strings;
 import org.bonitasoft.studio.common.databinding.validator.EmptyInputValidator;
@@ -568,8 +569,21 @@ public class ImportBosArchivePage implements ControlSupplier, Supplier<ImportArc
                         selectedFile.getName(),
                         bosArchive.getBonitaVersion()));
         Model mavenProject = bosArchive.getMavenProject();
+        var rootProject = bosArchive.getRootMavenModel();
         ProjectMetadata metadata = mavenProject != null ? ProjectMetadata.read(mavenProject)
                 : ProjectMetadata.fromBosFileName(selectedFile.getName());
+        metadata.setIncludeAdminApp(true);
+        if(rootProject != null) {
+            var bonitaRuntimeVersion = ProjectMetadata.getBonitaRuntimeVersion(rootProject);
+            if(bonitaRuntimeVersion != null) {
+                metadata.setBonitaRuntimeVersion(bonitaRuntimeVersion);
+                // Do not include admin app if bos file version is greater or equal to 9.0.0
+                if(new ComparableVersion(bonitaRuntimeVersion).compareTo(new ComparableVersion("9.0.0")) >= 0){
+                    metadata.setIncludeAdminApp(false);
+                }
+            }
+        }
+    
         List<String> existingProjectNames = repositoryAccessor.getAllRepositories().stream()
                 .map(r -> Adapters.adapt(r, BonitaProject.class))
                 .map(BonitaProject::getId)

@@ -27,10 +27,9 @@ import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.http.HttpClientFactory;
 import org.bonitasoft.studio.engine.operation.GetApiSessionOperation;
+import org.bonitasoft.studio.maven.ExtensionRepositoryStore;
 import org.bonitasoft.studio.maven.ImportProjectException;
 import org.bonitasoft.studio.maven.operation.DeployCustomPageProjectOperation;
-import org.bonitasoft.studio.pics.Pics;
-import org.bonitasoft.studio.rest.api.extension.RestAPIExtensionActivator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -39,7 +38,7 @@ public class DependencyThemeFileStore extends ThemeFileStore {
 
     private Theme theme;
 
-    public DependencyThemeFileStore(Theme theme, ThemeRepositoryStore parentStore) {
+    public DependencyThemeFileStore(Theme theme, ExtensionRepositoryStore parentStore) {
         super(new File(theme.getArtifact().getFile()).getName(), parentStore);
         this.theme = theme;
     }
@@ -62,6 +61,11 @@ public class DependencyThemeFileStore extends ThemeFileStore {
     @Override
     public String getName() {
         return getArchiveFile().getName();
+    }
+    
+    @Override
+    public String getContentType() {
+        return ExtensionRepositoryStore.THEME_CONTENT_TYPE;
     }
 
     @Override
@@ -102,5 +106,10 @@ public class DependencyThemeFileStore extends ThemeFileStore {
             return (X) theme;
         }
         return super.getAdapter(adapter);
+    }
+    
+    @Override
+    public boolean isInClasspath() {
+    	return true;
     }
 }
