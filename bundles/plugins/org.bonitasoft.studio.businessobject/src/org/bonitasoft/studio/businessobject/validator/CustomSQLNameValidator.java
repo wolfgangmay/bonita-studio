@@ -14,21 +14,16 @@
  */
 package org.bonitasoft.studio.businessobject.validator;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.bonitasoft.engine.bdm.validator.SQLNameValidator;
+import org.bonitasoft.engine.bdm.validator.SQLNameValidator.Grammar;
 import org.bonitasoft.studio.businessobject.i18n.Messages;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.osgi.util.NLS;
 
 public class CustomSQLNameValidator {
-
-    private static final Set<String> VENDOR_SPECIFIC_KEYWORDS = new HashSet<>();
-    static {
-        VENDOR_SPECIFIC_KEYWORDS.add("index");
-    }
 
     private SQLNameValidator engineValidator;
 
@@ -37,15 +32,22 @@ public class CustomSQLNameValidator {
     }
 
     public IStatus validate(String name) {
-        IStatus result = engineValidator.isValid(name)
-                ? ValidationStatus.ok()
-                : engineValidator.isSQLKeyword(name)
-                        ? ValidationStatus.error(NLS.bind(Messages.reservedKeyWord, name))
-                        : ValidationStatus.error(NLS.bind(Messages.invalidSQLIdentifier, name));
-        if (result.isOK() && VENDOR_SPECIFIC_KEYWORDS.contains(name.toLowerCase())) {
-            return ValidationStatus.warning(NLS.bind(Messages.discouragedUsageOfKnownReservedKeyword, name));
+        if (engineValidator.isValid(name)) {
+            // at least, we can make it work, but still check for warnings
+            var discouragingGrammars = engineValidator.isKeywordDiscouragedBy(name);
+            if (discouragingGrammars.isEmpty()) {
+                return ValidationStatus.ok();
+            } else {
+                String gramList = discouragingGrammars.stream().map(Grammar::toString)
+                        .collect(Collectors.joining(", "));
+                String msg = NLS.bind(Messages.discouragedUsageOfKnownReservedKeyword, name, gramList);
+                return ValidationStatus.warning(msg);
+            }
+        } else if (engineValidator.isSQLKeyword(name)) {
+            return ValidationStatus.error(NLS.bind(Messages.reservedKeyWord, name));
+        } else {
+            return ValidationStatus.error(NLS.bind(Messages.invalidSQLIdentifier, name));
         }
-        return result;
     }
 
 }

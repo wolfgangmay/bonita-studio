@@ -20,22 +20,30 @@ import org.eclipse.core.runtime.IStatus;
 import org.junit.Test;
 
 public class CustomSQLNameValidatorTest {
-    
+
     @Test
     public void should_validate_db_specific_keyword() throws Exception {
         CustomSQLNameValidator customSQLNameValidator = new CustomSQLNameValidator(20);
-        
+
         IStatus status = customSQLNameValidator.validate("Index");
-        
+
+        assertThat(status).isWarning();
+
+        status = customSQLNameValidator.validate("offset");
+
         assertThat(status).isWarning();
     }
-    
+
     @Test
     public void should_validate_sql_keyword() throws Exception {
         CustomSQLNameValidator customSQLNameValidator = new CustomSQLNameValidator(20);
-        
+
         IStatus status = customSQLNameValidator.validate("Table");
-        
+
+        assertThat(status).isError();
+
+        status = customSQLNameValidator.validate("limit");
+
         assertThat(status).isError();
     }
 
