@@ -111,7 +111,7 @@
         </location>
         <location includeDependencyDepth="none" includeDependencyScopes="compile,runtime,system" includeSource="true" missingManifest="generate" type="Maven">
                 <feature id="org.bonitasoft.project.report.model.feature" label="Bonita Project Report Model Feature" provider-name="Bonitasoft S.A" version="1.0.0">
-                    <description url="https://github.com/bonitasoft/bonita-process-model">
+                    <description url="https://github.com/bonitasoft/bonita-project-maven-plugin">
       Bonita Project Report Model Feature
    </description>
                     <copyright url="https://www.bonitasoft.com/">
@@ -168,8 +168,8 @@ DynamicImport-Package: *
             </dependencies>
         </location>
         <location includeDependencyDepth="none" includeDependencyScopes="compile,runtime,system" includeSource="true" missingManifest="generate" type="Maven">
-		        <feature id="org.bonitasoft.artifacts.model.feature" label="Bonita Artifacts Models Feature" provider-name="Bonitasoft S.A" version="1.0.0">
-			        <description url="https://github.com/bonitasoft/bonita-process-model">
+		        <feature id="org.bonitasoft.artifacts.model.feature" label="Bonita Artifacts Models Feature" provider-name="Bonitasoft S.A" version="1.0.1">
+			        <description url="https://github.com/bonitasoft/bonita-artifacts-model">
       Bonita Artifacts Model Feature
    </description>
 			        <copyright url="https://www.bonitasoft.com/">
@@ -219,55 +219,55 @@ DynamicImport-Package: *
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-business-archive</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-common-artifacts-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-form-mapping-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-process-definition-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-business-object-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-bdm-access-control-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-profile-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-organization-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
 				        <groupId>org.bonitasoft.engine</groupId>
 				        <artifactId>bonita-application-model</artifactId>
-				        <version>1.0.0</version>
+				        <version>1.0.1</version>
 				        <type>jar</type>
 			        </dependency>
 			        <dependency>
