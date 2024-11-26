@@ -85,7 +85,7 @@ location Groovy "https://groovy.jfrog.io/artifactory/plugins-release/e4.30" {
 	org.codehaus.groovy30.feature.feature.group
 	org.codehaus.groovy.eclipse.feature.feature.group
 }
-location BonitasoftBPM "mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.0:zip" {
+location BonitasoftBPM "mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.1:zip" {
 	org.bonitasoft.bonita2bpmn.feature.feature.group
     org.bonitasoft.bpm.connector.feature.feature.group
     org.bonitasoft.bpm.definitions.feature.feature.group
