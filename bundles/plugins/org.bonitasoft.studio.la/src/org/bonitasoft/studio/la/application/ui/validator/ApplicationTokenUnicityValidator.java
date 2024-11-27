@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.databinding.validator.UniqueValidator;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
@@ -76,7 +76,8 @@ public class ApplicationTokenUnicityValidator extends UniqueValidator {
     }
 
     public List<String> getTokenList() {
-        final List<String> allTokens = repositoryAccessor.getRepositoryStore(ApplicationRepositoryStore.class).getChildren()
+        final List<String> allTokens = repositoryAccessor.getRepositoryStore(ApplicationRepositoryStore.class)
+                .getChildren()
                 .stream()
                 .filter(fStore -> !Objects.equals(fStore.getName(), filename))
                 .map(fStore -> {
@@ -89,20 +90,20 @@ public class ApplicationTokenUnicityValidator extends UniqueValidator {
                     }
                 })
                 .filter(Objects::nonNull)
-                .flatMap(container -> container.getApplications().stream())
-                .map(ApplicationNode::getToken)
+                .flatMap(container -> container.getAllApplications().stream())
+                .map(AbstractApplicationNode::getToken)
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
-        applicationWorkingCopy.getApplications().stream()
-                .map(ApplicationNode::getToken)
+        applicationWorkingCopy.getAllApplications().stream()
+                .map(AbstractApplicationNode::getToken)
                 .map(String::toLowerCase)
                 .forEach(allTokens::add);
 
-        applicationWorkingCopy.getApplications().stream()
+        applicationWorkingCopy.getAllApplications().stream()
                 .filter(application -> Objects.equals(
                         currentTokenObservable.orElse(new WritableValue<>("", String.class)).getValue().toLowerCase(),
                         application.getToken().toLowerCase()))
-                .map(ApplicationNode::getToken)
+                .map(AbstractApplicationNode::getToken)
                 .map(String::toLowerCase)
                 .findFirst().ifPresent(allTokens::remove);
         return allTokens;

@@ -19,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Map;
 
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 
@@ -26,17 +27,29 @@ public class RedirectURLBuilder {
 
     private static final String BASE_URL = "https://www.bonitasoft.com/bos_redirect.php?bos_redirect_id=";
     private static final String LOCATION_HEADER = "Location";
-
+    
     public static String create(String redirectId) {
-        return BASE_URL + redirectId + "&"
-                + bosMajorVersion() + "&"
-                + bosMinorVersion() + "&"
-                + bosProduct();
+        return create(redirectId, Map.of());
     }
 
     public static URI createURI(String redirectId) {
+        return createURI(redirectId, Map.of());
+    }
+
+    public static String create(String redirectId, Map<String,String> extraUrlParameters) {
+        var url = BASE_URL + redirectId + "&"
+                + bosMajorVersion() + "&"
+                + bosMinorVersion() + "&"
+                + bosProduct();
+        for(var param : extraUrlParameters.entrySet()) {
+            url = url + "&" + param.getKey() + "=" + param.getValue();
+        }
+        return url;
+    }
+
+    public static URI createURI(String redirectId, Map<String,String> extraUrlParameters) {
         try {
-            return new URI(create(redirectId));
+            return new URI(create(redirectId, extraUrlParameters));
         } catch (URISyntaxException e) {
             BonitaStudioLog.error(e);
             return null;

@@ -201,7 +201,7 @@ public class BonitaStudioLog {
     private static void logWarning(final Logger logger, final String message) {
         Optional.ofNullable(logger).ifPresentOrElse(
                 l -> l.warn(message),
-                () -> System.out.println(message));
+                () -> System.err.println(message));
     }
 
     /**

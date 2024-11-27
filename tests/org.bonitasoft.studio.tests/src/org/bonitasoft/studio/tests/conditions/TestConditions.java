@@ -33,6 +33,7 @@ import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDefinitionNotFoundException;
 import org.bonitasoft.engine.bpm.process.ProcessExecutionException;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
@@ -85,7 +86,16 @@ public class TestConditions {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws SearchException {
+        var processApi = BOSEngineManager.getInstance().getProcessAPI(session);
+        processApi.searchProcessDeploymentInfos(new SearchOptionsBuilder(0, Integer.MAX_VALUE).done())
+        .getResult().stream().forEach( info -> {
+            try {
+                processApi.deleteArchivedProcessInstances(info.getProcessId(), 0, Integer.MAX_VALUE);
+            } catch (DeletionException e) {
+                BonitaStudioLog.warning("Failed to delete archived process instances after test: "+ e.getMessage(), TestConditions.class);
+            }
+        });
         BOSEngineManager.getInstance().logoutDefaultTenant(session);
     }
 

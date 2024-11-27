@@ -36,5 +36,7 @@ public class ModelVersion {
     public static final String CURRENT_BDM_ACCESS_CONTROL_NAMESPACE = "http://documentation.bonitasoft.com/bdm-access-control-xml-schema/1.0";
 
     // Application descriptor
-    public static final String CURRENT_APPLICATION_DESCRIPTOR_NAMESPACE = "http://documentation.bonitasoft.com/application-xml-schema/1.0";
+    public static final String APPLICATION_DESCRIPTOR_NAMESPACE_PREFIX = "http://documentation.bonitasoft.com/application-xml-schema/";
+    public static final String CURRENT_APPLICATION_DESCRIPTOR_NAMESPACE = APPLICATION_DESCRIPTOR_NAMESPACE_PREFIX
+            + "1.1";
 }

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.business.application.Application;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.business.application.xml.ApplicationMenuNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
@@ -120,7 +120,8 @@ public class ApplicationDescriptorIT {
         List<ApplicationNode> applications = applicationFile.getContent().getApplications();
         assertThat(applications).hasSize(2);
         assertThat(applications).extracting("token").containsExactly("tokenA", "tokenB_bis");
-        ApplicationNode applicationNodeB = applications.stream().filter(app -> Objects.equals("tokenB_bis", app.getToken()))
+        ApplicationNode applicationNodeB = applications.stream()
+                .filter(app -> Objects.equals("tokenB_bis", app.getToken()))
                 .findFirst().get();
         ApplicationNode applicationNodeA = applications.stream().filter(app -> Objects.equals("tokenA", app.getToken()))
                 .findFirst().get();
@@ -140,8 +141,9 @@ public class ApplicationDescriptorIT {
 
         List<ApplicationMenuNode> submenus = applicationNodeA.getApplicationMenus().get(0).getApplicationMenus();
         assertThat(submenus).hasSize(2);
-        assertThat(submenus.stream().filter(menu -> Objects.equals("subMenuARenamed", menu.getDisplayName())).findFirst()
-                .get().getApplicationPage()).isEqualTo("tokenB");
+        assertThat(
+                submenus.stream().filter(menu -> Objects.equals("subMenuARenamed", menu.getDisplayName())).findFirst()
+                        .get().getApplicationPage()).isEqualTo("tokenB");
         assertThat(submenus.stream().filter(menu -> Objects.equals("subMenuB", menu.getDisplayName())).findFirst().get()
                 .getApplicationPage()).isEqualTo("tokenC");
         assertThat(applicationNodeA.getApplicationPages()).hasSize(2);
@@ -157,7 +159,8 @@ public class ApplicationDescriptorIT {
     @Test
     public void should_add_an_application_descriptor_from_an_other_one() throws Exception {
         final BotApplicationWorkbenchWindow workBenchBot = new BotApplicationWorkbenchWindow(bot);
-        ApplicationRepositoryStore repositoryStore = repositoryAccessor.getRepositoryStore(ApplicationRepositoryStore.class);
+        ApplicationRepositoryStore repositoryStore = repositoryAccessor
+                .getRepositoryStore(ApplicationRepositoryStore.class);
 
         workBenchBot.newApplicationContainer()
                 .save()
@@ -173,7 +176,8 @@ public class ApplicationDescriptorIT {
                 .create()
                 .save();
 
-        ApplicationNodeContainer appNodeContainer = repositoryStore.getChild("ApplicationAddFromIntegrationTest.xml", false)
+        ApplicationNodeContainer appNodeContainer = repositoryStore
+                .getChild("ApplicationAddFromIntegrationTest.xml", false)
                 .getContent();
         assertThat(appNodeContainer.getApplications()).hasSize(2);
         List<String> tokens = appNodeContainer.getApplications().stream().map(ApplicationNode::getToken)
@@ -199,8 +203,8 @@ public class ApplicationDescriptorIT {
                 .deploy();
 
         ApplicationAPI applicationAPI = engineManager.getApplicationAPI(session);
-        final Stream<Application> deployedAppsStream = applicationAPI
-                .searchApplications(new SearchOptionsBuilder(0, 10).done()).getResult().stream();
-        assertThat(deployedAppsStream).extracting(Application::getToken).contains("appToDeploy");
+        final Stream<IApplication> deployedAppsStream = applicationAPI
+                .searchIApplications(new SearchOptionsBuilder(0, 10).done()).getResult().stream();
+        assertThat(deployedAppsStream).extracting(IApplication::getToken).contains("appToDeploy");
     }
 }

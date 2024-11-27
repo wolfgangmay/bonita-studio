@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
@@ -99,7 +99,7 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
     public Control createControl(Composite parent, IWizardContainer container, DataBindingContext ctx) {
         final Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(GridLayoutFactory.fillDefaults().margins(5, 5).create());
-        composite.setLayoutData(GridDataFactory.fillDefaults().create());;
+        composite.setLayoutData(GridDataFactory.fillDefaults().create());
 
         createRadioButtons(composite);
         createStackComposite(composite, ctx, container);
@@ -121,14 +121,14 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
                 UpdateStrategyFactory.neverUpdateValueStrategy().create(),
                 UpdateStrategyFactory.updateValueStrategy()
                         .withConverter(IConverter.<AddApplicationMode, Composite> create(mode -> {
-                                    switch (mode) {
-                                        case FROM:
-                                            return addFromComposite;
-                                        case NEW:
-                                        default:
-                                            return addNewComposite;
-                                    }
-                                }))
+                            switch (mode) {
+                                case FROM:
+                                    return addFromComposite;
+                                case NEW:
+                                default:
+                                    return addNewComposite;
+                            }
+                        }))
                         .create());
         ctx.updateModels();
     }
@@ -147,7 +147,8 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
                 .withTargetToModelStrategy(updateValueStrategy().withValidator(ApplicationDescriptorValidators
                         .addApplicationTokenValidator(
                                 new ApplicationTokenUnicityValidator.Builder(repositoryAccessor,
-                                        applicationFormPage.getWorkingCopy(), applicationFormPage.getEditorInput().getName())
+                                        applicationFormPage.getWorkingCopy(),
+                                        applicationFormPage.getEditorInput().getName())
                                                 .create(),
                                 AddApplicationMode.FROM, addModeObservable)))
                 .inContext(ctx)
@@ -194,7 +195,7 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
                 .getChildren().stream()
                 .forEach(fileStore -> {
                     try {
-                        fileStore.getContent().getApplications().stream()
+                        fileStore.getContent().getAllApplications().stream()
                                 .map(applicationNode -> new ApplicationDescriptorWithFileName(applicationNode,
                                         fileStore.getName()))
                                 .forEach(applicationDescriptorList::add);
@@ -224,7 +225,8 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
                 .withTargetToModelStrategy(updateValueStrategy().withValidator(ApplicationDescriptorValidators
                         .addApplicationTokenValidator(
                                 new ApplicationTokenUnicityValidator.Builder(repositoryAccessor,
-                                        applicationFormPage.getWorkingCopy(), applicationFormPage.getEditorInput().getName())
+                                        applicationFormPage.getWorkingCopy(),
+                                        applicationFormPage.getEditorInput().getName())
                                                 .create(),
                                 AddApplicationMode.NEW, addModeObservable)))
                 .createIn(addNewComposite);
@@ -291,7 +293,7 @@ public class AddApplicationDescriptorPage implements ControlSupplier {
         return addModeObservable.getValue().equals(AddApplicationMode.NEW);
     }
 
-    public ApplicationNode getSelection() {
+    public AbstractApplicationNode getSelection() {
         return ((ApplicationDescriptorWithFileName) observeSingleSelection.getValue()).getApplicationNode();
     }
 

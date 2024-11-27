@@ -19,9 +19,9 @@ import static java.util.Objects.requireNonNull;
 import java.lang.reflect.InvocationTargetException;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.IApplication;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.search.SearchOptions;
@@ -36,11 +36,11 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 public class DeleteApplicationRunnable implements IRunnableWithProgress {
 
     private final ApplicationAPI applicationAPI;
-    private final ApplicationNode applicationNode;
+    private final AbstractApplicationNode applicationNode;
     private IStatus status;
     private boolean ignoreErrors = false;
 
-    public DeleteApplicationRunnable(ApplicationAPI applicationAPI, ApplicationNode applicationNode) {
+    public DeleteApplicationRunnable(ApplicationAPI applicationAPI, AbstractApplicationNode applicationNode) {
         this.applicationAPI = requireNonNull(applicationAPI);
         this.applicationNode = requireNonNull(applicationNode);
     }
@@ -65,11 +65,11 @@ public class DeleteApplicationRunnable implements IRunnableWithProgress {
         return new SearchOptionsBuilder(0, 1).filter(ApplicationSearchDescriptor.TOKEN, token).done();
     }
 
-    private IStatus delete(ApplicationNode applicationNode) {
+    private IStatus delete(AbstractApplicationNode applicationNode) {
         try {
-            final long applicationId = applicationAPI.searchApplications(withToken(applicationNode.getToken()))
+            final long applicationId = applicationAPI.searchIApplications(withToken(applicationNode.getToken()))
                     .getResult().stream()
-                    .mapToLong(Application::getId)
+                    .mapToLong(IApplication::getId)
                     .findFirst()
                     .orElseThrow(ApplicationDescriptorNotFoundException::new);
             applicationAPI.deleteApplication(applicationId);

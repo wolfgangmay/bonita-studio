@@ -34,6 +34,7 @@ import org.bonitasoft.engine.api.ImportStatus;
 import org.bonitasoft.engine.api.result.StatusCode;
 import org.bonitasoft.engine.business.application.ApplicationImportPolicy;
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.engine.business.application.xml.ApplicationPageNode;
@@ -105,7 +106,7 @@ public class DeployApplicationDescriptorOperation implements IRunnableWithProgre
         Stream.Builder<IRunnableWithStatus> deployables = Stream.builder();
         if (pageDependencyResolver != null) {
             Stream.Builder<String> builder = Stream.builder();
-            //Application Pages
+            //Application Pages (only for legacy applications)
             applicationNodeContainer
                     .getApplications()
                     .stream()
@@ -113,7 +114,7 @@ public class DeployApplicationDescriptorOperation implements IRunnableWithProgre
                     .flatMap(Collection::stream)
                     .map(ApplicationPageNode::getCustomPage)
                     .forEach(builder::add);
-            //Layout
+            //Layout (only for legacy applications)
             applicationNodeContainer
                     .getApplications()
                     .stream()
@@ -144,8 +145,8 @@ public class DeployApplicationDescriptorOperation implements IRunnableWithProgre
                         .flatMap(s -> s.getErrors().stream()
                                 .map(errorToStatus(displayNameForToken(s.getName(), applicationNodeContainer))))
                         .forEach(mStatus::add);
-                applicationNodeContainer.getApplications().stream()
-                        .map(ApplicationNode::getToken)
+                applicationNodeContainer.getAllApplications().stream()
+                        .map(AbstractApplicationNode::getToken)
                         .map(name -> new Status(IStatus.OK, LivingApplicationPlugin.PLUGIN_ID,
                                 StatusCode.LIVING_APP_DEPLOYMENT.ordinal(),
                                 name, null))
@@ -163,9 +164,9 @@ public class DeployApplicationDescriptorOperation implements IRunnableWithProgre
     }
 
     private String displayNameForToken(String token, ApplicationNodeContainer applicationNodeContainer) {
-        return applicationNodeContainer.getApplications().stream()
+        return applicationNodeContainer.getAllApplications().stream()
                 .filter(node -> Objects.equals(token, node.getToken()))
-                .map(ApplicationNode::getDisplayName)
+                .map(AbstractApplicationNode::getDisplayName)
                 .findFirst()
                 .orElse(token);
     }

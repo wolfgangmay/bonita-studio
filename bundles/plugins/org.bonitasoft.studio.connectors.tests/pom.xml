@@ -7,10 +7,24 @@
     <parent>
         <groupId>org.bonitasoft.studio.bundles</groupId>
         <artifactId>plugins</artifactId>
-        <version>10.1.3-SNAPSHOT</version>
+        <version>10.2.1-SNAPSHOT</version>
     </parent>
     <groupId>org.bonitasoft.studio.bundles.plugins</groupId>
     <artifactId>org.bonitasoft.studio.connectors.tests</artifactId>
     <packaging>eclipse-test-plugin</packaging>
+
+   <build>
+        <plugins>
+             <plugin>
+                    <groupId>org.eclipse.tycho</groupId>
+                    <artifactId>tycho-surefire-plugin</artifactId>
+                    <configuration>
+                        <application>org.eclipse.ui.ide.workbench</application>
+                        <useUIHarness>true</useUIHarness>
+                        <useUIThread>true</useUIThread>
+                    </configuration>
+                </plugin>
+        </plugins>
+    </build>
 
 </project>

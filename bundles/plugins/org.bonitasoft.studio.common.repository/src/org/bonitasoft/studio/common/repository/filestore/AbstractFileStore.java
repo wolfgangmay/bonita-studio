@@ -552,6 +552,11 @@ public abstract class AbstractFileStore<T>
         return ValidationStatus.ok();
     }
 
+    /**
+     * @deprecated Just update the existing report.
+     * @param report report to set
+     */
+    @Deprecated
     public void setMigrationReport(MigrationReport report) {
         this.report = report;
     }

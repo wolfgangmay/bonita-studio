@@ -236,6 +236,7 @@ public class ProjectCompositionIT {
         var localDepStore = repositoryAccessor.getCurrentRepository().orElseThrow().getLocalDependencyStore();
         assertThat(localDepStore
                 .dependencyPath(dependency("org.bonitasoft.connectors", "bonita-connector-email", "1.1.0"))).exists();
+        assertThat(connectorDefinitionRegistry.find("email", "1.0.0")).isPresent();
 
         var projectDetailsBot = worbenchBot.openProjectOverview().toExtensionView();
         projectDetailsBot
@@ -270,6 +271,7 @@ public class ProjectCompositionIT {
         bot.waitUntil(Conditions.shellIsActive(Messages.updateProcessesTitle), 30000);
         bot.button(IDialogConstants.PROCEED_LABEL).click();
         bot.waitWhile(Conditions.shellIsActive(JFaceResources.getString("ProgressMonitorDialog.title")), 15000);
+        worbenchBot.waitEndOfBuilds(15000);
         bot.waitUntil(new AssertionCondition() {
 
             @Override

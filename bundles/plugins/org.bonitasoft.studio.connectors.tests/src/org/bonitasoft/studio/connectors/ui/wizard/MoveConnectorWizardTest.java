@@ -24,20 +24,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import org.bonitasoft.studio.connectors.ui.wizard.page.MoveConnectorWizardPage;
-import org.bonitasoft.studio.swt.rules.RealmWithDisplay;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MoveConnectorWizardTest {
-
-    @Rule
-    public RealmWithDisplay realm = new RealmWithDisplay();
+class MoveConnectorWizardTest {
 
     @Test
-    public void should_add_a_MoveConnectorWizardPage() throws Exception {
+    void should_add_a_MoveConnectorWizardPage() throws Exception {
         final MoveConnectorWizard wizard = new MoveConnectorWizard(mock(IOperationHistory.class), mock(TransactionalEditingDomain.class),
                 newArrayList(aConnector().in(aPool()).build()));
 
@@ -47,7 +42,7 @@ public class MoveConnectorWizardTest {
     }
 
     @Test
-    public void should_execute_ChangeConnectorContainerCommand_on_finish() throws Exception {
+    void should_execute_ChangeConnectorContainerCommand_on_finish() throws Exception {
         final IOperationHistory operationHistory = mock(IOperationHistory.class);
         final MoveConnectorWizard wizard = new MoveConnectorWizard(operationHistory, mock(InternalTransactionalEditingDomain.class),
                 newArrayList(aConnector().in(aPool()).build()));

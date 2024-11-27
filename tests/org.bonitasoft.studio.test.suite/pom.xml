@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.bonitasoft.studio.tests</groupId>
         <artifactId>tests</artifactId>
-        <version>10.1.3-SNAPSHOT</version>
+        <version>10.2.1-SNAPSHOT</version>
     </parent>
     <groupId>org.bonitasoft.studio.tests</groupId>
     <artifactId>org.bonitasoft.studio.test.suite</artifactId>
@@ -15,7 +15,7 @@
         <additionalArgs>-Dbonita.noregister=1 -Dbonita.studio.skipReleaseNote -Declipse.log.level=${tests.log.level}</additionalArgs>
         <target.test.dir>${test.workspace.dir}/community/junit/lé test</target.test.dir>
         <testMavenUserSettingsFile>${project.basedir}/tests-settings.xml</testMavenUserSettingsFile>
-        <m2eSettingsCustomizationFile>${project.build.directory}/classes/m2e_settings_customization.ini</m2eSettingsCustomizationFile>
+        <prefSettingsCustomizationFile>${project.build.directory}/classes/pref_settings_customization.ini</prefSettingsCustomizationFile>
     </properties>
 
     <build>
@@ -68,6 +68,7 @@
                             </requirement>
                         </extraRequirements>
                     </dependency-resolution>
+                    <targetDefinitionIncludeSource>ignore</targetDefinitionIncludeSource>
                 </configuration>
             </plugin>
             <plugin>
@@ -83,7 +84,7 @@
                     </includes>
                     
                     <argLine>${jvm.modules.arg} ${javaOPTS} ${jacocoAgentArgs} ${additionalArgs}</argLine>
-                    <appArgLine>-pluginCustomization ${m2eSettingsCustomizationFile} -nl en -clean</appArgLine>
+                    <appArgLine>-lifeCycleURI bundleclass://org.bonitasoft.studio.tests/org.bonitasoft.studio.tests.TestLifeCycleManager -pluginCustomization ${prefSettingsCustomizationFile} -nl en -clean</appArgLine>
                     <osgiDataDirectory>${target.test.dir}</osgiDataDirectory>
                 </configuration>
             </plugin>
