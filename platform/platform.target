@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><target sequenceNumber="1706176764" name="platform">
+<?xml version="1.0" encoding="UTF-8"?><target sequenceNumber="1732634931" name="platform">
   <locations>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
       <repository location="https://update-site.bonitasoft.com/p2/4.30"/>
@@ -71,28 +71,18 @@
       <unit id="org.apache.commons.commons-io" version="2.15.1"/>
     </location>
     <location includeConfigurePhase="true" includeSource="true" includeMode="planner" type="InstallableUnit" includeAllPlatforms="false">
-      <unit id="org.bonitasoft.bonita2bpmn.feature.feature.group" version="8.0.0"/>
-      <unit id="org.bonitasoft.bpm.connector.feature.feature.group" version="8.0.0"/>
-      <unit id="org.bonitasoft.bpm.definitions.feature.feature.group" version="8.0.0"/>
-      <unit id="org.bonitasoft.bpm.model.feature.feature.group" version="8.0.0"/>
-      <unit id="org.bonitasoft.bpm.tests.feature.feature.group" version="8.0.0"/>
+      <unit id="org.bonitasoft.bonita2bpmn.feature.feature.group" version="8.0.1"/>
+      <unit id="org.bonitasoft.bpm.connector.feature.feature.group" version="8.0.1"/>
+      <unit id="org.bonitasoft.bpm.definitions.feature.feature.group" version="8.0.1"/>
+      <unit id="org.bonitasoft.bpm.model.feature.feature.group" version="8.0.1"/>
+      <unit id="org.bonitasoft.bpm.tests.feature.feature.group" version="8.0.1"/>
       <unit id="com.fasterxml.jackson.feature.feature.group" version="2.15.2.qualifier"/>
-      <unit id="org.bonitasoft.artifacts.model.feature.feature.group" version="1.0.0"/>
-      <unit id="org.bonitasoft.bonita2bar.feature.feature.group" version="8.0.0"/>
-      <repository location="mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.0:zip" id="BonitasoftBPM"/>
+      <unit id="org.bonitasoft.artifacts.model.feature.feature.group" version="1.0.1"/>
+      <unit id="org.bonitasoft.bonita2bar.feature.feature.group" version="8.0.1"/>
+      <repository location="mvn:org.bonitasoft.bpm:org.bonitasoft.bpm.eclipse-repository:8.0.1:zip" id="BonitasoftBPM"/>
     </location>
     <location missingManifest="generate" includeDependencyScopes="compile,runtime,system" includeSource="true" includeDependencyDepth="none" label="BonitaArtifactsModels" type="Maven">
-      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.0.0">
-        <description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-        <copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-        <license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-      </feature>
+      <feature provider-name="Bonitasoft S.A" label="Extra Bonita Artifacts Models required by Studio but not in BonitasoftBPM" id="org.bonitasoft.artifacts.model.studio.feature.feature.group" version="1.0.1"/>
       <dependencies>
         <dependency>
           <groupId>com.sun.activation</groupId>
@@ -115,31 +105,31 @@
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-application-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-bdm-access-control-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-business-object-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-organization-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
           <groupId>org.bonitasoft.engine</groupId>
           <artifactId>bonita-profile-model</artifactId>
-          <version>1.0.0</version>
+          <version>1.0.1</version>
           <type>jar</type>
         </dependency>
         <dependency>
@@ -157,17 +147,7 @@
       </repositories>
     </location>
     <location missingManifest="generate" includeDependencyScopes="compile,runtime,system" includeSource="true" includeDependencyDepth="none" label="BonitaProjectReportModel" type="Maven">
-      <feature provider-name="Bonitasoft S.A" label="Bonita Project Report Model Feature" id="org.bonitasoft.project.report.model.feature" version="1.0.0">
-        <description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-        <copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-        <license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-      </feature>
+      <feature provider-name="Bonitasoft S.A" label="Bonita Project Report Model Feature" id="org.bonitasoft.project.report.model.feature" version="1.0.0"/>
       <dependencies>
         <dependency>
           <groupId>org.bonitasoft.maven</groupId>
