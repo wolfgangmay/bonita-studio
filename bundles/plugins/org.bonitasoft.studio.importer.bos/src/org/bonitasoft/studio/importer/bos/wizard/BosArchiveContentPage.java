@@ -104,14 +104,12 @@ public class BosArchiveContentPage implements ControlSupplier {
     public void pageChanged(PageChangedEvent event) {
         IWizardPage selectedPage = (IWizardPage) event.getSelectedPage();
         if (Messages.bosArchiveContentTitle.equals(selectedPage.getTitle())) {
-            Display.getDefault().asyncExec(() -> {
-                archiveModel = archiveModelSupplier.get();
-                if (archiveModel != null) {
-                    importActionSelector.setArchiveModel(archiveModel);
-                    viewer.setInput(archiveModel);
-                    updateTree();
-                }
-            });
+            archiveModel = archiveModelSupplier.get();
+            if (archiveModel != null) {
+                importActionSelector.setArchiveModel(archiveModel);
+                viewer.setInput(archiveModel);
+                Display.getDefault().asyncExec(this::updateTree);
+            }
         }
 
     }
