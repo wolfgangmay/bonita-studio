@@ -32,7 +32,6 @@ import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
 import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.migration.BonitaProjectMigrator;
 import org.bonitasoft.studio.common.repository.core.migration.report.MigrationReport;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -67,20 +66,29 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
                 || !projectRoot.toPath().resolve(".project").toFile().exists()) {
             throw new CoreException(Status.error(String.format("No project found at %s", projectRoot)));
         }
-        report = new BonitaProjectMigrator(projectRoot.toPath()).run(monitor);
-        var generatedSourcesFolder = projectRoot.toPath().resolve("app").resolve(AppProjectConfiguration.GENERATED_GROOVY_SOURCES_FODLER);
-        if(!Files.exists(generatedSourcesFolder)) {
-        	try {
-				Files.createDirectories(generatedSourcesFolder);
-			} catch (IOException e) {
-				BonitaStudioLog.error(e);
-			}
+        // We check for an homonym project first. In this case, we do not need to migrate and migration steps will confuse the 2 projects.
+        String projectIdBeforeMigr = readProjectId();
+        if (projectIdBeforeMigr != null
+                && ResourcesPlugin.getWorkspace().getRoot().getProject(projectIdBeforeMigr).exists()) {
+            throw new CoreException(
+                    Status.error(String.format("A project with id %s already exists in the workspace.",
+                            projectIdBeforeMigr)));
         }
-        var appPomFile = projectRoot.toPath().resolve("app").resolve("pom.xml").toFile();
-        var mavenModel = MavenProjectHelper.readModel(appPomFile);
-        projectId = mavenModel.getArtifactId();
-        IProject targetProject = ResourcesPlugin.getWorkspace().getRoot().getProject(projectId);
-        if (targetProject.exists()) {
+        // Migrate the project to import.
+        report = new BonitaProjectMigrator(projectRoot.toPath()).run(monitor);
+        var generatedSourcesFolder = projectRoot.toPath().resolve(BonitaProject.APP_MODULE)
+                .resolve(AppProjectConfiguration.GENERATED_GROOVY_SOURCES_FODLER);
+        if (!Files.exists(generatedSourcesFolder)) {
+            try {
+                Files.createDirectories(generatedSourcesFolder);
+            } catch (IOException e) {
+                BonitaStudioLog.error(e);
+            }
+        }
+        // Just in case a migration step changed the project id... check for homonym project again
+        projectId = readProjectId();
+        if (!projectId.equals(projectIdBeforeMigr)
+                && ResourcesPlugin.getWorkspace().getRoot().getProject(projectId).exists()) {
             throw new CoreException(
                     Status.error(String.format("A project with id %s already exists in the workspace.", projectId)));
         }
@@ -94,7 +102,7 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
                 throw new CoreException(Status.error("Failed to copy project in workspace.", e));
             }
             // Remove source project when present in workspace
-            if(Objects.equals(projectRoot.toPath().getParent(), projectInWs.toPath().getParent())){
+            if (Objects.equals(projectRoot.toPath().getParent(), projectInWs.toPath().getParent())) {
                 FileUtil.deleteDir(projectRoot);
             }
         }
@@ -115,20 +123,32 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
         var autoUpdate = store.getBoolean(MavenPreferenceConstants.P_AUTO_UPDATE_CONFIGURATION, true);
         setAutoUpdateConfiguration(store, false);
         try {
-        var projectImportConfiguration = new BonitaProjectImportConfiguration(projectId);
-        projectConfigurationManager.importProjects(
-                flatten(localProjectScanner.getProjects()).stream()
-                        .filter(bdmProjects()).collect(Collectors.toList()),
-                projectImportConfiguration, monitor);
+            var projectImportConfiguration = new BonitaProjectImportConfiguration(projectId);
+            projectConfigurationManager.importProjects(
+                    flatten(localProjectScanner.getProjects()).stream()
+                            .filter(bdmProjects()).collect(Collectors.toList()),
+                    projectImportConfiguration, monitor);
 
-        projectConfigurationManager.importProjects(
-                flatten(localProjectScanner.getProjects()).stream()
-                        .filter(Predicate.not(bdmProjects())).collect(Collectors.toList()),
-                projectImportConfiguration, monitor);
-        }finally {
+            projectConfigurationManager.importProjects(
+                    flatten(localProjectScanner.getProjects()).stream()
+                            .filter(Predicate.not(bdmProjects())).collect(Collectors.toList()),
+                    projectImportConfiguration, monitor);
+        } finally {
             setAutoUpdateConfiguration(store, autoUpdate);
         }
 
+    }
+
+    /**
+     * Read the project id from the maven app module
+     * 
+     * @return artifactId of app module
+     * @throws CoreException reading failure
+     */
+    private String readProjectId() throws CoreException {
+        var appPomFile = projectRoot.toPath().resolve(BonitaProject.APP_MODULE).resolve("pom.xml").toFile();
+        var mavenModel = MavenProjectHelper.readModel(appPomFile);
+        return mavenModel.getArtifactId();
     }
 
     private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
@@ -141,7 +161,7 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
     }
 
     protected void removeUidProvidedWidgets() throws CoreException {
-        var widgetsFolder = projectRoot.toPath().resolve("app").resolve("web_widgets");
+        var widgetsFolder = projectRoot.toPath().resolve(BonitaProject.APP_MODULE).resolve("web_widgets");
         if (Files.exists(widgetsFolder)) {
             try {
                 Files.find(widgetsFolder,
