@@ -147,8 +147,17 @@ public class ImportBonitaProjectOperation implements IWorkspaceRunnable {
      */
     private String readProjectId() throws CoreException {
         var appPomFile = projectRoot.toPath().resolve(BonitaProject.APP_MODULE).resolve("pom.xml").toFile();
-        var mavenModel = MavenProjectHelper.readModel(appPomFile);
-        return mavenModel.getArtifactId();
+        if(appPomFile.exists()) {
+            var mavenModel = MavenProjectHelper.readModel(appPomFile);
+            return mavenModel.getArtifactId();
+        }
+        var rootPomFile = projectRoot.toPath().resolve("pom.xml").toFile();
+        if(rootPomFile.exists()) {
+            var mavenModel = MavenProjectHelper.readModel(rootPomFile);
+            return mavenModel.getArtifactId();
+        }
+        // Project cloned from version below 7.13.0
+        return null;
     }
 
     private void setAutoUpdateConfiguration(IEclipsePreferences store, boolean enanbled) {
