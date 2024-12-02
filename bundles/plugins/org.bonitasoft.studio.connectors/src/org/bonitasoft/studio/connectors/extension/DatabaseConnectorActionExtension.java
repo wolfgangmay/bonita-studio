@@ -46,12 +46,15 @@ public class DatabaseConnectorActionExtension implements ExtensionAction {
         var composite = new Composite(parent, SWT.NONE);
         composite.setLayout(GridLayoutFactory.fillDefaults().numColumns(2).create());
         composite.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).align(SWT.BEGINNING, SWT.FILL).create());
-        composite.setData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME, BonitaThemeConstants.CARD_BACKGROUND);
+        String backgroundCssClassname = parent.getData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME) instanceof String ? 
+                (String) parent.getData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME)
+                : BonitaThemeConstants.CARD_BACKGROUND;
+        composite.setData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME, backgroundCssClassname);
 
         new DynamicButtonWidget.Builder()
                 .withLabel(commandExecutor.getCommandName(DATABASE_ADD_DRIVER_COMMAND_ID))
                 .withImage(Pics.getImage("database_driver_add.png", ConnectorPlugin.getDefault()))
-                .withCssclass(BonitaThemeConstants.CARD_BACKGROUND)
+                .withCssclass(backgroundCssClassname)
                 .onClick(e -> commandExecutor
                         .executeCommand(DATABASE_ADD_DRIVER_COMMAND_ID, Collections.emptyMap()))
                 .createIn(composite);
@@ -59,7 +62,7 @@ public class DatabaseConnectorActionExtension implements ExtensionAction {
         new DynamicButtonWidget.Builder()
                 .withLabel(commandExecutor.getCommandName(DATABASE_DRIVER_SETTINGS_COMMAND_ID))
                 .withImage(Pics.getImage("database_driver_settings.png", ConnectorPlugin.getDefault()))
-                .withCssclass(BonitaThemeConstants.CARD_BACKGROUND)
+                .withCssclass(backgroundCssClassname)
                 .onClick(e -> commandExecutor
                         .executeCommand(DATABASE_DRIVER_SETTINGS_COMMAND_ID, Collections.emptyMap()))
                 .createIn(composite);
