@@ -48,16 +48,20 @@ public class RestApiActionExtension implements ExtensionAction {
 
     @Override
     public void fill(Composite parent) {
+        String backgroundCssClassname = parent.getData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME) instanceof String ? 
+                (String) parent.getData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME)
+                : BonitaThemeConstants.CARD_BACKGROUND;
+        
         var composite = new Composite(parent, SWT.NONE);
         composite.setLayout(GridLayoutFactory.fillDefaults().create());
         composite.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).align(SWT.BEGINNING, SWT.FILL).create());
-        composite.setData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME, BonitaThemeConstants.CARD_BACKGROUND);
+        composite.setData(BonitaThemeConstants.CSS_CLASS_PROPERTY_NAME, backgroundCssClassname);
 
         new DynamicButtonWidget.Builder()
                 .withLabel(commandExecutor.getCommandName(EDIT_PERMISSION_COMMAND))
                 .withImage(Pics.getImage(PicsConstants.edit_simple))
                 .withHotImage(Pics.getImage(PicsConstants.edit_simple_hot))
-                .withCssclass(BonitaThemeConstants.CARD_BACKGROUND)
+                .withCssclass(backgroundCssClassname)
                 .onClick(e -> commandExecutor.executeCommand(EDIT_PERMISSION_COMMAND, Collections.emptyMap()))
                 .createIn(composite);
     }

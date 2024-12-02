@@ -203,6 +203,7 @@ public class ExtensionCard extends Composite {
 
         int columnUsed = 0;
         for (DynamicButtonWidget.Builder builder : toolbarContributions) {
+            builder.withCssclass(backgroundCssClassname);
             builder.createIn(toolbarComposite);
             columnUsed++;
         }
