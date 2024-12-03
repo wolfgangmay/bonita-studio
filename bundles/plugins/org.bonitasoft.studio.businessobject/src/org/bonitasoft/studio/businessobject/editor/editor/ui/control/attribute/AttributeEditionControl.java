@@ -85,7 +85,7 @@ public class AttributeEditionControl extends Composite {
     public static final String ADD_ATTRIBUTE_BUTTON_ID = "addAttributeId";
     public static final String REMOVE_ATTRIBUTE_BUTTON_ID = "removeAttributeId";
 
-    public static final String DEFAULT_FIELD_NAME = "attribute";
+    public static final String DEFAULT_FIELD_NAME = "myAttribute";
     public static final int DEFAULT_LENGTH = 255;
 
     private BusinessDataModelFormPage formPage;
