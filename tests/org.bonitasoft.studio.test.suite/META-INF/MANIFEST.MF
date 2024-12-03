@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Test Suite Plugin-in
 Bundle-SymbolicName: org.bonitasoft.studio.test.suite
-Bundle-Version: 8.0.7.qualifier
+Bundle-Version: 9.0.7.qualifier
 Require-Bundle: org.eclipse.core.runtime,
  org.bonitasoft.studio.tests,
  org.bonitasoft.studio.common,
@@ -15,3 +15,4 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-Vendor: BonitaSoft S.A.
 Export-Package: org.bonitasoft.studio.test.suite
+Import-Package: org.junit.jupiter.api

@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
@@ -29,17 +29,17 @@ import org.bonitasoft.studio.expression.editor.provider.IExpressionNatureProvide
 import org.bonitasoft.studio.expression.editor.viewer.ExpressionCollectionViewer;
 import org.bonitasoft.studio.expression.editor.viewer.ExpressionViewer;
 import org.bonitasoft.studio.expression.editor.viewer.LineTableCreator;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.expression.ExpressionFactory;
-import org.bonitasoft.studio.model.expression.ListExpression;
-import org.bonitasoft.studio.model.expression.TableExpression;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.CorrelationTypeActive;
-import org.bonitasoft.studio.model.process.MainProcess;
-import org.bonitasoft.studio.model.process.Message;
-import org.bonitasoft.studio.model.process.ProcessFactory;
-import org.bonitasoft.studio.model.process.ProcessPackage;
-import org.bonitasoft.studio.model.process.ThrowMessageEvent;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.expression.ExpressionFactory;
+import org.bonitasoft.bpm.model.expression.ListExpression;
+import org.bonitasoft.bpm.model.expression.TableExpression;
+import org.bonitasoft.bpm.model.process.CorrelationTypeActive;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.process.Message;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.ProcessFactory;
+import org.bonitasoft.bpm.model.process.ProcessPackage;
+import org.bonitasoft.bpm.model.process.ThrowMessageEvent;
 import org.bonitasoft.studio.pics.Pics;
 import org.bonitasoft.studio.properties.i18n.Messages;
 import org.eclipse.core.databinding.DataBindingContext;
@@ -607,13 +607,13 @@ public class MessageEventWizardPage extends WizardPage implements
             final Expression procName = (Expression) ((StructuredSelection) processExpressionViewer
                     .getSelection()).getFirstElement();
             if (procName.getType().equals(ExpressionConstants.CONSTANT_TYPE)) {
-                final AbstractProcess proc = getProcessOnDiagram(
+                final Pool proc = getProcessOnDiagram(
                         ModelHelper.getMainProcess(element),
                         procName.getContent());
                 final DiagramRepositoryStore store = RepositoryManager
                         .getInstance().getRepositoryStore(
                                 DiagramRepositoryStore.class);
-                final List<AbstractProcess> processes = store
+                final List<Pool> processes = store
                         .findProcesses(procName.getContent());
                 if (proc != null) {
                     processes.add(proc);
@@ -627,9 +627,9 @@ public class MessageEventWizardPage extends WizardPage implements
         }
     }
 
-    private AbstractProcess getProcessOnDiagram(final MainProcess mainProcess,
+    private Pool getProcessOnDiagram(final MainProcess mainProcess,
             final String procName) {
-        for (final AbstractProcess proc : ModelHelper.getAllProcesses(mainProcess)) {
+        for (final Pool proc : ModelHelper.getAllProcesses(mainProcess)) {
             if (proc.getName().equals(procName)) {
                 return proc;
             }

@@ -19,14 +19,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.expression.editor.provider.IExpressionNatureProvider;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.expression.ExpressionFactory;
-import org.bonitasoft.studio.model.process.AbstractCatchMessageEvent;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.ThrowMessageEvent;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.expression.ExpressionFactory;
+import org.bonitasoft.bpm.model.process.AbstractCatchMessageEvent;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.ThrowMessageEvent;
 import org.eclipse.emf.ecore.EObject;
 
 /**
@@ -34,7 +34,7 @@ import org.eclipse.emf.ecore.EObject;
  */
 public class CatchMessageEventNamesExpressionNatureProvider implements IExpressionNatureProvider {
 
-	private List<AbstractProcess> processes;
+	private List<Pool> processes;
 	private ThrowMessageEvent throwMessage;
 
 
@@ -43,7 +43,7 @@ public class CatchMessageEventNamesExpressionNatureProvider implements IExpressi
 		final List<Expression> result = new ArrayList<Expression>();
 		if(processes != null && !processes.isEmpty()){
 			final Set<String> names = new HashSet<String>();
-			for(final AbstractProcess process : processes){
+			for(final Pool process : processes){
 				for(final AbstractCatchMessageEvent catchMessage :  ModelHelper.getAllCatchEvent(process)){
                     if (!names.contains(catchMessage.getName())
                             && (catchMessage.getIncomingMessag() == null || catchMessage.getIncomingMessag().getSource() == null || catchMessage
@@ -65,7 +65,7 @@ public class CatchMessageEventNamesExpressionNatureProvider implements IExpressi
 		return result.toArray(new Expression[result.size()]);
 	}
 
-	public void setFoundProcesses(final List<AbstractProcess> processes){
+	public void setFoundProcesses(final List<Pool> processes){
 		this.processes = processes;
 	}
 

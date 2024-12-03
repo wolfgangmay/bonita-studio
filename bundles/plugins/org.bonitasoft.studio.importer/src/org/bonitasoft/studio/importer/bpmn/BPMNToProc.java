@@ -17,6 +17,7 @@ package org.bonitasoft.studio.importer.bpmn;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -42,12 +43,12 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
-import org.bonitasoft.studio.common.ExpressionConstants;
+import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.NamingUtils;
 import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
-import org.bonitasoft.studio.connector.model.definition.ConnectorDefinitionFactory;
-import org.bonitasoft.studio.connector.model.definition.Output;
+import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinitionFactory;
+import org.bonitasoft.bpm.connector.model.definition.Output;
 import org.bonitasoft.studio.importer.ImporterPlugin;
 import org.bonitasoft.studio.importer.builder.IProcBuilder;
 import org.bonitasoft.studio.importer.builder.IProcBuilder.DataType;
@@ -59,11 +60,11 @@ import org.bonitasoft.studio.importer.builder.ProcBuilder;
 import org.bonitasoft.studio.importer.builder.ProcBuilderException;
 import org.bonitasoft.studio.importer.i18n.Messages;
 import org.bonitasoft.studio.importer.processors.ToProcProcessor;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.expression.ExpressionFactory;
-import org.bonitasoft.studio.model.process.Actor;
-import org.bonitasoft.studio.model.process.Data;
-import org.bonitasoft.studio.model.process.ProcessFactory;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.expression.ExpressionFactory;
+import org.bonitasoft.bpm.model.process.Actor;
+import org.bonitasoft.bpm.model.process.Data;
+import org.bonitasoft.bpm.model.process.ProcessFactory;
 import org.bonitasoft.studio.model.process.diagram.edit.parts.MainProcessEditPart;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -157,7 +158,10 @@ import org.omg.spec.bpmn.model.TThrowEvent;
 import org.omg.spec.bpmn.model.TTimerEventDefinition;
 import org.omg.spec.bpmn.model.TTransaction;
 import org.omg.spec.bpmn.model.TUserTask;
+import org.omg.spec.dd.dc.Bounds;
+import org.omg.spec.dd.dc.Font;
 import org.omg.spec.dd.di.DiagramElement;
+import org.omg.spec.dd.di.Shape;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -188,7 +192,6 @@ public class BPMNToProc extends ToProcProcessor {
     // value
     private TSubProcess subprocEvent;
     private Point posMax;// used in case, (no pool shape defined and no
-
     // participant defined and no laneset defined) or no
     // diagram defined
     // private Point posMin;//used in case, no pool shape defined and no
@@ -230,29 +233,22 @@ public class BPMNToProc extends ToProcProcessor {
             "parameterRef", "resourceRef", "signalRef",
             "eventDefinitionRef", "attachedToRef" };
 
-    /**
-     * @param resourceName
-     */
-    public BPMNToProc(final String resourceName) {
-        final File f = new File(resourceName);
-        if (f.exists()) {
-            this.resourceName = f.getName();
-        } else {
-            this.resourceName = resourceName;
-        }
-
-    }
 
     @Override
     public File createDiagram(URL sourceBPMNUrl, final IProgressMonitor progressMonitor) {
         progressMonitor.beginTask(Messages.importFromBPMN,
                 IProgressMonitor.UNKNOWN);
+        try {
+            this.resourceName = new File(URLDecoder.decode(sourceBPMNUrl.getFile(), "UTF-8")).getName();
+        } catch (UnsupportedEncodingException e) {
+            BonitaStudioLog.error(e);
+            return null;
+        }
         status = new MultiStatus(ImporterPlugin.PLUGIN_ID, 0, null, null);
         builder = new ProcBuilder(progressMonitor);
-
         try(var stream = sourceBPMNUrl.openStream()) {
             boolean hadBeenPreProcessed = false;
-            
+           
             final Document document = DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder().parse(stream);
             if (!ModelPackage.eNS_URI.equals(document.getDocumentElement()
@@ -278,7 +274,7 @@ public class BPMNToProc extends ToProcProcessor {
 
         } catch (final Exception ex) {
             BonitaStudioLog.error(ex);
-        }
+        } 
 
         final ResourceSet resourceSet = new ResourceSetImpl();
         final Map<String, Object> extensionToFactoryMap = resourceSet
@@ -1393,7 +1389,7 @@ public class BPMNToProc extends ToProcProcessor {
         }
        return name;
     }
-    
+
     private void processSubProcess(final TSubProcess bpmnSubProcess) throws ProcBuilderException {
         builder.addCallActivityTargetProcess(subprocessName(bpmnSubProcess),
                 "1.0");

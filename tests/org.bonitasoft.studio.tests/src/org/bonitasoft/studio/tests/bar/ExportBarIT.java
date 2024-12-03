@@ -24,6 +24,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.form.FormMappingTarget;
@@ -38,8 +39,6 @@ import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.engine.BOSEngineManager;
 import org.bonitasoft.studio.engine.operation.ExportBarOperation;
 import org.bonitasoft.studio.importer.bos.operation.ImportBosArchiveOperation;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Pool;
 import org.bonitasoft.studio.tests.util.InitialProjectRule;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.FileLocator;
@@ -51,9 +50,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/**
- * @author Romain Bioteau
- */
 public class ExportBarIT {
 
     @Rule
@@ -107,7 +103,7 @@ public class ExportBarIT {
         final File targetBarFolder = tmpFolder.newFolder("targetBarFolder");
         final ExportBarOperation exportBarOperation = new ExportBarOperation();
         final DiagramFileStore diagram = (DiagramFileStore) importBosArchiveOperation.getFileStoresToOpen().get(0);
-        AbstractProcess process = diagram.getProcesses(true).get(0);
+        var process = diagram.getProcesses(true).get(0);
         Pool pool = ModelHelper.getParentPool(process);
 
         var commonResourcesToCopy = new File(FileLocator.toFileURL(ExportBarIT.class.getResource("/_common")).getFile());
@@ -136,6 +132,7 @@ public class ExportBarIT {
 
         //Given
         final File generatedBarFile = exportBarOperation.getGeneratedBars().get(0);
+        
         BusinessArchive businessArchive = readBusinessArchive(generatedBarFile);
         assertThat(businessArchive).isNotNull();
 

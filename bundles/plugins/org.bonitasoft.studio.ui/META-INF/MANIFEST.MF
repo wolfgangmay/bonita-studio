@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: UI Toolkit Plug In
 Bundle-SymbolicName: org.bonitasoft.studio.ui;singleton:=true
-Bundle-Version: 8.0.7.qualifier
+Bundle-Version: 9.0.7.qualifier
 Bundle-Activator: org.bonitasoft.studio.ui.UIPlugin
 Bundle-Vendor: BonitaSoft S.A.
 Bundle-Localization: plugin
@@ -56,16 +56,15 @@ Require-Bundle: org.eclipse.jface,
  org.eclipse.e4.ui.bindings,
  org.bonitasoft.studio.common.repository,
  org.eclipse.e4.ui.services,
- org.bonitasoft.studio.model,
+ org.bonitasoft.bpm.model,
  org.eclipse.wst.sse.core,
  org.eclipse.jface.notifications,
  org.bonitasoft.studio.preferences,
  org.bonitasoft.studio.pics,
  org.apache.commons.io,
  org.eclipse.e4.ui.css.swt.theme,
- org.bonitasoft.studio.common.ui;visibility:=reexport
+ org.bonitasoft.studio.common.ui;visibility:=reexport,
+ org.bonitasoft.engine.bonita-common
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
-Import-Package: javax.inject;version="1.0.0",
- javax.xml.bind;version="2.3.3",
- org.bonitasoft.engine.api.result
+Import-Package: javax.inject;version="1.0.0"

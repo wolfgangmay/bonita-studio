@@ -44,7 +44,6 @@ public class ProvidedContentFilter extends ViewerFilter {
         HIDDEN_RESOURCES.add(Path.fromPortableString("h2_database"));
         HIDDEN_RESOURCES.add(Path.fromPortableString("process_configurations"));
         HIDDEN_RESOURCES.add(Path.fromPortableString("template"));
-        HIDDEN_RESOURCES.add(Path.fromPortableString("src-providedGroovy"));
         HIDDEN_RESOURCES.add(Path.fromOSString("org.eclipse.pde.core.requiredPlugins"));
         HIDDEN_RESOURCES.add(Path.fromOSString("GROOVY_DSL_SUPPORT"));
         HIDDEN_RESOURCES.add(Path.fromOSString("build.properties"));
@@ -53,8 +52,10 @@ public class ProvidedContentFilter extends ViewerFilter {
         HIDDEN_RESOURCES.add(Path.fromOSString("web_fragments/.metadata"));
         HIDDEN_RESOURCES.add(Path.fromOSString("bin"));
         HIDDEN_RESOURCES.add(Path.fromOSString("target"));
+        HIDDEN_RESOURCES.add(Path.fromOSString("target/generated-groovy-sources"));
         HIDDEN_RESOURCES.add(Path.fromOSString("pom.xml"));
         HIDDEN_RESOURCES.add(Path.fromOSString("bdm/pom.xml"));
+        HIDDEN_RESOURCES.add(Path.fromOSString("extensions/pom.xml"));
     }
 
     @Override

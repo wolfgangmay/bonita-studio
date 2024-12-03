@@ -5,66 +5,57 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2.0 of the License, or
  * (at your option) any later version.
- *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.bonitasoft.studio.identity.actors.ui.wizard;
 
 import org.bonitasoft.studio.common.repository.RepositoryManager;
-import org.bonitasoft.studio.common.repository.filestore.AbstractFileStore;
 import org.bonitasoft.studio.common.repository.model.IDefinitionRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
-import org.bonitasoft.studio.common.repository.store.SourceRepositoryStore;
 import org.bonitasoft.studio.connector.model.implementation.provider.ConnectorImplementationContentProvider;
 import org.bonitasoft.studio.connector.model.implementation.provider.ConnectorImplementationLabelProvider;
 import org.bonitasoft.studio.connector.model.implementation.wizard.AbstractSelectImplementationWizard;
 import org.bonitasoft.studio.identity.IdentityPlugin;
 import org.bonitasoft.studio.identity.actors.repository.ActorFilterDefRepositoryStore;
 import org.bonitasoft.studio.identity.actors.repository.ActorFilterImplRepositoryStore;
-import org.bonitasoft.studio.identity.actors.repository.ActorFilterSourceRepositoryStore;
 import org.bonitasoft.studio.identity.i18n.Messages;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 
-
 /**
  * @author Romain Bioteau
- *
  */
 public class SelectUserFilterImplementationWizard extends AbstractSelectImplementationWizard {
 
-
-    public SelectUserFilterImplementationWizard(){
-        super() ;
+    public SelectUserFilterImplementationWizard() {
+        super();
         setWindowTitle(Messages.selectActorFitleImplementation);
     }
 
     @Override
-    protected SourceRepositoryStore<AbstractFileStore> getSourceStore() {
-        return RepositoryManager.getInstance().getRepositoryStore(ActorFilterSourceRepositoryStore.class);
-    }
-
-    @Override
     protected IRepositoryStore<? extends IRepositoryFileStore> getImplementationStore() {
-        return  RepositoryManager.getInstance().getRepositoryStore(ActorFilterImplRepositoryStore.class);
+        return RepositoryManager.getInstance().getRepositoryStore(ActorFilterImplRepositoryStore.class);
     }
 
     @Override
     protected LabelProvider getLabelProvider() {
-        return new ConnectorImplementationLabelProvider((IDefinitionRepositoryStore)RepositoryManager.getInstance().getRepositoryStore(ActorFilterDefRepositoryStore.class), IdentityPlugin.getDefault().getBundle());
+        return new ConnectorImplementationLabelProvider(
+                (IDefinitionRepositoryStore) RepositoryManager.getInstance()
+                        .getRepositoryStore(ActorFilterDefRepositoryStore.class),
+                IdentityPlugin.getDefault().getBundle());
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     protected IContentProvider getContentProvider() {
-        return new ConnectorImplementationContentProvider((IRepositoryStore<IRepositoryFileStore>) getImplementationStore(), true);
+        return new ConnectorImplementationContentProvider(
+                (IRepositoryStore<IRepositoryFileStore>) getImplementationStore(), true);
     }
 
     @Override
@@ -76,8 +67,5 @@ public class SelectUserFilterImplementationWizard extends AbstractSelectImplemen
     protected String getPageTitle() {
         return Messages.selectFilterImplementationTitle;
     }
-
-
-
 
 }

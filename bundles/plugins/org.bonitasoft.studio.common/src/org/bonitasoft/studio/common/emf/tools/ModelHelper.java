@@ -24,52 +24,52 @@ import java.util.Set;
 import org.bonitasoft.studio.common.DataTypeLabels;
 import org.bonitasoft.studio.common.Messages;
 import org.bonitasoft.studio.common.NamingUtils;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.expression.ExpressionPackage;
-import org.bonitasoft.studio.model.parameter.Parameter;
-import org.bonitasoft.studio.model.process.AbstractCatchMessageEvent;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Activity;
-import org.bonitasoft.studio.model.process.BooleanType;
-import org.bonitasoft.studio.model.process.BoundaryEvent;
-import org.bonitasoft.studio.model.process.BusinessObjectType;
-import org.bonitasoft.studio.model.process.CallActivity;
-import org.bonitasoft.studio.model.process.CatchLinkEvent;
-import org.bonitasoft.studio.model.process.ConnectableElement;
-import org.bonitasoft.studio.model.process.Connection;
-import org.bonitasoft.studio.model.process.Connector;
-import org.bonitasoft.studio.model.process.Container;
-import org.bonitasoft.studio.model.process.Data;
-import org.bonitasoft.studio.model.process.DataAware;
-import org.bonitasoft.studio.model.process.DataType;
-import org.bonitasoft.studio.model.process.DateType;
-import org.bonitasoft.studio.model.process.Document;
-import org.bonitasoft.studio.model.process.DoubleType;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.EnumType;
-import org.bonitasoft.studio.model.process.FlowElement;
-import org.bonitasoft.studio.model.process.IntegerType;
-import org.bonitasoft.studio.model.process.JavaType;
-import org.bonitasoft.studio.model.process.Lane;
-import org.bonitasoft.studio.model.process.LongType;
-import org.bonitasoft.studio.model.process.MainProcess;
-import org.bonitasoft.studio.model.process.Message;
-import org.bonitasoft.studio.model.process.MessageFlow;
-import org.bonitasoft.studio.model.process.Pool;
-import org.bonitasoft.studio.model.process.ProcessFactory;
-import org.bonitasoft.studio.model.process.ProcessPackage;
-import org.bonitasoft.studio.model.process.ReceiveTask;
-import org.bonitasoft.studio.model.process.ScriptTask;
-import org.bonitasoft.studio.model.process.SearchIndex;
-import org.bonitasoft.studio.model.process.SendTask;
-import org.bonitasoft.studio.model.process.SequenceFlow;
-import org.bonitasoft.studio.model.process.ServiceTask;
-import org.bonitasoft.studio.model.process.StringType;
-import org.bonitasoft.studio.model.process.SubProcessEvent;
-import org.bonitasoft.studio.model.process.Task;
-import org.bonitasoft.studio.model.process.ThrowLinkEvent;
-import org.bonitasoft.studio.model.process.ThrowMessageEvent;
-import org.bonitasoft.studio.model.process.XMLType;
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.expression.ExpressionPackage;
+import org.bonitasoft.bpm.model.parameter.Parameter;
+import org.bonitasoft.bpm.model.process.AbstractCatchMessageEvent;
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.process.Activity;
+import org.bonitasoft.bpm.model.process.BooleanType;
+import org.bonitasoft.bpm.model.process.BoundaryEvent;
+import org.bonitasoft.bpm.model.process.BusinessObjectType;
+import org.bonitasoft.bpm.model.process.CallActivity;
+import org.bonitasoft.bpm.model.process.CatchLinkEvent;
+import org.bonitasoft.bpm.model.process.ConnectableElement;
+import org.bonitasoft.bpm.model.process.Connection;
+import org.bonitasoft.bpm.model.process.Connector;
+import org.bonitasoft.bpm.model.process.Container;
+import org.bonitasoft.bpm.model.process.Data;
+import org.bonitasoft.bpm.model.process.DataAware;
+import org.bonitasoft.bpm.model.process.DataType;
+import org.bonitasoft.bpm.model.process.DateType;
+import org.bonitasoft.bpm.model.process.Document;
+import org.bonitasoft.bpm.model.process.DoubleType;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.EnumType;
+import org.bonitasoft.bpm.model.process.FlowElement;
+import org.bonitasoft.bpm.model.process.IntegerType;
+import org.bonitasoft.bpm.model.process.JavaType;
+import org.bonitasoft.bpm.model.process.Lane;
+import org.bonitasoft.bpm.model.process.LongType;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.process.Message;
+import org.bonitasoft.bpm.model.process.MessageFlow;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.ProcessFactory;
+import org.bonitasoft.bpm.model.process.ProcessPackage;
+import org.bonitasoft.bpm.model.process.ReceiveTask;
+import org.bonitasoft.bpm.model.process.ScriptTask;
+import org.bonitasoft.bpm.model.process.SearchIndex;
+import org.bonitasoft.bpm.model.process.SendTask;
+import org.bonitasoft.bpm.model.process.SequenceFlow;
+import org.bonitasoft.bpm.model.process.ServiceTask;
+import org.bonitasoft.bpm.model.process.StringType;
+import org.bonitasoft.bpm.model.process.SubProcessEvent;
+import org.bonitasoft.bpm.model.process.Task;
+import org.bonitasoft.bpm.model.process.ThrowLinkEvent;
+import org.bonitasoft.bpm.model.process.ThrowMessageEvent;
+import org.bonitasoft.bpm.model.process.XMLType;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
@@ -116,8 +116,8 @@ public class ModelHelper {
         return res;
     }
 
-    public static List<AbstractProcess> getAllProcesses(final Element eObject) {
-        final List<AbstractProcess> res = new ArrayList<>();
+    public static List<Pool> getAllProcesses(final Element eObject) {
+        final List<Pool> res = new ArrayList<>();
         final MainProcess mainProcess = getMainProcess(eObject);
         if (mainProcess != null) {
             findAllProcesses(mainProcess, res);
@@ -125,24 +125,22 @@ public class ModelHelper {
         return res;
     }
 
-    private static List<AbstractProcess> findAllProcesses(final Element element,
-            final List<AbstractProcess> processes) {
-        final List<AbstractProcess> oldwayFindProcesses = oldwayFindProcesses(element, processes);
-        return oldwayFindProcesses;
+    private static List<Pool> findAllProcesses(final Element element,
+            final List<Pool> processes) {
+    	return oldwayFindProcesses(element, processes);
     }
 
-    protected static List<AbstractProcess> oldwayFindProcesses(final Element element,
-            final List<AbstractProcess> processes) {
-        if (element instanceof AbstractProcess && !(element instanceof MainProcess)) {
+    protected static List<Pool> oldwayFindProcesses(final Element element,
+            final List<Pool> processes) {
+        if (element instanceof Pool && !(element instanceof MainProcess)) {
 
-            processes.add((AbstractProcess) element);
+            processes.add((Pool) element);
         }
 
         if (element instanceof Container) {
             for (final Element e : ((Container) element).getElements()) {
                 oldwayFindProcesses(e, processes);
             }
-
         }
         return processes;
     }
@@ -451,8 +449,8 @@ public class ModelHelper {
     protected static AbstractProcess findOldProcesses(final Element element,
             final String procName) {
         final MainProcess proc = getMainProcess(element);
-        final List<AbstractProcess> processes = getAllProcesses(proc);
-        for (final AbstractProcess p : processes) {
+        final List<Pool> processes = getAllProcesses(proc);
+        for (final Pool p : processes) {
             if (procName.equals(p.getName())) {
                 return p;
             }
@@ -541,13 +539,10 @@ public class ModelHelper {
         return null;
     }
 
-    /**
-     * @param subProcessName
-     */
-    public static AbstractProcess findProcess(final String subProcessName, final String version,
+    public static Pool findProcess(final String subProcessName, final String version,
             final List<? extends Element> elements) {
         if (version == null || version.trim().isEmpty()) {// it's the latest version
-            final List<AbstractProcess> processes = new ArrayList<>();
+            final List<Pool> processes = new ArrayList<>();
             findProcessRecursivly(subProcessName, version, elements, processes);
             if (!processes.isEmpty()) {
                 Collections.sort(processes, new ProcessVersionComparator());
@@ -555,12 +550,12 @@ public class ModelHelper {
             }
         } else {
             for (final Element item : elements) {
-                if (item instanceof AbstractProcess) {
-                    final AbstractProcess process = (AbstractProcess) item;
+                if (item instanceof Pool) {
+                    final Pool process = (Pool) item;
                     if (process.getName().equals(subProcessName) && version.equals(process.getVersion())) {
                         return process;
                     } else {
-                        final AbstractProcess res = findProcess(subProcessName, version, process.getElements());
+                        final Pool res = findProcess(subProcessName, version, process.getElements());
                         if (res != null) {
                             return res;
                         }
@@ -580,11 +575,11 @@ public class ModelHelper {
      */
     private static void findProcessRecursivly(final String subProcessName, final String version,
             final List<? extends Element> elements,
-            final List<AbstractProcess> processes) {
+            final List<Pool> processes) {
         // TODO : use the version argument
         for (final Element item : elements) {
-            if (item instanceof AbstractProcess) {
-                final AbstractProcess process = (AbstractProcess) item;
+            if (item instanceof Pool) {
+                final Pool process = (Pool) item;
                 if (process.getName().equals(subProcessName)) {
                     processes.add(process);
                 } else {

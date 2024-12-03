@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.bonitasoft.studio.identity;singleton:=true
 Automatic-Module-Name: org.bonitasoft.studio.actors
-Bundle-Version: 8.0.7.qualifier
+Bundle-Version: 9.0.7.qualifier
 Bundle-ClassPath: .
 Bundle-Activator: org.bonitasoft.studio.identity.IdentityPlugin
 Bundle-Vendor: %providerName
@@ -18,13 +18,13 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.workspace,
  org.bonitasoft.studio.common,
  org.bonitasoft.studio.common.repository,
- org.bonitasoft.studio.model,
+ org.bonitasoft.bpm.model,
  org.eclipse.ui.views.properties.tabbed,
  org.eclipse.gmf.runtime.diagram.ui.properties,
  org.eclipse.ui.ide,
- org.bonitasoft.studio.model.edit,
+ org.bonitasoft.bpm.model.edit,
  org.bonitasoft.studio.configuration,
- org.bonitasoft.studio.connectors.model,
+ org.bonitasoft.bpm.connector.model,
  org.bonitasoft.studio.connectors.model.edit,
  org.eclipse.jdt.ui,
  org.eclipse.jdt.core,
@@ -50,18 +50,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.wst.sse.ui,
  org.eclipse.e4.core.contexts,
  org.eclipse.wst.sse.core,
- org.eclipse.osgi.services
+ org.eclipse.osgi.services,
+ org.bonitasoft.engine.bonita-client
 Import-Package: javax.inject;version="1.0.0",
- org.bonitasoft.engine.api,
- org.bonitasoft.engine.bpm,
- org.bonitasoft.engine.bpm.bar,
- org.bonitasoft.engine.bpm.process,
- org.bonitasoft.engine.exception,
- org.bonitasoft.engine.filter,
- org.bonitasoft.engine.identity,
- org.bonitasoft.engine.profile,
- org.bonitasoft.engine.search,
- org.bonitasoft.engine.session,
  org.bonitasoft.studio.common.databinding.validator,
  org.bonitasoft.studio.common.ui.jface,
  org.bonitasoft.studio.expression.editor.filter
@@ -69,15 +60,15 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: org.bonitasoft.studio.identity;uses:="org.osgi.framework,org.eclipse.ui.plugin",
  org.bonitasoft.studio.identity.actors.repository;
-  uses:="org.bonitasoft.studio.connector.model.implementation,
+  uses:="org.bonitasoft.bpm.connector.model.implementation,
    org.eclipse.emf.edapt.spi.history,
    org.bonitasoft.studio.common.repository.provider,
    org.eclipse.swt.graphics,
    org.bonitasoft.studio.common.repository.model,
-   org.bonitasoft.studio.model.process,
+   org.bonitasoft.bpm.model.process,
    org.bonitasoft.studio.common.repository.store,
-   org.bonitasoft.studio.model.configuration,
-   org.bonitasoft.studio.connector.model.definition,
+   org.bonitasoft.bpm.model.configuration,
+   org.bonitasoft.bpm.connector.model.definition,
    org.osgi.framework,
    org.eclipse.ui,
    org.eclipse.core.runtime,
@@ -86,7 +77,6 @@ Export-Package: org.bonitasoft.studio.identity;uses:="org.osgi.framework,org.ecl
    org.eclipse.emf.edit.provider,
    org.eclipse.emf.ecore.resource,
    org.eclipse.emf.edapt.migration.execution",
- org.bonitasoft.studio.identity.actors.ui.handler,
  org.bonitasoft.studio.identity.actors.ui.wizard.page,
  org.bonitasoft.studio.identity.i18n,
  org.bonitasoft.studio.identity.organization.editor.control.group,

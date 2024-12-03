@@ -25,14 +25,14 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.bonitasoft.bpm.model.process.BoundaryEvent;
+import org.bonitasoft.bpm.model.process.CallActivity;
+import org.bonitasoft.bpm.model.process.Event;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.TextAnnotation;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.importer.bpmn.BPMNToProc;
-import org.bonitasoft.studio.model.process.BoundaryEvent;
-import org.bonitasoft.studio.model.process.CallActivity;
-import org.bonitasoft.studio.model.process.Event;
-import org.bonitasoft.studio.model.process.MainProcess;
-import org.bonitasoft.studio.model.process.Pool;
-import org.bonitasoft.studio.model.process.TextAnnotation;
 import org.bonitasoft.studio.tests.util.InitialProjectRule;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -67,8 +67,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testImportBPMN2() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource("standardProcess.bpmn")); //$NON-NLS-1$
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("standardProcess.bpmn")); //$NON-NLS-1$
+        BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -81,8 +81,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testImportBPMN2WithUnknownDiagramNS() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource("standardProcess_badNameSpace.bpmn")); //$NON-NLS-1$
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("standardProcess_badNameSpace.bpmn")); //$NON-NLS-1$
+        BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -95,8 +95,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testImportBPMN2WithOMG_ns() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource("testimport.bpmn")); //$NON-NLS-1$
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("testimport.bpmn")); //$NON-NLS-1$
+        BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -109,8 +109,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testBug1908a() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource("definitionsTest2.bpmn")); //$NON-NLS-1$
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("definitionsTest2.bpmn")); //$NON-NLS-1$
+        BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -123,8 +123,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testBug1908b() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource("definitionsTest3.bpmn")); //$NON-NLS-1$
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("definitionsTest3.bpmn")); //$NON-NLS-1$
+        BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -249,12 +249,11 @@ public class TestImportBPMN2 {
         assertEquals("Missing events", expectedEvents, events); //$NON-NLS-1$
     }
 
-    protected File importFileWithName(final String bpmnFileName)
-            throws IOException, MalformedURLException {
-        URL bpmnResource = FileLocator.toFileURL(getClass().getResource(bpmnFileName));
-        BPMNToProc bpmnToProc = new BPMNToProc(bpmnResource.getFile());
-        File destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
-        return destFile;
+    private File importFileWithName(final String bpmnFileName)
+            throws IOException {
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource(bpmnFileName));
+        BPMNToProc bpmnToProc = new BPMNToProc();
+        return bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
     }
 
 }

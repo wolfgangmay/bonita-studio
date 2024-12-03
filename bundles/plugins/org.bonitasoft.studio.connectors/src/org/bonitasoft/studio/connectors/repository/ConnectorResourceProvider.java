@@ -17,22 +17,23 @@ package org.bonitasoft.studio.connectors.repository;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.bonitasoft.studio.common.FragmentTypes;
+import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinition;
+import org.bonitasoft.bpm.connector.model.implementation.ConnectorImplementation;
+import org.bonitasoft.bpm.model.configuration.Configuration;
+import org.bonitasoft.bpm.model.configuration.DefinitionMapping;
+import org.bonitasoft.bpm.model.process.AbstractProcess;
+import org.bonitasoft.bpm.model.util.FragmentTypes;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
 import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.common.repository.provider.IBOSArchiveFileStoreProvider;
-import org.bonitasoft.studio.connector.model.definition.ConnectorDefinition;
-import org.bonitasoft.studio.connector.model.implementation.ConnectorImplementation;
 import org.bonitasoft.studio.connectors.i18n.Messages;
 import org.bonitasoft.studio.dependencies.repository.DependencyRepositoryStore;
-import org.bonitasoft.studio.model.configuration.Configuration;
-import org.bonitasoft.studio.model.configuration.DefinitionMapping;
-import org.bonitasoft.studio.model.process.AbstractProcess;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 
 /**
@@ -42,8 +43,8 @@ public class ConnectorResourceProvider implements IBOSArchiveFileStoreProvider {
 
     /*
      * (non-Javadoc)
-     * @see org.bonitasoft.studio.common.repository.provider.IBOSArchiveFileStoreProvider#getFileStoreForConfiguration(org.bonitasoft.studio.model.process.
-     * AbstractProcess, org.bonitasoft.studio.model.configuration.Configuration)
+     * @see org.bonitasoft.studio.common.repository.provider.IBOSArchiveFileStoreProvider#getFileStoreForConfiguration(org.bonitasoft.bpm.model.process.
+     * AbstractProcess, org.bonitasoft.bpm.model.configuration.Configuration)
      */
     @Override
     public Set<IRepositoryFileStore<?>> getFileStoreForConfiguration(final AbstractProcess process,
@@ -54,8 +55,6 @@ public class ConnectorResourceProvider implements IBOSArchiveFileStoreProvider {
                 ConnectorDefRepositoryStore.class);
         final ConnectorImplRepositoryStore connectorImplStore = RepositoryManager.getInstance().getRepositoryStore(
                 ConnectorImplRepositoryStore.class);
-        final ConnectorSourceRepositoryStore connectorSourceStore = RepositoryManager.getInstance().getRepositoryStore(
-                ConnectorSourceRepositoryStore.class);
         final DependencyRepositoryStore depStore = RepositoryManager.getInstance().getRepositoryStore(
                 DependencyRepositoryStore.class);
         for (final DefinitionMapping mapping : configuration.getDefinitionMappings()) {
@@ -88,7 +87,7 @@ public class ConnectorResourceProvider implements IBOSArchiveFileStoreProvider {
                     if (implId == null) {
                         MessageDialog.openError(Display.getDefault().getActiveShell(),
                                 Messages.noImplementationFoundErrorTitle,
-                                Messages.bind(Messages.noImplementationFoundErrorMessage, def.getId()));
+                                NLS.bind(Messages.noImplementationFoundErrorMessage, def.getId()));
                         return null;
                     }
                     final IRepositoryFileStore implementation = connectorImplStore.getImplementationFileStore(implId,
@@ -97,14 +96,6 @@ public class ConnectorResourceProvider implements IBOSArchiveFileStoreProvider {
                         files.add(implementation);
                         try {
                             final ConnectorImplementation impl = (ConnectorImplementation) implementation.getContent();
-                            final String className = impl.getImplementationClassname();
-                            final String packageName = className.substring(0, className.lastIndexOf("."));
-                            final IRepositoryFileStore packageFileStore = connectorSourceStore.getChild(packageName,
-                                    true);
-                            if (packageFileStore != null) {
-                                files.add(packageFileStore);
-                            }
-
                             for (final String jarName : impl.getJarDependencies().getJarDependency()) {
                                 final IRepositoryFileStore jarFile = depStore.getChild(jarName, true);
                                 if (jarFile != null) {

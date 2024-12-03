@@ -17,19 +17,18 @@ package org.bonitasoft.studio.common.repository.core.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.stream.Stream;
 
+import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.RestAPIExtensionNature;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.BonitaProject;
+import org.bonitasoft.studio.common.repository.core.maven.MavenModelOperation;
 import org.bonitasoft.studio.common.repository.core.maven.MavenProjectHelper;
-import org.bonitasoft.studio.common.repository.core.maven.model.GAV;
-import org.bonitasoft.studio.common.repository.core.maven.model.ProjectDefaultConfiguration;
 import org.bonitasoft.studio.common.repository.core.maven.model.ProjectMetadata;
 import org.bonitasoft.studio.common.repository.model.IRepository;
-import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -53,10 +52,9 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
     private static final String BDM_DAO_CLIENT_SUFFIX = "-bdm-dao-client";
     private static final String BDM_MODEL_SUFFIX = "-bdm-model";
     private static final String BDM_PARENT_SUFFIX = "-bdm-parent";
-    private static final String BONITA_VERSION_PROPERTY = "bonita.version";
-    private static final String BONITA_RUNTIME_VERSION_PROPERTY = "bonita-runtime.version";
     private static final String APP_MODULE_SUFFIX = "-app";
     private static final String PARENT_SUFFIX = "-parent";
+    private static final String EXTENSIONS_PARENT_SUFFIX = "-extensions";
 
     private ProjectMetadata metadata;
     private BonitaProject project;
@@ -89,62 +87,23 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
         parentModel.setGroupId(metadata.getGroupId());
         parentModel.setVersion(metadata.getVersion());
         parentModel.setArtifactId(newProjectId + PARENT_SUFFIX);
-        parentModel.getProperties().setProperty(ProjectDefaultConfiguration.BONITA_RUNTIME_VERSION,
-                metadata.getBonitaRuntimeVersion());
+        parentModel.getParent().setVersion(metadata.getBonitaRuntimeVersion());
 
         MavenProjectHelper.saveModel(parentProject, parentModel, new NullProgressMonitor());
 
         var bdmParentProject = project.getBdmParentProject();
         if (bdmParentProject.exists()) {
-            var bdmParentModel = MavenProjectHelper.getMavenModel(bdmParentProject);
-            parent = bdmParentModel.getParent();
-            parent.setGroupId(metadata.getGroupId());
-            parent.setArtifactId(newProjectId + PARENT_SUFFIX);
-            parent.setVersion(metadata.getVersion());
-            bdmParentModel.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
-            MavenProjectHelper.saveModel(bdmParentProject, bdmParentModel, new NullProgressMonitor());
+            updateBdmModules(projectId, model, newProjectId, bdmParentProject);
+        }
 
-            var bdmModelProject = project.getBdmModelProject();
-            var bdmModelModel = MavenProjectHelper.getMavenModel(bdmModelProject);
-            parent = bdmModelModel.getParent();
-            parent.setGroupId(metadata.getGroupId());
-            parent.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
-            parent.setVersion(metadata.getVersion());
-            bdmModelModel.setArtifactId(newProjectId + BDM_MODEL_SUFFIX);
-            MavenProjectHelper.saveModel(bdmModelProject, bdmModelModel, new NullProgressMonitor());
-
-            var bdmDaoClientProject = project.getBdmDaoClientProject();
-            var bdmDaoClientModel = MavenProjectHelper.getMavenModel(bdmDaoClientProject);
-            parent = bdmDaoClientModel.getParent();
-            parent.setGroupId(metadata.getGroupId());
-            parent.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
-            parent.setVersion(metadata.getVersion());
-            bdmDaoClientModel.setArtifactId(newProjectId + BDM_DAO_CLIENT_SUFFIX);
-
-            bdmDaoClientModel.getDependencies().stream()
-                    .filter(d -> Objects.equals(projectId + BDM_MODEL_SUFFIX, d.getArtifactId()))
-                    .findFirst()
-                    .ifPresent(d -> d.setArtifactId(newProjectId + BDM_MODEL_SUFFIX));
-
-            model.getDependencies().stream()
-                    .filter(d -> Objects.equals(projectId + BDM_MODEL_SUFFIX, d.getArtifactId()))
-                    .findFirst()
-                    .ifPresent(d -> d.setArtifactId(newProjectId + BDM_MODEL_SUFFIX));
-
-            MavenProjectHelper.saveModel(bdmDaoClientProject, bdmDaoClientModel, new NullProgressMonitor());
-            if (Objects.equals(projectId, newProjectId)) {
-                new UpdateMavenProjectJob(new IProject[] { bdmParentProject, bdmModelProject, bdmDaoClientProject },
-                        false,
-                        false,
-                        false,
-                        true,
-                        true).run(new NullProgressMonitor());
-            }
+        var extensionsParentProject = project.getExtensionsParentProject();
+        if (extensionsParentProject.exists()) {
+            updateExtensionsModules(projectId, newProjectId, extensionsParentProject);
         }
 
         MavenProjectHelper.saveModel(appProject, model, new NullProgressMonitor());
-        updateRestApiExtension(oldMetadata, metadata, new NullProgressMonitor());
-        if (!Objects.equals(projectId, newProjectId)) {
+         if (!Objects.equals(projectId, newProjectId)) {
+            updateRestApiExtension(oldMetadata, metadata, new NullProgressMonitor());
             if (currentRepository().closeAllEditors(false)) {
                 renameProjects(projectId, newProjectId, monitor);
             }
@@ -152,6 +111,89 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
             new UpdateMavenProjectJob(project.getRelatedProjects().toArray(IProject[]::new), false, false, false,
                     false, true)
                             .run(monitor);
+        }
+    }
+
+    private void updateExtensionsModules(String projectId, String newProjectId, IProject parentProject)
+            throws CoreException {
+        var projectToUpdate = new ArrayList<IProject>();
+        var extensionParentModel = MavenProjectHelper.getMavenModel(parentProject);
+        var parent = extensionParentModel.getParent();
+        parent.setGroupId(metadata.getGroupId());
+        parent.setArtifactId(newProjectId + PARENT_SUFFIX);
+        parent.setVersion(metadata.getVersion());
+        extensionParentModel.setArtifactId(newProjectId + EXTENSIONS_PARENT_SUFFIX);
+        MavenProjectHelper.saveModel(parentProject, extensionParentModel, new NullProgressMonitor());
+        projectToUpdate.add(parentProject);
+
+        for (IProject extensionProject : project.getExtensionsProjects()) {
+            var extensionModel = MavenProjectHelper.getMavenModel(extensionProject);
+            parent = extensionModel.getParent();
+            if (parent != null) {
+                parent.setGroupId(metadata.getGroupId());
+                parent.setArtifactId(newProjectId + EXTENSIONS_PARENT_SUFFIX);
+                parent.setVersion(metadata.getVersion());
+                MavenProjectHelper.saveModel(extensionProject, extensionModel, new NullProgressMonitor());
+                projectToUpdate.add(extensionProject);
+            }
+        }
+
+        if (Objects.equals(projectId, newProjectId)) {
+            new UpdateMavenProjectJob(projectToUpdate.toArray(IProject[]::new),
+                    false,
+                    false,
+                    false,
+                    true,
+                    true).run(new NullProgressMonitor());
+            MavenModelOperation.scheduleAnalyzeProjectDependenciesJob(RepositoryManager.getInstance().getAccessor());
+        }
+    }
+
+    private void updateBdmModules(String projectId, Model model, String newProjectId, IProject bdmParentProject)
+            throws CoreException {
+        var bdmParentModel = MavenProjectHelper.getMavenModel(bdmParentProject);
+        var parent = bdmParentModel.getParent();
+        parent.setGroupId(metadata.getGroupId());
+        parent.setArtifactId(newProjectId + PARENT_SUFFIX);
+        parent.setVersion(metadata.getVersion());
+        bdmParentModel.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
+        MavenProjectHelper.saveModel(bdmParentProject, bdmParentModel, new NullProgressMonitor());
+
+        var bdmModelProject = project.getBdmModelProject();
+        var bdmModelModel = MavenProjectHelper.getMavenModel(bdmModelProject);
+        parent = bdmModelModel.getParent();
+        parent.setGroupId(metadata.getGroupId());
+        parent.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
+        parent.setVersion(metadata.getVersion());
+        bdmModelModel.setArtifactId(newProjectId + BDM_MODEL_SUFFIX);
+        MavenProjectHelper.saveModel(bdmModelProject, bdmModelModel, new NullProgressMonitor());
+
+        var bdmDaoClientProject = project.getBdmDaoClientProject();
+        var bdmDaoClientModel = MavenProjectHelper.getMavenModel(bdmDaoClientProject);
+        parent = bdmDaoClientModel.getParent();
+        parent.setGroupId(metadata.getGroupId());
+        parent.setArtifactId(newProjectId + BDM_PARENT_SUFFIX);
+        parent.setVersion(metadata.getVersion());
+        bdmDaoClientModel.setArtifactId(newProjectId + BDM_DAO_CLIENT_SUFFIX);
+
+        bdmDaoClientModel.getDependencies().stream()
+                .filter(d -> Objects.equals(projectId + BDM_MODEL_SUFFIX, d.getArtifactId()))
+                .findFirst()
+                .ifPresent(d -> d.setArtifactId(newProjectId + BDM_MODEL_SUFFIX));
+
+        model.getDependencies().stream()
+                .filter(d -> Objects.equals(projectId + BDM_MODEL_SUFFIX, d.getArtifactId()))
+                .findFirst()
+                .ifPresent(d -> d.setArtifactId(newProjectId + BDM_MODEL_SUFFIX));
+
+        MavenProjectHelper.saveModel(bdmDaoClientProject, bdmDaoClientModel, new NullProgressMonitor());
+        if (Objects.equals(projectId, newProjectId)) {
+            new UpdateMavenProjectJob(new IProject[] { bdmParentProject, bdmModelProject, bdmDaoClientProject },
+                    false,
+                    false,
+                    false,
+                    true,
+                    true).run(new NullProgressMonitor());
         }
     }
 
@@ -204,7 +246,7 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
 
         // Reimport bdm modules
         var bdmModule = newParentProject.getFolder(BonitaProject.BDM_MODULE);
-        if (bdmModule.exists()) {
+        if (bdmModule.getFile("pom.xml").exists()) {
             var projectInfoToImport = new ArrayList<MavenProjectInfo>();
             projectInfoToImport.add(projectInfo(bdmModule));
             projectInfoToImport.add(projectInfo(bdmModule.getFolder(BDM_MODEL_MODULE)));
@@ -222,9 +264,33 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
             if (bdmFolder.exists()) {
                 bdmFolder.delete(true, new NullProgressMonitor());
             }
-            bdmFolder.createLink(Path.fromOSString("PARENT-1-PROJECT_LOC/bdm"),
+            bdmFolder.createLink(Path.fromOSString("PARENT-1-PROJECT_LOC/" + BonitaProject.BDM_MODULE),
                     IResource.REPLACE | IResource.ALLOW_MISSING_LOCAL, new NullProgressMonitor());
         }
+        
+        // Re-import extensions parent modules
+        var extensionsParentModule = newParentProject.getFolder(BonitaProject.EXTENSIONS_MODULE);
+        if (extensionsParentModule.getFile("pom.xml").exists()) {
+            var projectInfoToImport = new ArrayList<MavenProjectInfo>();
+            projectInfoToImport.add(projectInfo(extensionsParentModule));
+            projectImportConfiguration = new ProjectImportConfiguration();
+            projectImportConfiguration.setProjectNameTemplate("[artifactId]");
+            importResults = MavenPlugin.getProjectConfigurationManager().importProjects(
+                    projectInfoToImport,
+                    projectImportConfiguration, new NullProgressMonitor());
+            importResults.stream()
+                    .map(IMavenProjectImportResult::getProject)
+                    .filter(Objects::nonNull)
+                    .forEach(projectsToUpdate::add);
+            IFolder extensionsFolder = appProject.getFolder(BonitaProject.EXTENSIONS_MODULE);
+            if (extensionsFolder.exists()) {
+                extensionsFolder.delete(true, new NullProgressMonitor());
+            }
+            extensionsFolder.createLink(Path.fromOSString("PARENT-1-PROJECT_LOC/" + BonitaProject.EXTENSIONS_MODULE),
+                    IResource.REPLACE | IResource.ALLOW_MISSING_LOCAL, new NullProgressMonitor());
+        }
+        
+        
         var repository = RepositoryManager.getInstance().getRepository(newProjectId);
         repository.open(monitor);
     }
@@ -244,42 +310,17 @@ public class UpdateProjectMetadataOperation implements IWorkspaceRunnable {
                 .forEach(p -> {
                     try {
                         var mavenModel = MavenProjectHelper.getMavenModel(p);
-                        Properties properties = mavenModel.getProperties();
-                        if (properties.containsKey(BONITA_RUNTIME_VERSION_PROPERTY)) {
-                            properties.setProperty(BONITA_RUNTIME_VERSION_PROPERTY,
-                                    metadata.getBonitaRuntimeVersion());
-                        }
-                        if (properties.containsKey(BONITA_VERSION_PROPERTY)) {
-                            properties.setProperty(BONITA_VERSION_PROPERTY,
-                                    metadata.getBonitaRuntimeVersion());
-                        }
-                        var oldBdmModel = new GAV(oldMetadata.getGroupId(),
-                                oldMetadata.getArtifactId() + BDM_MODEL_SUFFIX,
-                                oldMetadata.getVersion(),
-                                null,
-                                "jar",
-                                "provided");
                         mavenModel.getDependencies().stream()
-                                .filter(d -> new GAV(d).isSameAs(oldBdmModel))
+                                .filter(d -> Objects.equals(oldMetadata.getArtifactId() + BDM_MODEL_SUFFIX, d.getArtifactId()))
                                 .findFirst()
                                 .ifPresent(d -> {
-                                    d.setGroupId(metadata.getGroupId());
                                     d.setArtifactId(metadata.getArtifactId() + BDM_MODEL_SUFFIX);
-                                    d.setVersion(metadata.getVersion());
                                 });
-                        var oldBdmDaoClient = new GAV(oldMetadata.getGroupId(),
-                                oldMetadata.getArtifactId() + BDM_DAO_CLIENT_SUFFIX,
-                                oldMetadata.getVersion(),
-                                null,
-                                "jar",
-                                "provided");
                         mavenModel.getDependencies().stream()
-                                .filter(d -> new GAV(d).isSameAs(oldBdmDaoClient))
+                                .filter(d -> Objects.equals(oldMetadata.getArtifactId() + BDM_DAO_CLIENT_SUFFIX, d.getArtifactId()))
                                 .findFirst()
                                 .ifPresent(d -> {
-                                    d.setGroupId(metadata.getGroupId());
                                     d.setArtifactId(metadata.getArtifactId() + BDM_DAO_CLIENT_SUFFIX);
-                                    d.setVersion(metadata.getVersion());
                                 });
                         MavenProjectHelper.saveModel(p, mavenModel, false, monitor);
                     } catch (CoreException e) {

@@ -17,38 +17,38 @@ package org.bonitasoft.studio.properties.sections.callActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.bonitasoft.bpm.model.expression.Expression;
+import org.bonitasoft.bpm.model.process.CallActivity;
+import org.bonitasoft.bpm.model.process.ContractInput;
+import org.bonitasoft.bpm.model.process.Data;
+import org.bonitasoft.bpm.model.process.Pool;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
-import org.bonitasoft.studio.common.model.IProcessContextProvider;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
-import org.bonitasoft.studio.model.expression.Expression;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.CallActivity;
-import org.bonitasoft.studio.model.process.ContractInput;
-import org.bonitasoft.studio.model.process.Data;
-import org.bonitasoft.studio.model.process.Pool;
 import org.eclipse.emf.ecore.EObject;
 
 public class CallActivityHelper {
 
-    private final IProcessContextProvider processProvider;
+    private final Supplier<List<Pool>> processProvider;
     private final CallActivitySelectionProvider selectionProvider;
 
-    public CallActivityHelper(RepositoryAccessor repositoryAccessor, 
+    public CallActivityHelper(RepositoryAccessor repositoryAccessor,
             CallActivitySelectionProvider selectionProvider) {
-        this.processProvider = () -> repositoryAccessor.getRepositoryStore(DiagramRepositoryStore.class).getAllProcesses();
+        this.processProvider = () -> repositoryAccessor.getRepositoryStore(DiagramRepositoryStore.class)
+                .getAllProcesses();
         this.selectionProvider = selectionProvider;
     }
-    
-    public CallActivityHelper(List<AbstractProcess> allProcesses, 
+
+    public CallActivityHelper(List<Pool> allProcesses,
             CallActivitySelectionProvider selectionProvider) {
         this.processProvider = () -> allProcesses;
         this.selectionProvider = selectionProvider;
     }
 
     public List<Data> getCallActivityData() {
-        final AbstractProcess subProcess = getCalledProcess();
+        final Pool subProcess = getCalledProcess();
         if (subProcess != null) {
             return subProcess.getData();
         }
@@ -71,13 +71,13 @@ public class CallActivityHelper {
         final String subprocessName = getCalledProcessName(callActivity);
         final String subprocessVersion = getCalledProcessVersion(callActivity);
         if (subprocessName != null) {
-            return (Pool) findProcess(subprocessName, subprocessVersion);
+            return findProcess(subprocessName, subprocessVersion);
         }
         return null;
     }
 
-    protected AbstractProcess findProcess(final String subprocessName, final String subprocessVersion) {
-        return ModelHelper.findProcess(subprocessName, subprocessVersion, processProvider.getAllProcesses());
+    protected Pool findProcess(final String subprocessName, final String subprocessVersion) {
+        return ModelHelper.findProcess(subprocessName, subprocessVersion, processProvider.get());
     }
 
     protected String getCalledProcessVersion(final CallActivity callActivity) {

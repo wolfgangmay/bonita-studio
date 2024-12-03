@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,32 +30,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bonitasoft.bonita2bpmn.extension.BonitaModelExporterImpl;
+import org.bonitasoft.bonita2bpmn.extension.IBonitaModelExporter;
+import org.bonitasoft.bonita2bpmn.transfo.BonitaToBPMNExporter;
+import org.bonitasoft.bonita2bpmn.transfo.ConnectorTransformationXSLProvider;
+import org.bonitasoft.bpm.model.process.Element;
+import org.bonitasoft.bpm.model.process.Lane;
+import org.bonitasoft.bpm.model.process.MainProcess;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.ProcessPackage;
+import org.bonitasoft.bpm.model.process.Task;
+import org.bonitasoft.bpm.model.util.IModelSearch;
+import org.bonitasoft.bpm.model.util.ModelSearch;
 import org.bonitasoft.studio.assertions.StatusAssert;
 import org.bonitasoft.studio.common.NamingUtils;
 import org.bonitasoft.studio.common.ProductVersion;
 import org.bonitasoft.studio.common.editingdomain.CustomDiagramEditingDomainFactory;
 import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.studio.common.gmf.tools.GMFTools;
-import org.bonitasoft.studio.common.model.IModelSearch;
-import org.bonitasoft.studio.common.model.ModelSearch;
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.connectors.repository.ConnectorDefRepositoryStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramRepositoryStore;
-import org.bonitasoft.studio.exporter.bpmn.transfo.BonitaToBPMNExporter;
-import org.bonitasoft.studio.exporter.bpmn.transfo.OSGIConnectorTransformationXSLProvider;
-import org.bonitasoft.studio.exporter.extension.BonitaModelExporterImpl;
-import org.bonitasoft.studio.exporter.extension.IBonitaModelExporter;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Element;
-import org.bonitasoft.studio.model.process.Lane;
-import org.bonitasoft.studio.model.process.MainProcess;
-import org.bonitasoft.studio.model.process.Pool;
-import org.bonitasoft.studio.model.process.ProcessPackage;
-import org.bonitasoft.studio.model.process.Task;
+import org.bonitasoft.studio.importer.bpmn.BPMNToProc;
 import org.bonitasoft.studio.model.process.diagram.edit.parts.MainProcessEditPart;
 import org.bonitasoft.studio.tests.util.InitialProjectRule;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.emf.common.util.EList;
@@ -114,65 +114,65 @@ public class BPMNImportExportTest {
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
     @Test
-    public void testImportExportWithAll() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportWithAll() throws IOException {
         final String bpmnFileName = "withAll.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportTwoPools() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportTwoPools() throws IOException {
         final String bpmnFileName = "two pools.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportEasyBugFillingProcess()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "EasyBugFilingProcess.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportWithMessageFlow() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportWithMessageFlow() throws IOException {
         final String bpmnFileName = "withMessageFlow.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportDeliverytoPayment() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportDeliverytoPayment() throws IOException {
         final String bpmnFileName = "Delivery-to-Payment.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportBPMN2Correlation() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportBPMN2Correlation() throws IOException {
         final String bpmnFileName = "bpmn2sample/Correlation/Buyer Seller/CorrelationExampleSeller.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
-    public void testImportExportBPMN2SamplePizza() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportBPMN2SamplePizza() throws IOException {
         final String bpmnFileName = "bpmn2sample/Pizza/triso - Order Process for Pizza V4.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleDiagramInterchangeChoreo()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Diagram Interchange/Examples - DI - Choreography.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleDiagramInterchangeExpSubProc()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Diagram Interchange/Examples - DI - Expanded Sub-Process.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleDiagramInterchangeLanesAndNestedLanes()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Diagram Interchange/Examples - DI - Lanes and Nested Lanes.bpmn";
         doTest(bpmnFileName, true, true, false);
         //we don't support nested lanes
@@ -181,239 +181,242 @@ public class BPMNImportExportTest {
 
     @Test
     public void testImportExportBPMN2SampleDiagramInterchangeVerticalCollaboration()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Diagram Interchange/Examples - DI - Vertical Collaboration.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleDiagramInterchangecollapsedSubProc()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Diagram Interchange/Examples - DI -Collapsed Sub-Process.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleHardwareretailer()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Hardware Retailer/triso - Hardware Retailer v2.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementCollChor()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management - coll chor.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementLevel1()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management level 1.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementAccounManager()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management(Account Manager Only).bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementProcEngine()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management(Process Engine Executable).bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementProcEngineOnly()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management(Process Engine Only).bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleIncidentManagementWholeCollab()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Incident Management/Incident Management(Whole Collab).bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleEmailVoting()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/eMail Voting/Email Voting 2.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramCallActivity()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Call Activity.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramCollapsedSubProc()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Collapsed SubProcess.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramExpandedSubProcess()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Expanded SubProcess.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramLaneset()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Laneset.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramPool()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Pool.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SamplModelsDiagramProcess()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Models & Diagrams/Process.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBPMN2SampleNobelPrize()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Nobel Prize/Nobel Prize Process.bpmn";
         doTest(bpmnFileName, true, true, false);
     }
 
     @Test
     public void testImportExportBPMN2SampleOrderFullFillment()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Order Fulfillment/Procurement Processes with Error Handling - Stencil Trisotech 3 pages.bpmn";
         doTest(bpmnFileName, false, false, true);
     }
 
     @Test
     public void testImportExportBPMN2SampleTravelBooking()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "bpmn2sample/Travel Booking/Tavel Booking.bpmn";
         doTest(bpmnFileName, false, false, true);
     }
 
     /* Bruce samples */
     @Test
-    public void testImportExportBruceSampleMyTask() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportBruceSampleMyTask() throws IOException {
         final String bpmnFileName = "brucesample/myTask.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleMyTaskMyPool()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/myTaskMyPool.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleMyTaskMyPoolCorrected()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/myTaskMyPool-corrected.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportBruceSampleOurProc() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportBruceSampleOurProc() throws IOException {
         final String bpmnFileName = "brucesample/ourProc.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurProcNoPool()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourProcNoPool.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurProcNoPoolCorrected()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourProcNoPool-corrected.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurReusable()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourReusable.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurReusableCorrected()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourReusable-corected.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportBruceSampleOurSubs() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportBruceSampleOurSubs() throws IOException {
         final String bpmnFileName = "brucesample/ourSubs.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurSubsCorrected()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourSubs-corrected.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurSubsNoPool()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourSubsNoPool.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportBruceSampleOurSubsNoPoolCorrected()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "brucesample/ourSubsNoPool-corrected.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
     public void testImportExportPositionsForSeveralPoolWithoutLanes()
-            throws MalformedURLException, IOException, InterruptedException {
+            throws IOException {
         final String bpmnFileName = "Interchange Demo.bpmn";
         doTest(bpmnFileName);
     }
 
     @Test
-    public void testImportExportWithEmptyLaneset() throws MalformedURLException, IOException, InterruptedException {
+    public void testImportExportWithEmptyLaneset() throws IOException {
         final String bpmnFileName = "Front office.bpmn";
         doTest(bpmnFileName);
     }
 
-    protected void doTest(final String bpmnFileName) throws MalformedURLException, IOException, InterruptedException {
+    protected void doTest(final String bpmnFileName) throws IOException {
         doTest(bpmnFileName, true, true, true);
     }
 
     protected void doTest(final String bpmnFileName, final boolean checkActivities, final boolean checkEvents,
-            final boolean checkMessageFlow) throws IOException, MalformedURLException {
-        final File destFile = BPMNTestUtil.importFileWithName(BPMNImportExportTest.class, bpmnFileName);
+            final boolean checkMessageFlow) throws IOException {
+    	  var bpmnResource = FileLocator.toFileURL(BPMNImportExportTest.class.getResource(bpmnFileName));
+    	  final BPMNToProc bpmnToProc = new BPMNToProc();
+          final File destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
+          destFile.deleteOnExit();
         Resource resource = null;
         try {
             final ResourceSet resourceSet = new ResourceSetImpl();
@@ -443,13 +446,12 @@ public class BPMNImportExportTest {
                 .getRepositoryStore(DiagramRepositoryStore.class);
         ConnectorDefRepositoryStore connectorDefStore = RepositoryManager.getInstance()
                 .getRepositoryStore(ConnectorDefRepositoryStore.class);
-        List<AbstractProcess> allProcesses = dStore.getAllProcesses();
-        IModelSearch modelSearch = new ModelSearch(() -> allProcesses, () -> connectorDefStore.getDefinitions());
+        IModelSearch modelSearch = new ModelSearch(dStore::getAllProcesses);
         final IBonitaModelExporter exporter = new BonitaModelExporterImpl(mainProcess.eResource(), modelSearch);
         final File bpmnFileExported = tmpFolder.newFile("withAllExported.bpmn");
         BonitaToBPMNExporter bonitaToBPMNExporter = new BonitaToBPMNExporter();
-        bonitaToBPMNExporter.export(exporter, modelSearch, bpmnFileExported,
-                new OSGIConnectorTransformationXSLProvider(), ProductVersion.CURRENT_VERSION);
+        bonitaToBPMNExporter.export(exporter, modelSearch, connectorDefStore::getDefinitions, bpmnFileExported,
+                ConnectorTransformationXSLProvider.DEFAULT, ProductVersion.CURRENT_VERSION);
         StatusAssert.assertThat(bonitaToBPMNExporter.getStatus()).hasSeverity(IStatus.INFO);
 
         //compare bpmn before import and after import/export

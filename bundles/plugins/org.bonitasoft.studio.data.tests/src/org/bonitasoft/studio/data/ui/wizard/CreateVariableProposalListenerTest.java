@@ -15,13 +15,14 @@
 package org.bonitasoft.studio.data.ui.wizard;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.bonitasoft.bpm.model.process.builders.ReceiveTaskBuilder.aReceiveTask;
 
-import org.bonitasoft.studio.model.process.Activity;
-import org.bonitasoft.studio.model.process.Pool;
-import org.bonitasoft.studio.model.process.builders.ActivityBuilder;
-import org.bonitasoft.studio.model.process.builders.PoolBuilder;
-import org.bonitasoft.studio.model.process.builders.ReceiveTaskBuilder;
-import org.bonitasoft.studio.model.process.builders.SendTaskBuilder;
+import org.bonitasoft.bpm.model.process.Activity;
+import org.bonitasoft.bpm.model.process.Pool;
+import org.bonitasoft.bpm.model.process.builders.ActivityBuilder;
+import org.bonitasoft.bpm.model.process.builders.PoolBuilder;
+import org.bonitasoft.bpm.model.process.builders.ReceiveTaskBuilder;
+import org.bonitasoft.bpm.model.process.builders.SendTaskBuilder;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.After;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class CreateVariableProposalListenerTest {
 
     @Test
     public void should_getDataContainer_return_process_if_in_a_receive_task() throws Exception {
-        final ReceiveTaskBuilder receiveTask = ReceiveTaskBuilder.createReceiveTaskBuilder();
+        final ReceiveTaskBuilder receiveTask = aReceiveTask();
         PoolBuilder.aPool().havingElements(receiveTask).build();
         final EObject dataContainer = createVariableProposalListener.getDataContainer(receiveTask.build());
         assertThat(dataContainer).isInstanceOf(Pool.class);

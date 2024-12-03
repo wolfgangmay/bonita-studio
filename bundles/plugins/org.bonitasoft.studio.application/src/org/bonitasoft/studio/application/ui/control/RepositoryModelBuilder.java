@@ -36,8 +36,6 @@ import org.bonitasoft.studio.common.repository.model.ITenantResource;
 import org.bonitasoft.studio.designer.core.repository.WebPageFileStore;
 import org.bonitasoft.studio.diagram.custom.repository.DiagramFileStore;
 import org.bonitasoft.studio.identity.organization.repository.OrganizationFileStore;
-import org.bonitasoft.studio.model.process.AbstractProcess;
-import org.bonitasoft.studio.model.process.Pool;
 import org.eclipse.core.runtime.IStatus;
 
 public class RepositoryModelBuilder {
@@ -73,6 +71,7 @@ public class RepositoryModelBuilder {
                 .stream()
                 .map(fStore -> createArtifact(store, fStore))
                 .filter(Objects::nonNull)
+                .filter(Artifact::isInClasspath)
                 .forEach(store::add);
         return store;
     }
@@ -103,14 +102,14 @@ public class RepositoryModelBuilder {
 
     public void createProcessArtifacts(RepositoryStore parent, DiagramFileStore fStore) {
         final List<Artifact> processes = parent.getArtifacts();
-        for (AbstractProcess procModel : fStore.getProcesses(false)) {
+        for (var procModel : fStore.getProcesses(false)) {
             ProcessArtifact defaultProcess = new ProcessArtifact(parent, procModel.getName());
             ProcessArtifact process = (ProcessArtifact) processes.stream().filter(defaultProcess::equals).findFirst()
                     .orElse(defaultProcess);
             if (!processes.contains(process)) {
                 processes.add(process);
             }
-            process.addVersion((Pool) procModel, fStore);
+            process.addVersion(procModel, fStore);
         }
     }
 }

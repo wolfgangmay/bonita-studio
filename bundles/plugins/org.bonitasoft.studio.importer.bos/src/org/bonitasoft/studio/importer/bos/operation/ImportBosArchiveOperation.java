@@ -32,12 +32,15 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.common.extension.BonitaStudioExtensionRegistryManager;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.common.repository.BuildScheduler;
 import org.bonitasoft.studio.common.repository.CommonRepositoryPlugin;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
+import org.bonitasoft.studio.common.repository.core.IProjectContainer;
 import org.bonitasoft.studio.common.repository.core.InputStreamSupplier;
 import org.bonitasoft.studio.common.repository.core.ProjectDependenciesStore;
 import org.bonitasoft.studio.common.repository.core.maven.DefinitionUsageOperation;
@@ -49,10 +52,12 @@ import org.bonitasoft.studio.common.repository.core.maven.ProjectDependenciesLoo
 import org.bonitasoft.studio.common.repository.core.maven.migration.ProjectDependenciesMigrationOperation;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.ConflictVersion;
 import org.bonitasoft.studio.common.repository.core.maven.migration.model.DependencyLookup;
+import org.bonitasoft.studio.common.repository.core.maven.model.AppProjectConfiguration;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.operation.DependenciesUpdateOperationFactory;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent;
 import org.bonitasoft.studio.common.repository.filestore.FileStoreChangeEvent.EventType;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
+import org.bonitasoft.studio.common.repository.model.IRepositoryStore;
 import org.bonitasoft.studio.common.repository.store.LocalDependenciesStore;
 import org.bonitasoft.studio.common.ui.PlatformUtil;
 import org.bonitasoft.studio.common.ui.jface.FileActionDialog;
@@ -203,6 +208,22 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                         .forEach(dl -> dl.setSelected(true));
             }
 
+            if (importedMavenModel != null) {
+                importedMavenModel.getDependencies().stream()
+                        .filter(dep -> Objects.equals("application", dep.getClassifier()))
+                        .forEach(dependencies::add);
+                importedMavenModel.getDependencies().stream()
+                        .filter(dep -> Objects.equals("${project.groupId}", dep.getGroupId())
+                                && Objects.equals("${project.version}", dep.getVersion()))
+                        .forEach(dependencies::add);
+                importedMavenModel.getDependencies().stream()
+                        .filter(dep -> (dep.getVersion() == null
+                                || Objects.equals(Artifact.SCOPE_PROVIDED, dep.getScope()))
+                                && !AppProjectConfiguration.isInternalDependency(dep)
+                                && !AppProjectConfiguration.isBdmDependency(dep))
+                        .forEach(dependencies::add);
+            }
+
             var dependenciesLookupToInstall = dependenciesLookup.stream()
                     .filter(DependencyLookup::isSelected)
                     .filter(dl -> dl.getConflictVersion() == null
@@ -220,11 +241,11 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
                 }
             }
 
+            doImport(importArchiveModel, statusBuilder, monitor);
+
             if (!dependencies.isEmpty()) {
                 doUpdateProjectDependencies(monitor, statusBuilder);
             }
-            
-            doImport(importArchiveModel, statusBuilder, monitor);
 
             monitor.subTask("");
 
@@ -235,13 +256,21 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
 
             repositoryStore.computeProcesses(monitor);
             dependenciesUpdateOperation.run(monitor);
-            if(importedMavenModel == null) { // Imported from -7.13, trigger configuration synch
+            if (importedMavenModel == null) { // Imported from -7.13, trigger configuration synch
                 var synchOp = dependenciesUpdateOperationFactory.createConfigurationSynchronizationOperation();
                 synchOp.run(monitor);
             }
         } finally {
             FileActionDialog.setDisablePopup(disablePopup);
         }
+
+        // wait for all scheduled build jobs to end
+        BuildScheduler.joinOnBuildRule();
+        // make sure extension projects are imported before validating...
+        var containerStores = getImportedFileStores().stream().map(IRepositoryFileStore::getParentStore)
+                .filter(IProjectContainer.class::isInstance).distinct();
+        containerStores.forEach(IRepositoryStore::repositoryUpdated);
+        BuildScheduler.joinOnBuildRule();
 
         monitor.subTask("");
         currentRepository.handleFileStoreEvent(new FileStoreChangeEvent(EventType.POST_IMPORT, null));
@@ -398,16 +427,17 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
         monitor.beginTask(Messages.importBosArchive,
                 (int) importArchiveModel.getStores().stream().flatMap(AbstractFolderModel::importableUnits).count());
         importArchiveModel.getStores().stream()
-        .sorted(storeImportOrderComparator())
-        .forEachOrdered(s -> 
-            s.importableUnits()
-            // Ensure .artifact-descriptor.properties is imported before bom.xml
-            .sorted(Comparator.comparing(ImportableUnit::getName))
-            .forEachOrdered(unit -> {
-                monitor.subTask(NLS.bind(Messages.importing, unit.getName()));
-                importUnit(unit, importArchiveModel.getBosArchive(), statusBuilder, monitor);
-                monitor.worked(1);
-            }));
+                .sorted(storeImportOrderComparator())
+                .forEachOrdered(s -> {
+                    s.importableUnits()
+                            // Ensure .artifact-descriptor.properties is imported before bom.xml
+                            .sorted(Comparator.comparing(ImportableUnit::getName))
+                            .forEachOrdered(unit -> {
+                                monitor.subTask(NLS.bind(Messages.importing, unit.getName()));
+                                importUnit(unit, importArchiveModel.getBosArchive(), statusBuilder, monitor);
+                                monitor.worked(1);
+                            });
+                });
         migrateUID(monitor);
     }
 
@@ -480,7 +510,8 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
         }
     }
 
-    private Supplier<? extends ImportArchiveModel> parseArchive(final File archive, org.bonitasoft.studio.common.repository.model.IRepository repository,
+    private Supplier<? extends ImportArchiveModel> parseArchive(final File archive,
+            org.bonitasoft.studio.common.repository.model.IRepository repository,
             final IProgressMonitor monitor) {
         return () -> {
             final ParseBosArchiveOperation parseBosArchiveOperation = newParseBosOperation(archive, repository);
@@ -493,7 +524,8 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
         };
     }
 
-    protected ParseBosArchiveOperation newParseBosOperation(final File archive, org.bonitasoft.studio.common.repository.model.IRepository repository) {
+    protected ParseBosArchiveOperation newParseBosOperation(final File archive,
+            org.bonitasoft.studio.common.repository.model.IRepository repository) {
         return new ParseBosArchiveOperation(archive, repository);
     }
 
@@ -539,9 +571,10 @@ public class ImportBosArchiveOperation implements IRunnableWithProgress {
     public void setCurrentRepository(org.bonitasoft.studio.common.repository.model.IRepository currentRepository) {
         this.currentRepository = currentRepository;
     }
-    
+
     @Deprecated
-    public void setCurrentRepository(Optional<org.bonitasoft.studio.common.repository.model.IRepository> currentRepository) {
+    public void setCurrentRepository(
+            Optional<org.bonitasoft.studio.common.repository.model.IRepository> currentRepository) {
         this.currentRepository = currentRepository.orElseThrow();
     }
 
