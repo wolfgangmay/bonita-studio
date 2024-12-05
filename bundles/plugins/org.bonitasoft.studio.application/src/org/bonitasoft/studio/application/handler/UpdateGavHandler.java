@@ -28,6 +28,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.bonitasoft.studio.application.i18n.Messages;
 import org.bonitasoft.studio.application.operation.extension.UpdateExtensionOperationDecorator;
+import org.bonitasoft.studio.application.statistics.StatisticsManager;
 import org.bonitasoft.studio.application.ui.control.ExtensionTypeHandler;
 import org.bonitasoft.studio.application.ui.control.ImportExtensionPage;
 import org.bonitasoft.studio.application.ui.control.UpdateGavPage;
@@ -58,8 +59,9 @@ public class UpdateGavHandler extends ImportExtensionHandler {
             MavenRepositoryRegistry mavenRepositoryRegistry,
             MavenProjectHelper mavenProjectHelper,
             ExceptionDialogHandler errorDialogHandler,
-            CommandExecutor commandExecutor) {
-        super(repositoryAccessor, mavenRepositoryRegistry, mavenProjectHelper, errorDialogHandler, commandExecutor);
+            CommandExecutor commandExecutor,
+            StatisticsManager statisticsManager) {
+        super(repositoryAccessor, mavenRepositoryRegistry, mavenProjectHelper, errorDialogHandler, commandExecutor, statisticsManager);
     }
 
     @Execute

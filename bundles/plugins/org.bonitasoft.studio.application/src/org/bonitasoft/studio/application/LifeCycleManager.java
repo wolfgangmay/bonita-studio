@@ -15,6 +15,8 @@
 package org.bonitasoft.studio.application;
 
 import org.bonitasoft.studio.application.operation.extension.participant.configuration.ProcessConfigurationCollector;
+import org.bonitasoft.studio.application.statistics.DefaultStatisticsManager;
+import org.bonitasoft.studio.application.statistics.StatisticsManager;
 import org.bonitasoft.studio.common.platform.tools.ClearPersistedStateIndication;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.ConfigurationCollector;
 import org.bonitasoft.studio.common.repository.core.migration.dependencies.Synchronizer;
@@ -34,6 +36,12 @@ public class LifeCycleManager {
             .addBinding(Synchronizer.class).implementedBy(ConfigurationSynchronizer.class);
         InjectorFactory.getDefault()
             .addBinding(ConfigurationCollector.class).implementedBy(ProcessConfigurationCollector.class);
+        InjectorFactory.getDefault()
+            .addBinding(StatisticsManager.class).implementedBy(getStatisticsManagerImplementation());
+    }
+
+    protected Class<?> getStatisticsManagerImplementation() {
+        return DefaultStatisticsManager.class;
     }
 
     protected boolean shouldClearPersistedState() {

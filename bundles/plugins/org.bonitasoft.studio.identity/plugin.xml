@@ -330,7 +330,7 @@
             id="orga-xsd">
          <public
                publicId="http://documentation.bonitasoft.com/organization-xml-schema/1.1"
-               uri="model/bos-organization.xsd">
+               uri="platform:/plugin/wrapped.org.bonitasoft.engine.bonita-organization-model/organization.xsd">
          </public>
       </catalogContribution>
    </extension>

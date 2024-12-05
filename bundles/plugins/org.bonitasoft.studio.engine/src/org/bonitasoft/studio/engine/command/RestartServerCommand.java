@@ -18,6 +18,7 @@ import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.core.DatabaseHandler;
 import org.bonitasoft.studio.common.ui.jface.MessageDialogWithPrompt;
 import org.bonitasoft.studio.engine.BOSEngineManager;
+import org.bonitasoft.studio.engine.BOSWebServerManager;
 import org.bonitasoft.studio.engine.EngineNotificationSemaphore;
 import org.bonitasoft.studio.engine.EnginePlugin;
 import org.bonitasoft.studio.engine.i18n.Messages;
@@ -64,6 +65,7 @@ public class RestartServerCommand extends AbstractHandler {
                             .getDatabaseHandler();
                     databaseHandler.removeEngineDatabase();
                 }
+                BOSWebServerManager.getInstance().clearConfiguration();
                 engineManager.start();
                 if (notifying) {
                     BonitaNotificator.openInfoNotification(Messages.restartServerCompletedNotificationTitle,

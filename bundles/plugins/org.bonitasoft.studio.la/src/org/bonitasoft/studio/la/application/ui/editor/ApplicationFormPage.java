@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
-import org.bonitasoft.engine.business.application.xml.ApplicationNode;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.la.application.core.ApplicationDependencyResolver;
 import org.bonitasoft.studio.la.application.ui.editor.contribution.AddApplicationDescriptorContributionItem;
@@ -37,7 +37,8 @@ public class ApplicationFormPage extends AbstractFormPage<ApplicationNodeContain
     private List<String> expendedApplications = new ArrayList<>();
     private ApplicationEditorProviders applicationEditorProviders;
 
-    public ApplicationFormPage(String id, String title, ApplicationNodeContainerConverter parser, IEclipseContext context) {
+    public ApplicationFormPage(String id, String title, ApplicationNodeContainerConverter parser,
+            IEclipseContext context) {
         super(id, title, context);
         this.parser = parser;
         this.applicationEditorProviders = createApplicationEditorProviders();
@@ -64,11 +65,11 @@ public class ApplicationFormPage extends AbstractFormPage<ApplicationNodeContain
         return new ApplicationFormPart(scrolledForm.getBody(), this);
     }
 
-    public void addApplicationToForm(ApplicationNode application) {
+    public void addApplicationToForm(AbstractApplicationNode application) {
         applicationFormPart.addApplicationToForm(scrolledForm.getBody(), application);
     }
 
-    public void removeApplicationFromForm(ApplicationNode application) {
+    public void removeApplicationFromForm(AbstractApplicationNode application) {
         applicationFormPart.removeApplicationFromForm(scrolledForm.getBody(), application);
     }
 

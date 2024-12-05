@@ -5,12 +5,10 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2.0 of the License, or
  * (at your option) any later version.
- *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -26,14 +24,13 @@ import org.bonitasoft.studio.common.repository.model.ReadFileStoreException;
 import org.bonitasoft.studio.la.application.repository.ApplicationFileStore;
 import org.bonitasoft.studio.la.i18n.Messages;
 
-
-public class ThemeUpdateChange implements ChangePreview , ApplicationChange {
+public class ThemeUpdateChange implements ChangePreview, ApplicationChange {
 
     private Map<ApplicationFileStore, List<String>> appsToRefactor;
     private Theme oldTheme;
     private Theme newTheme;
 
-    public ThemeUpdateChange(Theme oldTheme,Theme newTheme, Map<ApplicationFileStore, List<String>> appsToRefactor) {
+    public ThemeUpdateChange(Theme oldTheme, Theme newTheme, Map<ApplicationFileStore, List<String>> appsToRefactor) {
         this.oldTheme = oldTheme;
         this.newTheme = newTheme;
         this.appsToRefactor = appsToRefactor;
@@ -47,6 +44,7 @@ public class ThemeUpdateChange implements ChangePreview , ApplicationChange {
             if (tokens != null) {
                 try {
                     var appNodeContainer = fileStore.getContent();
+                    // only legacy applications have a theme
                     appNodeContainer.getApplications().stream()
                             .filter(app -> entry.getValue().contains(app.getToken()))
                             .forEach(app -> app.setTheme(newTheme.getName()));

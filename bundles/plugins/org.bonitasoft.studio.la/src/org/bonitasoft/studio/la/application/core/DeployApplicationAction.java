@@ -121,7 +121,7 @@ public class DeployApplicationAction {
 
     public int deployApplicationNodeContainer(Shell shell, ApplicationNodeContainer applicationNodeContainer,
             String[] onFinishButtons) {
-        if (applicationNodeContainer.getApplications().isEmpty()) {
+        if (applicationNodeContainer.getAllApplications().isEmpty()) {
             MessageDialog.openInformation(shell, Messages.deployDoneTitle, Messages.nothingToDeploy);
             return Dialog.CANCEL;
         }
@@ -145,10 +145,13 @@ public class DeployApplicationAction {
 
     protected int openStatusDialog(Shell shell, final DeployApplicationDescriptorOperation deployOperation,
             String[] onFinishButtons) {
-        MultiStatus status = deployOperation.getStatus() instanceof MultiStatus ? (MultiStatus) deployOperation.getStatus()
-                : new MultiStatus(LivingApplicationPlugin.PLUGIN_ID, 0, new IStatus[] { deployOperation.getStatus() }, "",
+        MultiStatus status = deployOperation.getStatus() instanceof MultiStatus
+                ? (MultiStatus) deployOperation.getStatus()
+                : new MultiStatus(LivingApplicationPlugin.PLUGIN_ID, 0, new IStatus[] { deployOperation.getStatus() },
+                        "",
                         null);
-        return new MultiStatusDialog(shell, Messages.deployDoneTitle, Messages.deployDoneMessage, MessageDialog.INFORMATION,
+        return new MultiStatusDialog(shell, Messages.deployDoneTitle, Messages.deployDoneMessage,
+                MessageDialog.INFORMATION,
                 onFinishButtons, status).open();
     }
 

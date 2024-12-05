@@ -19,9 +19,6 @@ import static org.bonitasoft.bpm.model.parameter.builders.ParameterBuilder.aPara
 import static org.bonitasoft.bpm.model.process.builders.DataBuilder.aData;
 import static org.mockito.Mockito.when;
 
-import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
-import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
-import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfiguration;
 import org.bonitasoft.bpm.model.connectorconfiguration.ConnectorConfigurationFactory;
 import org.bonitasoft.bpm.model.parameter.Parameter;
@@ -32,32 +29,31 @@ import org.bonitasoft.bpm.model.process.ContractInput;
 import org.bonitasoft.bpm.model.process.ContractInputType;
 import org.bonitasoft.bpm.model.process.Data;
 import org.bonitasoft.bpm.model.process.ProcessFactory;
+import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
+import org.bonitasoft.studio.common.emf.tools.ModelHelper;
 import org.eclipse.jface.viewers.Viewer;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- * @author Romain Bioteau
- */
-@RunWith(MockitoJUnitRunner.class)
-public class ConnectorAvailableExpressionTypeFilterTest {
+@ExtendWith(MockitoExtension.class)
+class ConnectorAvailableExpressionTypeFilterTest {
 
     private ConnectorAvailableExpressionTypeFilter connectorAvailableExpressionTypeFilter;
 
     @Mock
     private Viewer expressionViewer;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connectorAvailableExpressionTypeFilter = new ConnectorAvailableExpressionTypeFilter();
-
     }
 
     @Test
-    public void should_accept_default_types()
+    void should_accept_default_types()
             throws Exception {
         assertThat(connectorAvailableExpressionTypeFilter.select(expressionViewer, null,
                 ExpressionHelper.createConstantExpression("", ""))).isTrue();
@@ -70,7 +66,7 @@ public class ConnectorAvailableExpressionTypeFilterTest {
     }
 
     @Test
-    public void should_select_returns_true_for_contract_input_expression_in_on_finish_connector_input()
+    void should_select_returns_true_for_contract_input_expression_in_on_finish_connector_input()
             throws Exception {
         final Activity activity = ProcessFactory.eINSTANCE.createActivity();
         final Connector onFinishConnector = ProcessFactory.eINSTANCE.createConnector();
@@ -86,7 +82,7 @@ public class ConnectorAvailableExpressionTypeFilterTest {
     }
 
     @Test
-    public void should_select_returns_true_for_contract_input_expression_in_on_enter_connector_input() throws Exception {
+    void should_select_returns_true_for_contract_input_expression_in_on_enter_connector_input() throws Exception {
         final Connector onFinishConnector = ProcessFactory.eINSTANCE.createConnector();
         onFinishConnector.setEvent(ConnectorEvent.ON_ENTER.name());
         final ConnectorConfiguration config = ConnectorConfigurationFactory.eINSTANCE.createConnectorConfiguration();
@@ -101,7 +97,7 @@ public class ConnectorAvailableExpressionTypeFilterTest {
     }
 
     @Test
-    public void should_select_returns_true_for_variable_expression_in_connector_input()
+    void should_select_returns_true_for_variable_expression_in_connector_input()
             throws Exception {
         final Data data = ProcessFactory.eINSTANCE.createData();
         data.setName("myData");
@@ -112,7 +108,7 @@ public class ConnectorAvailableExpressionTypeFilterTest {
     }
 
     @Test
-    public void should_select_returns_true_for_parameter_expression() throws Exception {
+    void should_select_returns_true_for_parameter_expression() throws Exception {
         final ConnectorConfiguration config = ConnectorConfigurationFactory.eINSTANCE.createConnectorConfiguration();
         when(expressionViewer.getInput()).thenReturn(config);
 

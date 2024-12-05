@@ -43,7 +43,8 @@ public class ApplicationEditor extends AbstractEditor<ApplicationNodeContainer> 
 
     public static final String EDITOR_ID = "org.bonitasoft.studio.la.editor";
 
-    protected final ApplicationNodeContainerConverter applicationNodeContainerConverter = RepositoryManager.getInstance()
+    protected final ApplicationNodeContainerConverter applicationNodeContainerConverter = RepositoryManager
+            .getInstance()
             .getRepositoryStore(ApplicationRepositoryStore.class).getConverter();
 
     protected ApplicationFormPage applicationFormPage;
@@ -87,8 +88,8 @@ public class ApplicationEditor extends AbstractEditor<ApplicationNodeContainer> 
 
     @Override
     protected void updateWorkingCopy(ApplicationNodeContainer newModel) {
-        workingCopy.getApplications().clear();
-        workingCopy.getApplications().addAll(newModel.getApplications());
+        workingCopy.getAllApplications().clear();
+        workingCopy.getAllApplications().addAll(newModel.getAllApplications());
     }
 
     @Override

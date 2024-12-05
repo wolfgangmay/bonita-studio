@@ -23,7 +23,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.business.application.Application;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.session.APISession;
@@ -110,9 +110,10 @@ public class ProjectExplorerLivingApplicationIT {
             ICondition applicationDeployedCondition = new ConditionBuilder()
                     .withTest(() -> {
                         try {
-                            return applicationAPI.searchApplications(new SearchOptionsBuilder(0, 20).done()).getResult()
+                            return applicationAPI.searchIApplications(new SearchOptionsBuilder(0, 20).done())
+                                    .getResult()
                                     .stream()
-                                    .map(Application::getToken)
+                                    .map(IApplication::getToken)
                                     .anyMatch("testExplorerApplication"::equals);
                         } catch (SearchException e) {
                             e.printStackTrace();

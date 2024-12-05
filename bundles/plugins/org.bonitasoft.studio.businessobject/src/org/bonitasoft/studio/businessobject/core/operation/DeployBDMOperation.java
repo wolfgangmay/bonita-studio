@@ -199,7 +199,7 @@ public class DeployBDMOperation implements IRunnableWithProgress {
             BonitaStudioLog.error(e);
         }
         try (Connection conn = DriverManager.getConnection(String.format(
-                "jdbc:h2:file:%s/business_data.db;MVCC=TRUE;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;",
+                "jdbc:h2:file:%s/business_data.db;DB_CLOSE_ON_EXIT=TRUE;IGNORECASE=TRUE;AUTO_SERVER=TRUE;",
                 pathToDBFolder(fileStore.getRepositoryAccessor())), "sa", "");
                 Statement stmt = conn.createStatement();) {
             stmt.executeUpdate("DROP ALL OBJECTS");

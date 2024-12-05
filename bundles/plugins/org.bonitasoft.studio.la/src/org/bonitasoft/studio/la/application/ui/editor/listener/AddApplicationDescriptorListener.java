@@ -20,6 +20,7 @@ import java.util.Optional;
 import javax.xml.bind.JAXBException;
 
 import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
+import org.bonitasoft.engine.business.application.xml.AbstractApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.application.xml.ApplicationNodeContainer;
 import org.bonitasoft.studio.common.repository.RepositoryAccessor;
@@ -69,20 +70,22 @@ public class AddApplicationDescriptorListener extends HyperlinkAdapter implement
         handleEvent(null);
     }
 
-    protected void addApplicationNode(ApplicationNode application) {
+    protected void addApplicationNode(AbstractApplicationNode application) {
         final ApplicationNodeContainer workingCopy = applicationFormPage.getWorkingCopy();
         workingCopy.addApplication(application);
         applicationFormPage.recreateForm();
         applicationFormPage.expendApplication(Arrays.asList(application.getToken()));
         try {
-            applicationFormPage.getDocument().set(new String(applicationNodeContainerConverter.marshallToXML(workingCopy)));
+            applicationFormPage.getDocument()
+                    .set(new String(applicationNodeContainerConverter.marshallToXML(workingCopy)));
         } catch (JAXBException | IOException | SAXException e) {
             throw new RuntimeException("Fail to update the document", e);
         }
         applicationFormPage.reflow();
     }
 
-    private WizardBuilder<ApplicationNode> createWizard(WizardBuilder<ApplicationNode> builder) {
+    private WizardBuilder<AbstractApplicationNode> createWizard(
+            WizardBuilder<AbstractApplicationNode> builder) {
 
         final AddApplicationDescriptorPage addDescriptorPage = new AddApplicationDescriptorPage(applicationFormPage,
                 getToken(), "My App", "1.0");
@@ -94,13 +97,15 @@ public class AddApplicationDescriptorListener extends HyperlinkAdapter implement
                         .withDescription(Messages.addApplicationDescriptor)
                         .withControl(addDescriptorPage))
                 .onFinish(container -> addDescriptorPage.isNew()
-                        ? newApplicationDescriptor(addDescriptorPage)
+                        ? newLegacyApplicationDescriptor(addDescriptorPage).map(AbstractApplicationNode.class::cast)
                         : cloneApplicationdescriptor(addDescriptorPage.getNewTokenFromExisting(),
                                 addDescriptorPage.getSelection()));
     }
 
-    private Optional<ApplicationNode> newApplicationDescriptor(final AddApplicationDescriptorPage addDescriptorPage) {
-        ApplicationNode applicationNode = newApplication(addDescriptorPage.getNewToken(), addDescriptorPage.getDisplayName(),
+    private Optional<ApplicationNode> newLegacyApplicationDescriptor(
+            final AddApplicationDescriptorPage addDescriptorPage) {
+        ApplicationNode applicationNode = newApplication(addDescriptorPage.getNewToken(),
+                addDescriptorPage.getDisplayName(),
                 addDescriptorPage.getVersion()).create();
         applicationNode.setProfile(DEFAULT_PROFILE);
         applicationNode.setLayout(CustomPageDescriptor.DEFAULT_LAYOUT.getId());
@@ -108,15 +113,19 @@ public class AddApplicationDescriptorListener extends HyperlinkAdapter implement
         return Optional.of(applicationNode);
     }
 
-    private Optional<ApplicationNode> cloneApplicationdescriptor(String newToken, ApplicationNode toDuplicate) {
+    private Optional<AbstractApplicationNode> cloneApplicationdescriptor(String newToken,
+            AbstractApplicationNode toDuplicate) {
         CloneApplicationDescriptorListener cloner = new CloneApplicationDescriptorListener(toDuplicate,
                 applicationFormPage);
-        ApplicationNode applicationNode = cloner.cloneSimpleFields(newToken);
-        if (toDuplicate.getApplicationPages() != null) {
-            applicationNode.setApplicationPages(cloner.clonePages(toDuplicate.getApplicationPages()));
-        }
-        if (toDuplicate.getApplicationMenus() != null) {
-            applicationNode.setApplicationMenus(cloner.cloneMenus(toDuplicate.getApplicationMenus()));
+        var applicationNode = cloner.cloneSimpleFields(newToken);
+        if (toDuplicate instanceof ApplicationNode legacyToDup
+                && applicationNode instanceof ApplicationNode legacyCopy) {
+            if (legacyToDup.getApplicationPages() != null) {
+                legacyCopy.setApplicationPages(cloner.clonePages(legacyToDup.getApplicationPages()));
+            }
+            if (legacyToDup.getApplicationMenus() != null) {
+                legacyCopy.setApplicationMenus(cloner.cloneMenus(legacyToDup.getApplicationMenus()));
+            }
         }
         return Optional.of(applicationNode);
     }

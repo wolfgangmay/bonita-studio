@@ -31,6 +31,7 @@ import java.util.List;
 import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationSearchDescriptor;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.search.SearchOptions;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
@@ -52,11 +53,11 @@ public class DeleteApplicationRunnableTest {
         final ApplicationAPI applicationAPI = mock(ApplicationAPI.class);
         final Application application1 = applicationWithId(1);
         final Application application2 = applicationWithId(2);
-        when(applicationAPI.searchApplications(notNull()))
+        when(applicationAPI.searchIApplications(notNull()))
                 .thenReturn(searchResult(Collections.emptyList()));
-        when(applicationAPI.searchApplications(eq(withToken("myApp1"))))
+        when(applicationAPI.searchIApplications(eq(withToken("myApp1"))))
                 .thenReturn(searchResult(Arrays.asList(application1)));
-        when(applicationAPI.searchApplications(eq(withToken("myApp2"))))
+        when(applicationAPI.searchIApplications(eq(withToken("myApp2"))))
                 .thenReturn(searchResult(Arrays.asList(application2)));
 
         final DeleteApplicationRunnable operation = new DeleteApplicationRunnable(applicationAPI,
@@ -71,7 +72,7 @@ public class DeleteApplicationRunnableTest {
     @Test
     public void should_fail_if_application_not_found() throws Exception {
         final ApplicationAPI applicationAPI = mock(ApplicationAPI.class);
-        when(applicationAPI.searchApplications(notNull()))
+        when(applicationAPI.searchIApplications(notNull()))
                 .thenReturn(searchResult(Collections.emptyList()));
 
         final DeleteApplicationRunnable operation = new DeleteApplicationRunnable(applicationAPI,
@@ -86,7 +87,7 @@ public class DeleteApplicationRunnableTest {
     @Test
     public void should_not_fail_if_application_not_found_with_ignore_option() throws Exception {
         final ApplicationAPI applicationAPI = mock(ApplicationAPI.class);
-        when(applicationAPI.searchApplications(notNull()))
+        when(applicationAPI.searchIApplications(notNull()))
                 .thenReturn(searchResult(Collections.emptyList()));
 
         final DeleteApplicationRunnable operation = new DeleteApplicationRunnable(applicationAPI,
@@ -104,9 +105,9 @@ public class DeleteApplicationRunnableTest {
         final ApplicationAPI applicationAPI = mock(ApplicationAPI.class);
         doThrow(DeletionException.class).when(applicationAPI).deleteApplication(1);
         final Application application1 = applicationWithId(1);
-        when(applicationAPI.searchApplications(notNull()))
+        when(applicationAPI.searchIApplications(notNull()))
                 .thenReturn(searchResult(Collections.emptyList()));
-        when(applicationAPI.searchApplications(eq(withToken("myApp1"))))
+        when(applicationAPI.searchIApplications(eq(withToken("myApp1"))))
                 .thenReturn(searchResult(Arrays.asList(application1)));
 
         final DeleteApplicationRunnable operation = new DeleteApplicationRunnable(applicationAPI,
@@ -118,7 +119,7 @@ public class DeleteApplicationRunnableTest {
         StatusAssert.assertThat(operation.getStatus()).isNotOK();
     }
 
-    private SearchResult<Application> searchResult(List<Application> resultAsList) {
+    private SearchResult<IApplication> searchResult(List<IApplication> resultAsList) {
         return new SearchResultImpl<>(resultAsList.size(), resultAsList);
     }
 
