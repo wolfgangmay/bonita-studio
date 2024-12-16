@@ -72,7 +72,7 @@ public interface DefaultPluginVersions {
     
     static final String BONITA_PROJECT_MAVEN_PLUGIN_ARTIFACT_ID = "bonita-project-maven-plugin";
 
-    static final String BONITA_PROJECT_MAVEN_PLUGIN_DEFAULT_VERSION = "1.0.3";
+    static final String BONITA_PROJECT_MAVEN_PLUGIN_DEFAULT_VERSION = "1.0.4";
 
     static final String BUILD_HELPER_MAVEN_PLUGIN = "build-helper-maven-plugin";
     static final String BUILD_HELPER_MAVEN_PLUGIN_VERSION = "3.4.0";
