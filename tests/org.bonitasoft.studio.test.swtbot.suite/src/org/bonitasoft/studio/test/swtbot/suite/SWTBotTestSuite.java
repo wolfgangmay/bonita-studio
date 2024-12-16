@@ -130,7 +130,7 @@ import org.junit.runners.Suite;
         MultiInstantiationIT.class,
         BarExporterTest.class,
         ExportBosArchiveIT.class,
-        TestRunWithDocument.class,
+          TestRunWithDocument.class,
         TestDocument.class,
         DuplicateCommandTest.class,
         TestMoveBetweenLane.class,
